@@ -1,49 +1,69 @@
 package com.gungame.world.walls;
 
 import com.badlogic.gdx.math.Vector2;
+import com.gungame.GameObject;
+import com.gungame.GameObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
+import static com.gungame.world.GameWorldConfig.HORIZONTAL_SIZE;
+import static com.gungame.world.GameWorldConfig.VERTICAL_SIZE;
+
 public class WallsGenerationUtils {
     private static final Random random = new Random();
     private static final Logger logger = LoggerFactory.getLogger(WallsGenerationUtils.class);
 
-    public static void generateWalls(WallsEngine wallsEngine, float x, float y, float width, float height) {
+    public static void generateWalls(WallsFactory wallsFactory, float x, float y, float width, float height) {
         float h = y;
         while (h <= height) {
-            wallsEngine.createWallPiece(x, h);
-            wallsEngine.createWallPiece(x + width - wallsEngine.getWallPieceSize().x, h);
-            h += wallsEngine.getWallPieceSize().y;
+            wallsFactory.createWallPiece(x, h);
+            wallsFactory.createWallPiece(x + width - wallsFactory.getWallPieceSize().x, h);
+            h += wallsFactory.getWallPieceSize().y;
         }
 
         float w = x;
         while (w <= width) {
-            wallsEngine.createWallPiece(w, y);
-            wallsEngine.createWallPiece(w, y + height - wallsEngine.getWallPieceSize().y);
-            w += wallsEngine.getWallPieceSize().x;
+            wallsFactory.createWallPiece(w, y);
+            wallsFactory.createWallPiece(w, y + height - wallsFactory.getWallPieceSize().y);
+            w += wallsFactory.getWallPieceSize().x;
         }
     }
 
-    public static void generateBoxes(WallsEngine wallsEngine, float x, float y, float width, float height, float filling) {
-        // TODO: упростить
-        Vector2 boxSize = wallsEngine.getBoxSize();
+    public static void generateBoxes(WallsFactory wallsFactory, float x, float y, float width, float height, float filling) {
+        Vector2 boxSize = wallsFactory.getBoxSize();
         int totalFits = (int) Math.min((width - x) / boxSize.x, (height - y) / boxSize.y);
         int totalToGenerate = (int) (totalFits * filling);
 
         for (int i = 0; i < totalToGenerate; i++) {
-            while (true) {
-                float boxX = random.nextFloat(x, x + width);
-                float boxY = random.nextFloat(y, y + height);
-                float boxRotation = random.nextFloat(-180, 180);
-                if (wallsEngine.createBox(boxX, boxY, boxRotation)) {
-                    logger.debug("created box(x={}, y={}, rotation={})", boxX, boxY, boxRotation);
-                    break;
-                }
-            }
+            generateBox(wallsFactory, x, y, width, height);
         }
 
         logger.debug("generated " + totalToGenerate + " boxes");
+    }
+
+    private static void generateBox(WallsFactory wallsFactory, float x, float y, float width, float height) {
+        float boxX = random.nextFloat(x, x + width);
+        float boxY = random.nextFloat(y, y + height);
+        float boxRotation = random.nextFloat(-180, 180);
+        wallsFactory.createBox(boxX, boxY, boxRotation);
+        logger.debug("creating box(x={}, y={}, rotation={})", boxX, boxY, boxRotation);
+    }
+
+    public static void recreateBoxIfNesseseryOnCollision(GameObject objectA, GameObject objectB) {
+        if (objectA.getType() != GameObjectType.BOX && objectB.getType() != GameObjectType.BOX) {
+            return;
+        }
+        GameObject toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
+
+        toDestroy.markForDestroy();
+        logger.debug("destroying box(x={}, y={}, rotation={})",
+                toDestroy.getSprite().getX(), toDestroy.getSprite().getY(), toDestroy.getSprite().getRotation());
+
+        WallsFactory factory = (WallsFactory) toDestroy.getParent();
+        float wallW = factory.getWallPieceSize().x, wallH = factory.getWallPieceSize().y;
+        // TODO: чекнуть зону на примере травы
+        generateBox(factory, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
     }
 }

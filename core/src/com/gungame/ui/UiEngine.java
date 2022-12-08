@@ -3,7 +3,7 @@ package com.gungame.ui;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.world.World;
+import com.gungame.world.GameWorld;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +12,8 @@ public class UiEngine implements Disposable {
 
     private final List<Ui> uis;
 
-    public UiEngine(boolean isDebugEnabled) {
+    public UiEngine() {
         uis = new ArrayList<>();
-        if (isDebugEnabled) {
-            uis.add(new DebugUi());
-        }
     }
 
     @Override
@@ -24,7 +21,7 @@ public class UiEngine implements Disposable {
         uis.forEach(Ui::dispose);
     }
 
-    public void draw(SpriteBatch batch, Camera camera, World world) {
-        uis.forEach(it -> it.draw(batch, camera, world));
+    public void draw(SpriteBatch batch, Camera camera, GameWorld gameWorld) {
+        uis.forEach(it -> it.draw(batch, camera, gameWorld));
     }
 }

@@ -2,15 +2,15 @@ package com.gungame.world.ground;
 
 public class GroundGenerationUtils {
 
-    public static void generateGrass(GroundEngine groundEngine, float x, float y, float width, float height) {
+    public static void generateGrass(GroundContainer groundContainer, float x, float y, float width, float height) {
         float h = x, w = y;
 
         while (h <= height && w <= width) {
-            groundEngine.createGrassPiece(w, h);
+            groundContainer.createGrassPiece(w, h);
 
-            w += groundEngine.getGrassSize().x;
+            w += groundContainer.getGrassSize().x;
             if (w > width) {
-                h += groundEngine.getGrassSize().y;
+                h += groundContainer.getGrassSize().y;
                 w = x;
             }
         }

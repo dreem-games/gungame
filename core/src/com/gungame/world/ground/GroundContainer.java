@@ -8,7 +8,7 @@ import com.badlogic.gdx.utils.Disposable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GroundEngine implements Disposable {
+public class GroundContainer implements Disposable {
     private final Vector2 pieceSize = new Vector2(30, 30);
     private final Texture grassTexture = new Texture("texture/grass.jpg");
     private final List<Vector2> positions = new ArrayList<>();
