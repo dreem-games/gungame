@@ -1,11 +1,9 @@
 package aurelienribon.bodyeditor;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
@@ -109,6 +107,27 @@ public class BodyEditorLoader {
             body.createFixture(fd);
 
             free(center);
+        }
+    }
+
+    public void attachFixture(Body body, String name, FixtureDef fd, Vector2 scale, Texture texture, MassData templateMassData) {
+        float yScale = (float) texture.getWidth() / (float) texture.getHeight();
+        float xScale;
+        if (yScale >= 1.f) {
+            xScale = 1.f;
+        } else {
+            xScale = 1 / yScale;
+            yScale = 1;
+        }
+        var correctScale = new Vector2(scale.x * xScale, scale.y * yScale);
+        attachFixture(body, name, fd, correctScale);
+
+        if (templateMassData != null) {
+            var realMassData = new MassData();
+            realMassData.mass = templateMassData.mass;
+            realMassData.I = templateMassData.I;
+            setAndMultiply(realMassData.center, templateMassData.center, correctScale);
+            body.setMassData(realMassData);
         }
     }
 

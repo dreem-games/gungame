@@ -12,6 +12,9 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.world.ground.GroundContainer;
 import com.gungame.world.ground.GroundGenerationUtils;
+import com.gungame.world.hero.HeroController;
+import com.gungame.world.hero.HeroFactory;
+import com.gungame.world.hero.HeroKeyboardHeroController;
 import com.gungame.world.walls.WallsFactory;
 import com.gungame.world.walls.WallsGenerationUtils;
 
@@ -20,6 +23,7 @@ import static com.gungame.world.GameWorldConfig.*;
 public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
+    private HeroController heroController;
     private WallsFactory wallsFactory;
     private GroundContainer groundContainer;
     private World world;
@@ -28,7 +32,7 @@ public class GameWorld implements Disposable {
     private float lastWorldStepTime;
     private float timeAccumulator;
 
-    public void init() {
+    public void init(Camera camera) {
         Box2D.init();
         if (PHYSICS_DEBUG_MODE) {
             debugRenderer = new Box2DDebugRenderer(true, true, true, true, true, true);
@@ -37,12 +41,14 @@ public class GameWorld implements Disposable {
 
         world = new World(new Vector2(0, 0), true);
         world.setContactListener(new GameContactListener());
+        var heroFactory = new HeroFactory(world, bodyEditorLoader);
         wallsFactory = new WallsFactory(world, bodyEditorLoader);
         groundContainer = new GroundContainer();
 
         WallsGenerationUtils.generateWalls(wallsFactory, 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
         float wallW = wallsFactory.getWallPieceSize().x, wallH = wallsFactory.getWallPieceSize().y;
 
+        heroController = new HeroKeyboardHeroController(heroFactory.createMainHero(10, 10, 20), camera);
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(wallsFactory, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
     }
@@ -63,6 +69,7 @@ public class GameWorld implements Disposable {
         if (timeAccumulator >= WORLD_STEP_TIME) {
             GameObjectUtils.updateGameObjects(world);
             wallsFactory.executeObjectsUpdates();
+            heroController.control();
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }

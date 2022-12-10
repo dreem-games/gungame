@@ -13,8 +13,8 @@ import java.util.Queue;
 
 public class WallsFactory implements Disposable {
 
-    private final Vector2 wallSize = new Vector2(30, 30);
-    private final Vector2 boxSize = new Vector2(40, 40);
+    private final Vector2 wallSize = new Vector2(3, 3);
+    private final Vector2 boxSize = new Vector2(4, 4);
     private final Texture wallTexture = new Texture("texture/wall.png");
     private final Texture boxTexture = new Texture("texture/box.jpg");
     private final World world;
