@@ -4,7 +4,6 @@ import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.gungame.GameObject;
 import com.gungame.world.walls.WallsGenerationUtils;
 
 public class GameContactListener implements ContactListener {

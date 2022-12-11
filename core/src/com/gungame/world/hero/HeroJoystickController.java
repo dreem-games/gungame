@@ -3,7 +3,7 @@ package com.gungame.world.hero;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
-import com.gungame.GameObject;
+import com.gungame.world.GameObject;
 
 public class HeroJoystickController extends HeroController {
 

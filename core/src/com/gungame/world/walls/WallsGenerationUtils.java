@@ -1,8 +1,8 @@
 package com.gungame.world.walls;
 
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.GameObject;
-import com.gungame.GameObjectType;
+import com.gungame.world.GameObject;
+import com.gungame.world.GameObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,18 +52,18 @@ public class WallsGenerationUtils {
     }
 
     public static void recreateBoxIfNesseseryOnCollision(GameObject objectA, GameObject objectB) {
-        if (objectA.getType() != GameObjectType.BOX && objectB.getType() != GameObjectType.BOX) {
+        if (objectA.getType() != GameObjectType.BOX && objectB.getType() != GameObjectType.BOX
+                || objectA.isActive() || objectB.isActive()) {
             return;
         }
         GameObject toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
 
         toDestroy.markForDestroy();
-        logger.debug("destroying box(x={}, y={}, rotation={})",
-                toDestroy.getSprite().getX(), toDestroy.getSprite().getY(), toDestroy.getSprite().getRotation());
+        logger.debug("destroying box(x={}, y={}, angle={})",
+                toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle());
 
         WallsFactory factory = (WallsFactory) toDestroy.getParent();
         float wallW = factory.getWallPieceSize().x, wallH = factory.getWallPieceSize().y;
-        // TODO: чекнуть зону на примере травы
         generateBox(factory, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
     }
 }

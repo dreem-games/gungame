@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.GameObjectType;
+import com.gungame.world.GameObjectType;
 import com.gungame.world.GameObjectUtils;
 
 import java.util.LinkedList;
@@ -36,12 +36,12 @@ public class WallsFactory implements Disposable {
 
     public void createWallPiece(float x, float y) {
         // они создаются только перед симуляцией, соответственно, проблем не будет
-        GameObjectUtils.createObject(world, bodyLoader, "wall", wallTexture, wallSize,
+        GameObjectUtils.createGameObject(world, bodyLoader, "wall", wallTexture, wallSize,
                 GameObjectType.WALL, x, y, 0, this);
     }
 
     public void createBox(float x, float y, float rotation) {
-        updates.add(() -> GameObjectUtils.createObject(
+        updates.add(() -> GameObjectUtils.createGameObject(
                 world, bodyLoader, "box", boxTexture, boxSize, GameObjectType.BOX, x, y, rotation, this));
     }
 

@@ -5,8 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.GameObject;
-import com.gungame.GameObjectType;
+import com.gungame.world.GameObject;
+import com.gungame.world.GameObjectType;
 import com.gungame.world.GameObjectUtils;
 
 public class HeroFactory implements Disposable {
@@ -22,7 +22,7 @@ public class HeroFactory implements Disposable {
     }
 
     public GameObject createMainHero(float x, float y, float rotation) {
-        return GameObjectUtils.createObject(world, bodyLoader, "hero",
+        return GameObjectUtils.createGameObject(world, bodyLoader, "hero",
                 heroTexture, heroSize, GameObjectType.HERO, x, y, rotation, this);
     }
 

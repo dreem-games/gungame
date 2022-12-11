@@ -67,7 +67,7 @@ public class GameWorld implements Disposable {
 
         timeAccumulator += frameTime;
         if (timeAccumulator >= WORLD_STEP_TIME) {
-            GameObjectUtils.updateGameObjects(world);
+            GameObjectUtils.getGameObjects(world).forEach(GameObject::update);
             wallsFactory.executeObjectsUpdates();
             heroController.control();
             world.step(WORLD_STEP_TIME, 6, 2);
@@ -75,8 +75,7 @@ public class GameWorld implements Disposable {
         }
 
         groundContainer.draw(batch);
-        GameObjectUtils.getSyncedBodySprites(world)
-                .forEach(sprite -> sprite.draw(batch));
+        GameObjectUtils.getGameObjects(world).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(world, camera.combined);
         }

@@ -4,7 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
-import com.gungame.GameObject;
+import com.gungame.world.GameObject;
 
 public class HeroKeyboardHeroController extends HeroController {
 
@@ -32,8 +32,9 @@ public class HeroKeyboardHeroController extends HeroController {
         Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(mousePos);
 
-        mousePos.x -= hero.getBody().getPosition().x;
-        mousePos.y -= hero.getBody().getPosition().y;
+        var heroPosition = hero.getPosition();
+        mousePos.x -= heroPosition.x;
+        mousePos.y -= heroPosition.y;
         mousePos = mousePos.nor();
 
 

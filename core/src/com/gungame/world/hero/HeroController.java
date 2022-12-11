@@ -3,7 +3,7 @@ package com.gungame.world.hero;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.GameObject;
+import com.gungame.world.GameObject;
 import com.gungame.world.GameWorldConfig;
 
 public abstract class HeroController {
@@ -19,10 +19,8 @@ public abstract class HeroController {
     public abstract void control();
 
     protected void move(float x, float y) {
-        Vector2 vel = hero.getBody().getLinearVelocity();
-        Vector2 pos = hero.getBody().getPosition();
-
-        hero.getBody().applyLinearImpulse(getImpulse(vel.x, x), getImpulse(vel.y, y), pos.x, pos.y, true);
+        Vector2 vel = hero.getVelocity();
+        hero.applyImpulse(getImpulse(vel.x, x), getImpulse(vel.y, y));
     }
 
     private float getImpulse(float velocity, float accseleration) {
@@ -34,7 +32,7 @@ public abstract class HeroController {
     }
 
     protected void rotate(float x, float y) {
-        float angle = hero.getBody().getAngle();
+        float angle = hero.getAngle();
         if (angle < 0) {
             angle += MathUtils.PI2;
         }
@@ -52,6 +50,6 @@ public abstract class HeroController {
         while (targetVel < -MathUtils.PI) {
             targetVel += MathUtils.PI2;
         }
-        hero.getBody().setAngularVelocity(targetVel * GameWorldConfig.HERO_ROTATION_SPEED);
+        hero.setAngularVelocity(targetVel * GameWorldConfig.HERO_ROTATION_SPEED);
     }
 }
