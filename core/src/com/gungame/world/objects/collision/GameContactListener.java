@@ -1,23 +1,24 @@
-package com.gungame.world;
+package com.gungame.world.objects.collision;
 
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.gungame.world.walls.WallsGenerationUtils;
+import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.walls.WallsGenerationUtils;
 
 public class GameContactListener implements ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        var userDataA = (GameObject) contact.getFixtureA().getBody().getUserData();
-        var userDataB = (GameObject) contact.getFixtureB().getBody().getUserData();
+        var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
+        var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
-        if (userDataA.isToDestroy() || userDataB.isToDestroy()) {
+        if (objectA.isToDestroy() || objectB.isToDestroy()) {
             return;
         }
 
-        WallsGenerationUtils.recreateBoxIfNesseseryOnCollision(userDataA, userDataB);
+        WallsGenerationUtils.recreateBoxIfNesseseryOnCollision(objectA, objectB);
     }
 
     @Override

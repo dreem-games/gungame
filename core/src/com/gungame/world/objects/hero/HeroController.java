@@ -1,9 +1,9 @@
-package com.gungame.world.hero;
+package com.gungame.world.objects.hero;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.GameObject;
+import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.GameWorldConfig;
 
 public abstract class HeroController {

@@ -1,13 +1,13 @@
-package com.gungame.world;
+package com.gungame.world.objects.meta;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 
-public class DynamicGameObject extends GameObject {
+public class DynamicVisibleGameObject extends VisibleGameObject {
 
     private boolean isActive;  // становится true при первом взаимодействии, например, передвижении
 
-    public DynamicGameObject(GameObjectType type, Body body, Sprite sprite, Object parent) {
+    public DynamicVisibleGameObject(GameObjectType type, Body body, Sprite sprite, Object parent) {
         super(type, body, sprite, parent);
         isActive = false;
     }
@@ -19,6 +19,12 @@ public class DynamicGameObject extends GameObject {
 
     @Override
     public void activate() {
+        isActive = true;
+    }
+
+    @Override
+    protected void onPositionChanged() {
+        super.onPositionChanged();
         isActive = true;
     }
 }

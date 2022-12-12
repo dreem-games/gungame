@@ -1,10 +1,10 @@
-package com.gungame.world.hero;
+package com.gungame.world.objects.hero;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
-import com.gungame.world.GameObject;
+import com.gungame.world.objects.meta.GameObject;
 
 public class HeroKeyboardHeroController extends HeroController {
 

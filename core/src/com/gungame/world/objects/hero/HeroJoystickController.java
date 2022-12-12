@@ -1,15 +1,15 @@
-package com.gungame.world.hero;
+package com.gungame.world.objects.hero;
 
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
-import com.gungame.world.GameObject;
+import com.gungame.world.objects.meta.VisibleGameObject;
 
 public class HeroJoystickController extends HeroController {
 
     private final Controller controller;
 
-    public HeroJoystickController(GameObject hero, Camera camera) {
+    public HeroJoystickController(VisibleGameObject hero, Camera camera) {
         super(hero, camera);
         controller = Controllers.getCurrent();
     }

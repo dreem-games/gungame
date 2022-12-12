@@ -1,8 +1,8 @@
-package com.gungame.world.walls;
+package com.gungame.world.objects.walls;
 
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.GameObject;
-import com.gungame.world.GameObjectType;
+import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.meta.GameObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class WallsGenerationUtils {
                 || objectA.isActive() || objectB.isActive()) {
             return;
         }
-        GameObject toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
+        var toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
 
         toDestroy.markForDestroy();
         logger.debug("destroying box(x={}, y={}, angle={})",

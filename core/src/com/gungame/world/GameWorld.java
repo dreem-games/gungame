@@ -10,13 +10,16 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.gungame.world.ground.GroundContainer;
-import com.gungame.world.ground.GroundGenerationUtils;
-import com.gungame.world.hero.HeroController;
-import com.gungame.world.hero.HeroFactory;
-import com.gungame.world.hero.HeroKeyboardHeroController;
-import com.gungame.world.walls.WallsFactory;
-import com.gungame.world.walls.WallsGenerationUtils;
+import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.meta.GameObjectUtils;
+import com.gungame.world.objects.collision.GameContactListener;
+import com.gungame.world.objects.ground.GroundContainer;
+import com.gungame.world.objects.ground.GroundGenerationUtils;
+import com.gungame.world.objects.hero.HeroController;
+import com.gungame.world.objects.hero.HeroFactory;
+import com.gungame.world.objects.hero.HeroKeyboardHeroController;
+import com.gungame.world.objects.walls.WallsFactory;
+import com.gungame.world.objects.walls.WallsGenerationUtils;
 
 import static com.gungame.world.GameWorldConfig.*;
 
@@ -75,7 +78,7 @@ public class GameWorld implements Disposable {
         }
 
         groundContainer.draw(batch);
-        GameObjectUtils.getGameObjects(world).forEach(it -> it.draw(batch));
+        GameObjectUtils.getVisibleGameObjects(world).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(world, camera.combined);
         }

@@ -1,10 +1,10 @@
-package com.gungame.world;
+package com.gungame.world.objects.meta;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 
-public class StaticGameObject extends GameObject {
+public class StaticGameObject extends VisibleGameObject {
 
     public StaticGameObject(GameObjectType type, Body body, Sprite sprite, Object parent) {
         super(type, body, sprite, parent);

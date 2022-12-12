@@ -1,13 +1,13 @@
-package com.gungame.world.hero;
+package com.gungame.world.objects.hero;
 
 import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.world.GameObject;
-import com.gungame.world.GameObjectType;
-import com.gungame.world.GameObjectUtils;
+import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.meta.GameObjectUtils;
 
 public class HeroFactory implements Disposable {
 

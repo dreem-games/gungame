@@ -1,4 +1,4 @@
-package com.gungame.world.ground;
+package com.gungame.world.objects.ground;
 
 public class GroundGenerationUtils {
 
