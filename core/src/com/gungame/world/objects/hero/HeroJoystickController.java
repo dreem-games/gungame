@@ -19,6 +19,6 @@ public class HeroJoystickController extends HeroController {
         var mapping = controller.getMapping();
 
         rotate(controller.getAxis(mapping.axisRightX), controller.getAxis(mapping.axisRightY));
-        move(controller.getAxis(mapping.axisLeftX), controller.getAxis(mapping.axisLeftY));
+        move(controller.getAxis(mapping.axisLeftX), controller.getAxis(mapping.axisLeftY), false);
     }
 }

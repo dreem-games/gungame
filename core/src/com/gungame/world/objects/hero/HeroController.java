@@ -18,17 +18,25 @@ public abstract class HeroController {
 
     public abstract void control();
 
-    protected void move(float x, float y) {
-        Vector2 vel = hero.getVelocity();
-        hero.applyImpulse(getImpulse(vel.x, x), getImpulse(vel.y, y));
+    protected void move(float x, float y, boolean isRunning) {
+        var vel = hero.getVelocity();
+        float impulseX = getImpulse(vel.x, x, isRunning);
+        float impulseY = getImpulse(vel.y, y, isRunning);
+        hero.applyImpulse(impulseX, impulseY);
     }
 
-    private float getImpulse(float velocity, float accseleration) {
-        if (Math.sin(velocity) != Math.sin(accseleration)
-                || Math.abs(velocity + accseleration) > GameWorldConfig.HERO_MAX_VELOCITY) {
-            return GameWorldConfig.HERO_ACCELERATION * accseleration;
+    private float getImpulse(float velocity, float accseleration, boolean isRunning) {
+        float potentialResult = GameWorldConfig.HERO_ACCELERATION * accseleration;
+        float maxSpeed = GameWorldConfig.HERO_MAX_VELOCITY * Math.abs(accseleration);
+        if (isRunning) {
+            potentialResult *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
+            maxSpeed *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
         }
-        return 0f;
+        float maxEnabledImpulse = maxSpeed - velocity;
+        float minEnabledImpulse = -maxSpeed - velocity;
+        return Math.min(
+                Math.max(potentialResult, minEnabledImpulse),
+                maxEnabledImpulse);
     }
 
     protected void rotate(float x, float y) {
