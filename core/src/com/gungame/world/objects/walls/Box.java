@@ -12,8 +12,8 @@ public class Box extends DynamicVisibleGameObject {
 
     private final short groupIndex;
 
-    public Box(GameObjectType type, Body body, Sprite sprite, Object parent) {
-        super(type, body, sprite, parent);
+    public Box(GameObjectType type, Body body, Sprite sprite) {
+        super(type, body, sprite);
         groupIndex = --minGroupIndex;
     }
 

@@ -6,7 +6,8 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.gungame.world.objects.hero.Hero;
 import com.gungame.world.objects.walls.Box;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 
 public enum GameObjectType {
     WALL(BodyDef.BodyType.StaticBody, StaticGameObject.class),
@@ -15,34 +16,61 @@ public enum GameObjectType {
     BULLET(BodyDef.BodyType.KinematicBody, DynamicVisibleGameObject.class);
 
     private final BodyDef.BodyType bodyType;
-
-    private final Class<? extends GameObject> subjectClass;
+    private final GameObjectCreator instanceCreator;
 
     GameObjectType(BodyDef.BodyType bodyType, Class<? extends GameObject> subjectClass) {
         this.bodyType = bodyType;
-        this.subjectClass = subjectClass;
+        this.instanceCreator = getInstanceCreator(subjectClass);
+    }
+
+    private GameObjectCreator getInstanceCreator(Class<? extends GameObject> subjectClass) {
+        var lookup = MethodHandles.publicLookup();
+
+        try {
+            try {
+                var methodType = MethodType.methodType(void.class, GameObjectType.class, Body.class, Sprite.class);
+                var constructorHandle = lookup.findConstructor(subjectClass, methodType);
+                return (body, sprite) -> (GameObject) constructorHandle.invoke(this, body, sprite);
+            } catch (NoSuchMethodException e) {
+                try {
+                    var methodType = MethodType.methodType(void.class, GameObjectType.class, Body.class);
+                    var constructorHandle = lookup.findConstructor(subjectClass, methodType);
+                    return (InvisibleGameObjectCreator) (body) -> (GameObject) constructorHandle.invoke(this, body);
+                } catch (NoSuchMethodException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public BodyDef.BodyType getBodyType() {
         return bodyType;
     }
 
-    public GameObject createInstance(Body body, Sprite sprite, Object parent) {
-        // TODO: мб можно оптимальнее через MethodHandle?
+    public GameObject createInstance(Body body, Sprite sprite) {
         try {
-            try {
-                var constructor = subjectClass.getConstructor(GameObjectType.class, Body.class, Object.class);
-                return constructor.newInstance(this, body, parent);
-            } catch (NoSuchMethodException e) {
-                try {
-                    var constructor = subjectClass.getConstructor(GameObjectType.class, Body.class, Sprite.class, Object.class);
-                    return constructor.newInstance(this, body, sprite, parent);
-                } catch (NoSuchMethodException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            return instanceCreator.createInstance(body, sprite);
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @FunctionalInterface
+    public interface GameObjectCreator {
+
+        GameObject createInstance(Body body, Sprite sprite) throws Throwable;
+    }
+
+    @FunctionalInterface
+    public interface InvisibleGameObjectCreator extends GameObjectCreator {
+
+        @Override
+        default GameObject createInstance(Body body, Sprite sprite) throws Throwable {
+            return createInstance(body);
+        }
+
+        GameObject createInstance(Body body) throws Throwable;
     }
 }

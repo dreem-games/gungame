@@ -1,0 +1,41 @@
+package com.gungame.world.objects.bullet;
+
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.gungame.world.objects.collision.CollisionCategory;
+import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.meta.VisibleGameObject;
+
+public class Bullet extends VisibleGameObject {
+
+    private short groupIndex = 0;
+
+    public Bullet(GameObjectType type, Body body, Sprite sprite) {
+        super(type, body, sprite);
+    }
+
+    public void setGroupIndex(short groupIndex) {
+        this.groupIndex = groupIndex;
+    }
+
+    public short getGroupIndex() {
+        return groupIndex;
+    }
+
+    @Override
+    public void setupCollisionFilter(Filter filter) {
+        filter.groupIndex = groupIndex;
+        filter.categoryBits = CollisionCategory.ALL.getBitMask();
+        filter.maskBits = CollisionCategory.ALL.getBitMask();
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
+    }
+
+    @Override
+    public void activate() {
+    }
+}

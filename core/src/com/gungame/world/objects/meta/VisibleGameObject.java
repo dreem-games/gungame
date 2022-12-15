@@ -12,8 +12,8 @@ public abstract class VisibleGameObject extends GameObject {
     protected final Sprite sprite;
     private float lastAngle;
 
-    public VisibleGameObject(GameObjectType type, Body body, Sprite sprite, Object parent) {
-        super(type, body, parent);
+    public VisibleGameObject(GameObjectType type, Body body, Sprite sprite) {
+        super(type, body);
         this.sprite = sprite;
 
         lastPosition = new Vector2(body.getWorldCenter());

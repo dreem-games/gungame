@@ -7,8 +7,8 @@ public class DynamicVisibleGameObject extends VisibleGameObject {
 
     private boolean isActive;  // становится true при первом взаимодействии, например, передвижении
 
-    public DynamicVisibleGameObject(GameObjectType type, Body body, Sprite sprite, Object parent) {
-        super(type, body, sprite, parent);
+    public DynamicVisibleGameObject(GameObjectType type, Body body, Sprite sprite) {
+        super(type, body, sprite);
         isActive = false;
     }
 

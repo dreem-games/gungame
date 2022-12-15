@@ -1,7 +1,5 @@
 package com.gungame.world;
 
-import aurelienribon.bodyeditor.BodyEditorLoader;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -10,15 +8,14 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.gungame.world.objects.meta.GameObject;
-import com.gungame.world.objects.meta.GameObjectUtils;
 import com.gungame.world.objects.collision.GameContactListener;
 import com.gungame.world.objects.ground.GroundContainer;
 import com.gungame.world.objects.ground.GroundGenerationUtils;
 import com.gungame.world.objects.hero.HeroController;
-import com.gungame.world.objects.hero.HeroFactory;
 import com.gungame.world.objects.hero.HeroKeyboardHeroController;
-import com.gungame.world.objects.walls.WallsFactory;
+import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.meta.GameObjectFactoryManager;
+import com.gungame.world.objects.meta.GameObjectUtils;
 import com.gungame.world.objects.walls.WallsGenerationUtils;
 
 import static com.gungame.world.GameWorldConfig.*;
@@ -27,7 +24,7 @@ public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
     private HeroController heroController;
-    private WallsFactory wallsFactory;
+    private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
     private World world;
     private Box2DDebugRenderer debugRenderer;
@@ -40,25 +37,24 @@ public class GameWorld implements Disposable {
         if (PHYSICS_DEBUG_MODE) {
             debugRenderer = new Box2DDebugRenderer(true, true, true, true, true, true);
         }
-        var bodyEditorLoader = new BodyEditorLoader(Gdx.files.internal("texture/bodies.json"));
 
         world = new World(new Vector2(0, 0), true);
         world.setContactListener(new GameContactListener());
-        var heroFactory = new HeroFactory(world, bodyEditorLoader);
-        wallsFactory = new WallsFactory(world, bodyEditorLoader);
+        factoryManager = GameObjectFactoryManager.getInstance(world);
         groundContainer = new GroundContainer();
 
-        WallsGenerationUtils.generateWalls(wallsFactory, 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
-        float wallW = wallsFactory.getWallPieceSize().x, wallH = wallsFactory.getWallPieceSize().y;
+        WallsGenerationUtils.generateWalls(factoryManager.getWallFactory(), 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
+        var wallsSize = factoryManager.getWallFactory().getObjectMetadata().size();
+        float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        heroController = new HeroKeyboardHeroController(heroFactory.createMainHero(10, 10, 20), camera);
+        heroController = new HeroKeyboardHeroController(factoryManager.getHeroFactory().createImmediately(10, 10, 20), camera);
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
-        WallsGenerationUtils.generateBoxes(wallsFactory, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
+        WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
     }
 
     @Override
     public void dispose() {
-        wallsFactory.dispose();
+        factoryManager.dispose();
         groundContainer.dispose();
         world.dispose();
     }
@@ -71,12 +67,11 @@ public class GameWorld implements Disposable {
         timeAccumulator += frameTime;
         if (timeAccumulator >= WORLD_STEP_TIME) {
             GameObjectUtils.getGameObjects(world).forEach(GameObject::update);
-            wallsFactory.executeObjectsUpdates();
+            factoryManager.executeUpdates();
             heroController.control();
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }
-
         groundContainer.draw(batch);
         GameObjectUtils.getVisibleGameObjects(world).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {

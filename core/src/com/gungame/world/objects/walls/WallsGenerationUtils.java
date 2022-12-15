@@ -1,8 +1,7 @@
 package com.gungame.world.objects.walls;
 
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.objects.meta.GameObject;
-import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.meta.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,43 +14,44 @@ public class WallsGenerationUtils {
     private static final Random random = new Random();
     private static final Logger logger = LoggerFactory.getLogger(WallsGenerationUtils.class);
 
-    public static void generateWalls(WallsFactory wallsFactory, float x, float y, float width, float height) {
+    public static void generateWalls(GameObjectFactory<StaticGameObject> wallsFactory, float x, float y, float width, float height) {
+        var wallSize = wallsFactory.getObjectMetadata().size();
         float h = y;
         while (h <= height) {
-            wallsFactory.createWallPiece(x, h);
-            wallsFactory.createWallPiece(x + width - wallsFactory.getWallPieceSize().x, h);
-            h += wallsFactory.getWallPieceSize().y;
+            wallsFactory.createImmediately(x, h, 0);
+            wallsFactory.createImmediately(x + width - wallSize.x, h, 0);
+            h += wallSize.y;
         }
 
         float w = x;
         while (w <= width) {
-            wallsFactory.createWallPiece(w, y);
-            wallsFactory.createWallPiece(w, y + height - wallsFactory.getWallPieceSize().y);
-            w += wallsFactory.getWallPieceSize().x;
+            wallsFactory.createImmediately(w, y, 0);
+            wallsFactory.createImmediately(w, y + height - wallSize.y, 0);
+            w += wallSize.x;
         }
     }
 
-    public static void generateBoxes(WallsFactory wallsFactory, float x, float y, float width, float height, float filling) {
-        Vector2 boxSize = wallsFactory.getBoxSize();
+    public static void generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
+        Vector2 boxSize = boxFactory.getObjectMetadata().size();
         int totalFits = (int) Math.min((width - x) / boxSize.x, (height - y) / boxSize.y);
         int totalToGenerate = (int) (totalFits * filling);
 
         for (int i = 0; i < totalToGenerate; i++) {
-            generateBox(wallsFactory, x, y, width, height);
+            generateBox(boxFactory, x, y, width, height);
         }
 
         logger.debug("generated " + totalToGenerate + " boxes");
     }
 
-    private static void generateBox(WallsFactory wallsFactory, float x, float y, float width, float height) {
+    private static void generateBox(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height) {
         float boxX = random.nextFloat(x, x + width);
         float boxY = random.nextFloat(y, y + height);
         float boxRotation = random.nextFloat(-180, 180);
-        wallsFactory.createBox(boxX, boxY, boxRotation);
+        boxFactory.create(boxX, boxY, boxRotation);
         logger.debug("creating box(x={}, y={}, rotation={})", boxX, boxY, boxRotation);
     }
 
-    public static void recreateBoxIfNesseseryOnCollision(GameObject objectA, GameObject objectB) {
+    public static void recreateBoxIfNecessaryOnCollision(GameObject objectA, GameObject objectB) {
         if (objectA.getType() != GameObjectType.BOX && objectB.getType() != GameObjectType.BOX
                 || objectA.isActive() || objectB.isActive()) {
             return;
@@ -62,8 +62,9 @@ public class WallsGenerationUtils {
         logger.debug("destroying box(x={}, y={}, angle={})",
                 toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle());
 
-        WallsFactory factory = (WallsFactory) toDestroy.getParent();
-        float wallW = factory.getWallPieceSize().x, wallH = factory.getWallPieceSize().y;
-        generateBox(factory, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
+        var factoryManager = GameObjectFactoryManager.getInstance(toDestroy.getWorld());
+        var wallSize = factoryManager.getWallFactory().getObjectMetadata().size();
+        float wallW = wallSize.x, wallH = wallSize.y;
+        generateBox(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
     }
 }

@@ -18,7 +18,7 @@ public class GameContactListener implements ContactListener {
             return;
         }
 
-        WallsGenerationUtils.recreateBoxIfNesseseryOnCollision(objectA, objectB);
+        WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
     }
 
     @Override
