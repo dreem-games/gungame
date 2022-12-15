@@ -1,17 +1,17 @@
-package com.gungame.world.objects.hero;
+package com.gungame.world.controller;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.GameWorldConfig;
+import com.gungame.world.objects.phisical.Hero;
 
 public abstract class HeroController {
 
-    protected final GameObject hero;
+    protected final Hero hero;
     protected final Camera camera;
 
-    public HeroController(GameObject hero, Camera camera) {
+    public HeroController(Hero hero, Camera camera) {
         this.hero = hero;
         this.camera = camera;
     }

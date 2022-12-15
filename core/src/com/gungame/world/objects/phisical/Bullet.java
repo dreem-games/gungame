@@ -1,9 +1,10 @@
-package com.gungame.world.objects.bullet;
+package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
-import com.gungame.world.objects.collision.CollisionCategory;
+import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
 
@@ -37,5 +38,17 @@ public class Bullet extends VisibleGameObject {
 
     @Override
     public void activate() {
+    }
+
+    @Override
+    public void postConstruct() {
+        float angle = getAngle();
+        float impulseX = MathUtils.cos(angle), impulseY = MathUtils.sin(angle);
+        applyImpulse(impulseX * 100, impulseY * 100);
+    }
+
+    @Override
+    public int getDrawLevel() {
+        return 2;
     }
 }

@@ -1,4 +1,4 @@
-package com.gungame.world.objects.collision;
+package com.gungame.world.collision;
 
 public enum CollisionCategory {
     ALL(0b11),

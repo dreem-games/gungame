@@ -1,15 +1,15 @@
-package com.gungame.world.objects.hero;
+package com.gungame.world.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.gungame.world.objects.meta.GameObject;
+import com.gungame.world.objects.phisical.Hero;
 
 public class HeroKeyboardHeroController extends HeroController {
 
-    public HeroKeyboardHeroController(GameObject hero, Camera camera) {
+    public HeroKeyboardHeroController(Hero hero, Camera camera) {
         super(hero, camera);
     }
 
@@ -44,5 +44,9 @@ public class HeroKeyboardHeroController extends HeroController {
 
         rotate(mousePos.x, mousePos.y);
         move(impulse.x, impulse.y, isRunning);
+
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            hero.fire();
+        }
     }
 }

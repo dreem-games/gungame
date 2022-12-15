@@ -1,4 +1,4 @@
-package com.gungame.world.objects.walls;
+package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.math.Vector2;
 import com.gungame.world.objects.meta.*;

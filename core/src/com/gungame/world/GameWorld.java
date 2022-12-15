@@ -8,15 +8,15 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.gungame.world.objects.collision.GameContactListener;
-import com.gungame.world.objects.ground.GroundContainer;
-import com.gungame.world.objects.ground.GroundGenerationUtils;
-import com.gungame.world.objects.hero.HeroController;
-import com.gungame.world.objects.hero.HeroKeyboardHeroController;
+import com.gungame.world.collision.GameContactListener;
+import com.gungame.world.objects.imaginary.GroundContainer;
+import com.gungame.world.objects.imaginary.GroundGenerationUtils;
+import com.gungame.world.controller.HeroController;
+import com.gungame.world.controller.HeroKeyboardHeroController;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectUtils;
-import com.gungame.world.objects.walls.WallsGenerationUtils;
+import com.gungame.world.objects.phisical.WallsGenerationUtils;
 
 import static com.gungame.world.GameWorldConfig.*;
 

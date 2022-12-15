@@ -1,11 +1,12 @@
-package com.gungame.world.objects.collision;
+package com.gungame.world.collision;
 
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
-import com.gungame.world.objects.walls.WallsGenerationUtils;
+import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.phisical.WallsGenerationUtils;
 
 public class GameContactListener implements ContactListener {
 
@@ -18,7 +19,15 @@ public class GameContactListener implements ContactListener {
             return;
         }
 
+        // мб как-нибудь потом нормальную генерацию сделаем...
         WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
+
+        if (objectA.getType() == GameObjectType.BULLET) {
+            objectA.markForDestroy();
+        }
+        if (objectB.getType() == GameObjectType.BULLET) {
+            objectB.markForDestroy();
+        }
     }
 
     @Override

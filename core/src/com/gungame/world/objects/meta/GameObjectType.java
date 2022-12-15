@@ -3,8 +3,9 @@ package com.gungame.world.objects.meta;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.gungame.world.objects.hero.Hero;
-import com.gungame.world.objects.walls.Box;
+import com.gungame.world.objects.phisical.Bullet;
+import com.gungame.world.objects.phisical.Hero;
+import com.gungame.world.objects.phisical.Box;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -13,7 +14,7 @@ public enum GameObjectType {
     WALL(BodyDef.BodyType.StaticBody, StaticGameObject.class),
     BOX(BodyDef.BodyType.DynamicBody, Box.class),
     HERO(BodyDef.BodyType.DynamicBody, Hero.class),
-    BULLET(BodyDef.BodyType.KinematicBody, DynamicVisibleGameObject.class);
+    BULLET(BodyDef.BodyType.KinematicBody, Bullet.class);
 
     private final BodyDef.BodyType bodyType;
     private final GameObjectCreator instanceCreator;

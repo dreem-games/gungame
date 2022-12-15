@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.World;
-import com.gungame.world.objects.collision.CollisionCategory;
+import com.gungame.world.collision.CollisionCategory;
 
 public abstract class GameObject {
 
@@ -55,6 +55,11 @@ public abstract class GameObject {
         activate();
         Vector2 impulsePoint = getPosition();
         body.applyLinearImpulse(x, y, impulsePoint.x, impulsePoint.y, true);
+    }
+
+    public void setVelocity(float x, float y) {
+        activate();
+        body.setLinearVelocity(x, y);
     }
 
     public void setAngularVelocity(float velocity) {

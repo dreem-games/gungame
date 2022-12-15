@@ -1,9 +1,9 @@
-package com.gungame.world.objects.walls;
+package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
-import com.gungame.world.objects.collision.CollisionCategory;
+import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 

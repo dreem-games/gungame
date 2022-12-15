@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Disposable;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.function.Consumer;
 
 public class GameObjectFactory <T extends GameObject> implements Disposable {
 
@@ -29,10 +30,6 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         this.objectMetadata = metadata;
     }
 
-    public void create(float x, float y, float rotation) {
-        updates.add(() -> createImmediately(x, y, rotation));
-    }
-
     public void executeObjectsUpdates() {
         while (!updates.isEmpty()) {
             updates.poll().run();
@@ -46,6 +43,14 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
     @Override
     public void dispose() {
         texture.dispose();
+    }
+
+    public void create(float x, float y, float rotation) {
+        updates.add(() -> createImmediately(x, y, rotation));
+    }
+
+    public void create(float x, float y, float rotation, Consumer<T> initializer) {
+        updates.add(() -> initializer.accept(createImmediately(x, y, rotation)));
     }
 
     public T createImmediately(float x, float y, float rotation) {
