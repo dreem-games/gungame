@@ -20,6 +20,10 @@ public class HeroJoystickController extends HeroController {
 
     @Override
     public boolean control() {
+        if (controller == null) {
+            return false;
+        }
+
         boolean used = false;
         var mapping = controller.getMapping();
 

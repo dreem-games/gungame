@@ -1,6 +1,4 @@
 buildscript {
-    
-
     repositories {
         mavenLocal()
         mavenCentral()
@@ -9,6 +7,7 @@ buildscript {
         google()
     }
     dependencies {
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
 //        classpath 'org.gretty:gretty:3.0.7'
     }
 }
@@ -16,7 +15,7 @@ buildscript {
 allprojects {
     apply plugin: "eclipse"
 
-    version = '1.0'
+    version = '0.1-dev'
     ext {
         appName = "gungame"
         gdxVersion = '1.11.0'
@@ -39,8 +38,9 @@ allprojects {
 }
 
 project(":desktop") {
+    apply plugin: 'java'
     apply plugin: "java-library"
-
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     dependencies {
         implementation project(":core")
