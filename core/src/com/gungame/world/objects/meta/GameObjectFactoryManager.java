@@ -25,7 +25,7 @@ public class GameObjectFactoryManager implements Disposable {
     private static final GameObjectMetadata HERO_METADATA = new GameObjectMetadata(
             GameObjectType.HERO, "texture/hero.png", "hero", new Vector2(5, 4), createMassData(100, .3f, .4f));
     private static final GameObjectMetadata BULLET_METADATA = new GameObjectMetadata(
-            GameObjectType.BULLET, "texture/bullet.png", "bullet", new Vector2(.5f, .1f), GameObjectUtils.createMassData(.1f, .8f, .11f));
+            GameObjectType.BULLET, "texture/bullet.png", "bullet", new Vector2(.5f, .1f), GameObjectUtils.createMassData(.0f, .8f, .11f));
 
     private final GameObjectFactory<StaticGameObject> wallFactory;
     private final GameObjectFactory<Box> boxFactory;

@@ -9,30 +9,44 @@ import com.gungame.world.objects.phisical.Hero;
 
 public class HeroKeyboardHeroController extends HeroController {
 
+    private float lastMouseX, lastMouseY;
+
     public HeroKeyboardHeroController(Hero hero, Camera camera) {
         super(hero, camera);
     }
 
-    public void control() {
+    public boolean control() {
+        boolean used = false;
         var impulse = new Vector2();
-        boolean isRunning = false;
+        MovingMode movingMode = MovingMode.NORMAL;
 
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             impulse.x -= 1f;
+            used = true;
         } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             impulse.x += 1f;
+            used = true;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.S)) {
             impulse.y -= 1f;
+            used = true;
         } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             impulse.y += 1f;
+            used = true;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
-            isRunning = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+            movingMode = MovingMode.JUMPING;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            movingMode = MovingMode.RUNNING;
         }
 
         Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        if (lastMouseX != mousePos.x || lastMouseY != mousePos.y) {
+            used = true;
+            lastMouseX = mousePos.x;
+            lastMouseY = mousePos.y;
+        }
         camera.unproject(mousePos);
 
         var heroPosition = hero.getPosition();
@@ -42,11 +56,17 @@ public class HeroKeyboardHeroController extends HeroController {
         mousePos = mousePos.nor();
         impulse = impulse.nor();
 
-        rotate(mousePos.x, mousePos.y);
-        move(impulse.x, impulse.y, isRunning);
+        used |= move(impulse.x, impulse.y, movingMode);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             hero.fire();
+            used = true;
         }
+
+        if (used) {
+            rotate(mousePos.x, mousePos.y);
+        }
+
+        return used;
     }
 }

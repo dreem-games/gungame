@@ -22,6 +22,7 @@ public abstract class GameObject {
     public abstract void activate();
 
     public void setupCollisionFilter(Filter filter) {
+        filter.groupIndex = 0;
         filter.categoryBits = CollisionCategory.ALL.getBitMask();
         filter.maskBits = CollisionCategory.ALL.getBitMask();
     }

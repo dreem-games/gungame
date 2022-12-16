@@ -16,21 +16,41 @@ public abstract class HeroController {
         this.camera = camera;
     }
 
-    public abstract void control();
+    /**
+     * Выполняет управление персонажем.
+     * @return true если контроллер используется в данный момент.
+     */
+    public abstract boolean control();
 
-    protected void move(float x, float y, boolean isRunning) {
+    /**
+     * Применяет к персонажу силу для его передвижения.
+     *
+     * @param x направление (часть вектора)
+     * @param y направление (часть вектора)
+     * @param movingMode режим передвижения
+     * @return true если сила применена
+     */
+    protected boolean move(float x, float y, MovingMode movingMode) {
+        if (x * x + y * y < .1f) {
+            return false;
+        }
+
         var vel = hero.getVelocity();
-        float impulseX = getImpulse(vel.x, x, isRunning);
-        float impulseY = getImpulse(vel.y, y, isRunning);
+        float impulseX = getImpulse(vel.x, x, movingMode);
+        float impulseY = getImpulse(vel.y, y, movingMode);
         hero.applyImpulse(impulseX, impulseY);
+        return true;
     }
 
-    private float getImpulse(float velocity, float accseleration, boolean isRunning) {
+    private float getImpulse(float velocity, float accseleration, MovingMode movingMode) {
         float potentialResult = GameWorldConfig.HERO_ACCELERATION * accseleration;
         float maxSpeed = GameWorldConfig.HERO_MAX_VELOCITY * Math.abs(accseleration);
-        if (isRunning) {
+        if (movingMode == MovingMode.RUNNING) {
             potentialResult *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
             maxSpeed *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
+        } else if (movingMode == MovingMode.JUMPING) {
+            potentialResult *= GameWorldConfig.HERO_JUMPING_ACCELERATION_SCALE;
+            maxSpeed *= GameWorldConfig.HERO_JUMPING_ACCELERATION_SCALE;
         }
         float maxEnabledImpulse = maxSpeed - velocity;
         float minEnabledImpulse = -maxSpeed - velocity;
@@ -39,6 +59,11 @@ public abstract class HeroController {
                 maxEnabledImpulse);
     }
 
+    /**
+     * Поворачивает персонажа учитывая, что он стоит в начале координат,
+     * а должен смотреть по направлению x, y.
+     * Рекомендуется передавать координаты в нормализованном виде.
+     */
     protected void rotate(float x, float y) {
         float angle = hero.getAngle();
         if (angle < 0) {
@@ -59,5 +84,11 @@ public abstract class HeroController {
             targetVel += MathUtils.PI2;
         }
         hero.setAngularVelocity(targetVel * GameWorldConfig.HERO_ROTATION_SPEED);
+    }
+
+    protected enum MovingMode {
+        NORMAL,
+        RUNNING,
+        JUMPING  // как рывок в сторону
     }
 }

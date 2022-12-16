@@ -9,10 +9,9 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.world.collision.GameContactListener;
+import com.gungame.world.controller.ControllersManager;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
-import com.gungame.world.controller.HeroController;
-import com.gungame.world.controller.HeroKeyboardHeroController;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectUtils;
@@ -23,7 +22,7 @@ import static com.gungame.world.GameWorldConfig.*;
 public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
-    private HeroController heroController;
+    private ControllersManager controllersManager;
     private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
     private World world;
@@ -47,7 +46,8 @@ public class GameWorld implements Disposable {
         var wallsSize = factoryManager.getWallFactory().getObjectMetadata().size();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        heroController = new HeroKeyboardHeroController(factoryManager.getHeroFactory().createImmediately(10, 10, 20), camera);
+        var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        controllersManager = new ControllersManager(hero, camera);
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
     }
@@ -68,7 +68,7 @@ public class GameWorld implements Disposable {
         if (timeAccumulator >= WORLD_STEP_TIME) {
             GameObjectUtils.getGameObjects(world).forEach(GameObject::update);
             factoryManager.executeUpdates();
-            heroController.control();
+            controllersManager.control();
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }

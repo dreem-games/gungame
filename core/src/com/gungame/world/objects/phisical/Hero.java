@@ -26,9 +26,8 @@ public class Hero extends DynamicVisibleGameObject {
         var position = getPosition();
         float angle = getAngle();
         float virtualAngle = angle - .3f;
-        float x = MathUtils.cos(virtualAngle) * xScale / 2, y = MathUtils.sin(virtualAngle) * yScale / 2;
-        // TODO: найти точку получше
-        bulletFactory.create(position.x + x, position.y + y, angle,
+        float x = MathUtils.cos(virtualAngle) * xScale / 1.7f, y = MathUtils.sin(virtualAngle) * yScale / 1.7f;
+        bulletFactory.create(position.x + x, position.y + y, angle * MathUtils.radiansToDegrees,
                 bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
         // TODO: applyForce
     }

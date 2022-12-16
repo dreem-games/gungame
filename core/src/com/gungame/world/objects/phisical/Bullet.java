@@ -1,5 +1,6 @@
 package com.gungame.world.objects.phisical;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -44,7 +45,9 @@ public class Bullet extends VisibleGameObject {
     public void postConstruct() {
         float angle = getAngle();
         float impulseX = MathUtils.cos(angle), impulseY = MathUtils.sin(angle);
-        applyImpulse(impulseX * 100, impulseY * 100);
+        applyImpulse(impulseX * 90, impulseY * 90);
+
+        sprite.setColor(Color.RED);
     }
 
     @Override
