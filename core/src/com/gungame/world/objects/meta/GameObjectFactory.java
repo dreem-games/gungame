@@ -25,7 +25,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
     public GameObjectFactory(World world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
         this.world = world;
-        this.texture = new Texture(metadata.texturePath());
+        this.texture = new Texture(metadata.getTexturePath());
         this.bodyLoader = bodyLoader;
         this.objectMetadata = metadata;
     }
@@ -55,32 +55,32 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
     public T createImmediately(float x, float y, float rotation) {
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = objectMetadata.type().getBodyType();
+        bodyDef.type = objectMetadata.getType().getBodyType();
         bodyDef.position.set(x, y);
-        bodyDef.linearDamping = 5;
-        bodyDef.angularDamping = 1;
+        bodyDef.linearDamping = objectMetadata.getLinearDamping();
+        bodyDef.angularDamping = objectMetadata.getAngularDamping();
         bodyDef.angle = rotation * MathUtils.degreesToRadians;
 
         var body = world.createBody(bodyDef);
         Sprite sprite = new Sprite(texture);
         T gameObject;
         try {
-            gameObject = (T) objectMetadata.type().createInstance(body, sprite);
+            gameObject = (T) objectMetadata.getType().createInstance(body, sprite);
         } catch (ClassCastException e) {
             throw new IllegalStateException("expected ");
         }
 
         // инициализируем body
         var fixtureDef = new FixtureDef();
-        fixtureDef.friction = 0.99f;
-        fixtureDef.density = 50f;
+        fixtureDef.friction = objectMetadata.getFriction();
+        fixtureDef.density = objectMetadata.getDensity();
         gameObject.setupCollisionFilter(fixtureDef.filter);
-        bodyLoader.attachFixture(body, objectMetadata.bodyName(), fixtureDef, objectMetadata.size(), texture, objectMetadata.massData());
+        bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef, objectMetadata.getSize(), texture, objectMetadata.getMassData());
         body.resetMassData();
         body.setUserData(gameObject);
 
         // инициализируем спрайт
-        sprite.setSize(objectMetadata.size().x, objectMetadata.size().y);
+        sprite.setSize(objectMetadata.getSize().x, objectMetadata.getSize().y);
         sprite.setPosition(x, y);
         var localCenter = body.getLocalCenter();
         sprite.setOrigin(localCenter.x, localCenter.y);

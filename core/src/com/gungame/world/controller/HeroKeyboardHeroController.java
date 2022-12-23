@@ -63,9 +63,7 @@ public class HeroKeyboardHeroController extends HeroController {
             used = true;
         }
 
-        if (used) {
-            rotate(mousePos.x, mousePos.y);
-        }
+        rotate(mousePos.x, mousePos.y);
 
         return used;
     }
