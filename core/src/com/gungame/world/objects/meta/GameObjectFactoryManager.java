@@ -2,30 +2,52 @@ package com.gungame.world.objects.meta;
 
 import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
+import com.gungame.world.objects.phisical.Box;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
-import com.gungame.world.objects.phisical.Box;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import static com.gungame.world.objects.meta.GameObjectUtils.createMassData;
 
 public class GameObjectFactoryManager implements Disposable {
     private static final Map<World, GameObjectFactoryManager> instances = Collections.synchronizedMap(new IdentityHashMap<>());
 
-    private static final GameObjectMetadata WALL_METADATA = new GameObjectMetadata(
-            GameObjectType.WALL, "texture/wall.png", "wall", new Vector2(4, 4), createMassData(10, .5f, .5f));
-    private static final GameObjectMetadata BOX_METADATA = new GameObjectMetadata(
-            GameObjectType.BOX, "texture/box.jpg", "box", new Vector2(4, 4), createMassData(10, .5f, .5f));
-    private static final GameObjectMetadata HERO_METADATA = new GameObjectMetadata(
-            GameObjectType.HERO, "texture/hero.png", "hero", new Vector2(5, 4), createMassData(100, .3f, .4f));
-    private static final GameObjectMetadata BULLET_METADATA = new GameObjectMetadata(
-            GameObjectType.BULLET, "texture/bullet.png", "bullet", new Vector2(.5f, .1f), GameObjectUtils.createMassData(.0f, .8f, .11f));
+    private static final GameObjectMetadata WALL_METADATA = new GameObjectMetadataBuilder()
+            .setType(GameObjectType.WALL)
+            .setBodyName("wall", "png")
+            .setSize(4, 4)
+            .setLinearDamping(0)
+            .setAngularDamping(10)
+            .createGameObjectMetadata();
+    private static final GameObjectMetadata BOX_METADATA = new GameObjectMetadataBuilder()
+            .setType(GameObjectType.BOX)
+            .setBodyName("box", "jpg")
+            .setSize(4, 4)
+            .setMassData(10, .5f, .5f)
+            .setLinearDamping(10)
+            .setAngularDamping(100)
+            .createGameObjectMetadata();
+    private static final GameObjectMetadata HERO_METADATA = new GameObjectMetadataBuilder()
+            .setType(GameObjectType.HERO)
+            .setBodyName("hero", "png")
+            .setSize(5, 4)
+            .setMassData(100, .3f, .4f)
+            .setLinearDamping(5)
+            .setAngularDamping(10)
+            .createGameObjectMetadata();
+    private static final GameObjectMetadata BULLET_METADATA = new GameObjectMetadataBuilder()
+            .setType(GameObjectType.BULLET)
+            .setBodyName("bullet", "png")
+            .setSize(.5f, .1f)
+            .setMassData(.0f, .8f, .11f)
+            .setLinearDamping(0)
+            .setAngularDamping(10)
+            .setFriction(0f)
+            .createGameObjectMetadata();
 
     private final GameObjectFactory<StaticGameObject> wallFactory;
     private final GameObjectFactory<Box> boxFactory;

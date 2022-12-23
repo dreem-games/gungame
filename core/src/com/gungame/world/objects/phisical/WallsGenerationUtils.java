@@ -15,7 +15,7 @@ public class WallsGenerationUtils {
     private static final Logger logger = LoggerFactory.getLogger(WallsGenerationUtils.class);
 
     public static void generateWalls(GameObjectFactory<StaticGameObject> wallsFactory, float x, float y, float width, float height) {
-        var wallSize = wallsFactory.getObjectMetadata().size();
+        var wallSize = wallsFactory.getObjectMetadata().getSize();
         float h = y;
         while (h <= height) {
             wallsFactory.createImmediately(x, h, 0);
@@ -32,7 +32,7 @@ public class WallsGenerationUtils {
     }
 
     public static void generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
-        Vector2 boxSize = boxFactory.getObjectMetadata().size();
+        Vector2 boxSize = boxFactory.getObjectMetadata().getSize();
         int totalFits = (int) Math.min((width - x) / boxSize.x, (height - y) / boxSize.y);
         int totalToGenerate = (int) (totalFits * filling);
 
@@ -63,7 +63,7 @@ public class WallsGenerationUtils {
                 toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle());
 
         var factoryManager = GameObjectFactoryManager.getInstance(toDestroy.getWorld());
-        var wallSize = factoryManager.getWallFactory().getObjectMetadata().size();
+        var wallSize = factoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallSize.x, wallH = wallSize.y;
         generateBox(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
     }

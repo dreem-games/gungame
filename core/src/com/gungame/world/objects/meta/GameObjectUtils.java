@@ -30,11 +30,4 @@ public class GameObjectUtils {
                 .map(it -> (VisibleGameObject) it)
                 .sorted(Comparator.comparing(VisibleGameObject::getDrawLevel));
     }
-
-    public static MassData createMassData(float mass, float originX, float originY) {
-        var res = new MassData();
-        res.mass = mass;
-        res.center.set(originX, originY);
-        return res;
-    }
 }

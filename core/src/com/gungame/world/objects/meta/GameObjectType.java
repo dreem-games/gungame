@@ -14,7 +14,7 @@ public enum GameObjectType {
     WALL(BodyDef.BodyType.StaticBody, StaticGameObject.class),
     BOX(BodyDef.BodyType.DynamicBody, Box.class),
     HERO(BodyDef.BodyType.DynamicBody, Hero.class),
-    BULLET(BodyDef.BodyType.KinematicBody, Bullet.class);
+    BULLET(BodyDef.BodyType.DynamicBody, Bullet.class);
 
     private final BodyDef.BodyType bodyType;
     private final GameObjectCreator instanceCreator;

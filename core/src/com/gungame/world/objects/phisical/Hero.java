@@ -45,7 +45,7 @@ public class Hero extends DynamicVisibleGameObject {
         var defaultMassData = GameObjectFactoryManager.getInstance(getWorld())
                 .getHeroFactory()
                 .getObjectMetadata()
-                .massData();
+                .getMassData();
         var massCenter = body.getMassData().center;
         xScale = massCenter.x / defaultMassData.center.x;
         yScale = massCenter.y / defaultMassData.center.y;
