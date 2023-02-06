@@ -64,7 +64,7 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
         // https://mvnrepository.com/artifact/org.projectlombok/lombok
-        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
 
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 
