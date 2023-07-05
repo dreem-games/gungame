@@ -13,7 +13,7 @@ import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
 
 public class Bullet extends VisibleGameObject {
 
-    private short groupIndex = -1;
+    private short groupIndex = 0;
 
     public Bullet(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);

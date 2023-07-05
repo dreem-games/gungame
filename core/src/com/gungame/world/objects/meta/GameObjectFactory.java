@@ -53,7 +53,14 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         updates.add(() -> initializer.accept(createImmediately(x, y, rotation)));
     }
 
-    public T createImmediately(float x, float y, float rotation) {
+    public void create(float x, float y, float rotation,
+                       CustomObjectInitializationConfig customObjectInitializationConfig,
+                       Consumer<T> initializer) {
+        updates.add(() -> initializer.accept(createImmediately(x, y, rotation, customObjectInitializationConfig)));
+    }
+
+    public T createImmediately(float x, float y, float rotation,
+                               CustomObjectInitializationConfig customObjectInitializationConfig) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = objectMetadata.getType().getBodyType();
         bodyDef.position.set(x, y);
@@ -75,7 +82,11 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         fixtureDef.friction = objectMetadata.getFriction();
         fixtureDef.density = objectMetadata.getDensity();
         gameObject.setupCollisionFilter(fixtureDef.filter);
-        bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef, objectMetadata.getSize(), texture, objectMetadata.getMassData());
+        if (customObjectInitializationConfig != null) {
+            customObjectInitializationConfig.postprocessCollisionFilter(fixtureDef.filter);
+        }
+        bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef,
+                objectMetadata.getSize(), texture, objectMetadata.getMassData());
         body.resetMassData();
         body.setUserData(gameObject);
 
@@ -88,5 +99,9 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
         gameObject.postConstruct();
         return gameObject;
+    }
+
+    public T createImmediately(float x, float y, float rotation) {
+        return createImmediately(x, y, rotation, null);
     }
 }

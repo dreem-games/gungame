@@ -72,7 +72,7 @@ public class GameWorld implements Disposable {
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }
-        groundContainer.draw(batch);
+        groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(world).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(world, camera.combined);

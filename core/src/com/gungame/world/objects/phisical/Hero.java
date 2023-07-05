@@ -6,7 +6,9 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.utils.Array;
 import com.gungame.world.collision.CollisionCategory;
+import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -26,10 +28,41 @@ public class Hero extends DynamicVisibleGameObject {
         var position = getPosition();
         float angle = getAngle();
         float virtualAngle = angle - .3f;
-        float x = MathUtils.cos(virtualAngle) * xScale / 1.7f, y = MathUtils.sin(virtualAngle) * yScale / 1.7f;
-        bulletFactory.create(position.x + x, position.y + y, angle * MathUtils.radiansToDegrees,
+        float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
+        float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
+
+        var hidesBox = hidesBox(x, y);
+        CustomObjectInitializationConfig customInitConfig = null;
+        if (hidesBox != null) {
+            customInitConfig = new CustomObjectInitializationConfig();
+            customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+        }
+
+        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                 bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
-        // TODO: applyForce
+    }
+
+    private Box hidesBox(float x, float y) {
+        var arr = new Array<Body>();
+        getWorld().getBodies(arr);
+
+        Box nearestBox = null;
+        float nearestDistance = Float.MAX_VALUE;
+        final float minDistance = Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
+        // поворот не учитывается, так что пока для небольшого количества объектов норм
+
+        for (var body : arr) {
+            var userData = body.getUserData();
+            if (userData instanceof Box box) {
+                var distance = box.getPosition().dst(x, y);
+                if (distance < minDistance && distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestBox = box;
+                }
+            }
+        }
+
+        return nearestBox;
     }
 
     @Override
