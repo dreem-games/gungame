@@ -66,6 +66,9 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
+        // https://mvnrepository.com/artifact/org.projectlombok/lombok
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
+
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 
         // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
