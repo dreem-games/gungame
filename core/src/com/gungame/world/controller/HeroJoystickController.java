@@ -27,8 +27,8 @@ public class HeroJoystickController extends HeroController {
         boolean used = false;
         var mapping = controller.getMapping();
 
-        var rightVec = new Vector2(normilized(controller.getAxis(mapping.axisRightX)),
-                -normilized(controller.getAxis(mapping.axisRightY)));
+        var rightVec = new Vector2(normalized(controller.getAxis(mapping.axisRightX)),
+                -normalized(controller.getAxis(mapping.axisRightY)));
         float length = rightVec.x * rightVec.x + rightVec.y * rightVec.y;
         if (length < .1f) {
             rightVec = lastRightVec;
@@ -44,7 +44,7 @@ public class HeroJoystickController extends HeroController {
             movingMode = MovingMode.RUNNING;
         }
 
-        used |= move(normilized(controller.getAxis(mapping.axisLeftX)), -normilized(controller.getAxis(mapping.axisLeftY)), movingMode);
+        used |= move(normalized(controller.getAxis(mapping.axisLeftX)), -normalized(controller.getAxis(mapping.axisLeftY)), movingMode);
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
         if (r1Pressed && !r1WasPressed) {
@@ -60,7 +60,7 @@ public class HeroJoystickController extends HeroController {
         return used;
     }
 
-    private float normilized(float joystikValue) {
-        return joystikValue - joystikValue % 0.1f;
+    private float normalized(float joystickValue) {
+        return joystickValue - joystickValue % 0.1f;
     }
 }

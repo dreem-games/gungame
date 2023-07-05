@@ -21,6 +21,10 @@ public abstract class GameObject {
 
     public abstract void activate();
 
+    /**
+     * Конфигурирует фильтр коллизий для данного объекта.
+     * Работает только на этапе создания объекта.
+     */
     public void setupCollisionFilter(Filter filter) {
         filter.groupIndex = 0;
         filter.categoryBits = CollisionCategory.ALL.getBitMask();

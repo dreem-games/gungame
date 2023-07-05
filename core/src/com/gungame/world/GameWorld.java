@@ -43,7 +43,7 @@ public class GameWorld implements Disposable {
         groundContainer = new GroundContainer();
 
         WallsGenerationUtils.generateWalls(factoryManager.getWallFactory(), 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
-        var wallsSize = factoryManager.getWallFactory().getObjectMetadata().size();
+        var wallsSize = factoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
         var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
@@ -72,7 +72,7 @@ public class GameWorld implements Disposable {
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }
-        groundContainer.draw(batch);
+        groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(world).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(world, camera.combined);

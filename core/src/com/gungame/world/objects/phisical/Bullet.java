@@ -9,6 +9,8 @@ import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
 
+import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
+
 public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
@@ -45,9 +47,10 @@ public class Bullet extends VisibleGameObject {
     public void postConstruct() {
         float angle = getAngle();
         float impulseX = MathUtils.cos(angle), impulseY = MathUtils.sin(angle);
-        applyImpulse(impulseX * 90, impulseY * 90);
+        applyImpulse(impulseX * BULLET_SPEED, impulseY * BULLET_SPEED);
 
         sprite.setColor(Color.RED);
+        body.setBullet(true);
     }
 
     @Override

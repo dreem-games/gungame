@@ -3,11 +3,13 @@ buildscript {
         mavenLocal()
         mavenCentral()
         gradlePluginPortal()
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         google()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+        classpath "io.freefair.gradle:lombok-plugin:6.6.1"
 //        classpath 'org.gretty:gretty:3.0.7'
     }
 }
@@ -23,7 +25,7 @@ allprojects {
         box2DLightsVersion = '1.5'
         ashleyVersion = '1.7.4'
         aiVersion = '1.8.2'
-        gdxControllersVersion = '2.2.1'
+        gdxControllersVersion = '2.2.2'
     }
 
     repositories {
@@ -56,6 +58,7 @@ project(":desktop") {
 
 project(":core") {
     apply plugin: "java-library"
+    apply plugin: "io.freefair.lombok"
 
 
     dependencies {
@@ -64,7 +67,7 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
         // https://mvnrepository.com/artifact/org.projectlombok/lombok
-        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
 
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 
