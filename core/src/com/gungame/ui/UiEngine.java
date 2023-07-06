@@ -3,17 +3,19 @@ package com.gungame.ui;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.world.GameWorld;
+import com.gungame.world.objects.phisical.Hero;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class UiEngine implements Disposable {
-
+    private final Hero mainHero;
     private final List<Ui> uis;
 
-    public UiEngine() {
-        uis = new ArrayList<>();
+    public UiEngine(Hero mainHero) {
+        this.uis = new ArrayList<>();
+        this.mainHero = mainHero;
+        initUis();
     }
 
     @Override
@@ -21,7 +23,11 @@ public class UiEngine implements Disposable {
         uis.forEach(Ui::dispose);
     }
 
-    public void draw(SpriteBatch batch, Camera camera, GameWorld gameWorld) {
-        uis.forEach(it -> it.draw(batch, camera, gameWorld));
+    public void draw(SpriteBatch batch, Camera camera) {
+        uis.forEach(it -> it.draw(batch, camera, mainHero));
+    }
+
+    public void initUis() {
+        uis.add(new HeroStaminaBar());
     }
 }

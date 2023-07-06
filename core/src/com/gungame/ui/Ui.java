@@ -3,9 +3,9 @@ package com.gungame.ui;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.world.GameWorld;
+import com.gungame.world.objects.phisical.Hero;
 
-public interface Ui extends Disposable {
+interface Ui extends Disposable {
 
-    void draw(SpriteBatch batch, Camera camera, GameWorld gameWorld);
+    void draw(SpriteBatch batch, Camera camera, Hero hero);
 }

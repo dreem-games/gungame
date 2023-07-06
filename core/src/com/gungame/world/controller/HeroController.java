@@ -5,15 +5,21 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.objects.phisical.Hero;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 public abstract class HeroController {
-
     protected final Hero hero;
     protected final Camera camera;
+
+    private @NonNull MovingMode movingMode;
+    private long lastMovingModeChange;
 
     public HeroController(Hero hero, Camera camera) {
         this.hero = hero;
         this.camera = camera;
+        this.movingMode = MovingMode.NORMAL;
     }
 
     /**
@@ -22,41 +28,50 @@ public abstract class HeroController {
      */
     public abstract boolean control();
 
+    protected void tryChangeMovingMode(MovingMode newMovingMode) {
+        if (movingMode == newMovingMode || System.nanoTime() - lastMovingModeChange < newMovingMode.minDuration) {
+            return;
+        }
+        if (hero.tryUseStamina(newMovingMode.staminaCost * newMovingMode.maxDuration / 1_000)) {
+            movingMode = newMovingMode;
+            lastMovingModeChange = System.nanoTime();
+        }
+    }
+
     /**
      * Применяет к персонажу силу для его передвижения.
      *
      * @param x направление (часть вектора)
      * @param y направление (часть вектора)
-     * @param movingMode режим передвижения
      * @return true если сила применена
      */
-    protected boolean move(float x, float y, MovingMode movingMode) {
+    protected boolean move(float x, float y) {
         if (x * x + y * y < .1f) {
-            return false;
+            return false;  // может быть небольшая погрешность
         }
 
-        var vel = hero.getVelocity();
-        float impulseX = getImpulse(vel.x, x, movingMode);
-        float impulseY = getImpulse(vel.y, y, movingMode);
+        long time = System.nanoTime();
+        long delta = time - lastMovingModeChange;
+        if (movingMode.maxDuration > 0 && delta > movingMode.maxDuration * 1000) {
+            movingMode = MovingMode.NORMAL;
+        } else if (delta > movingMode.minDuration * 1000 && !hero.tryUseStamina(movingMode.staminaCost * delta / 1_000_000)) {
+            movingMode = MovingMode.NORMAL;
+        }
+
+        float impulseX = getImpulse(x, movingMode);
+        float impulseY = getImpulse(y, movingMode);
         hero.applyImpulse(impulseX, impulseY);
         return true;
     }
 
-    private float getImpulse(float velocity, float accseleration, MovingMode movingMode) {
-        float potentialResult = GameWorldConfig.HERO_ACCELERATION * accseleration;
-        float maxSpeed = GameWorldConfig.HERO_MAX_VELOCITY * Math.abs(accseleration);
+    private float getImpulse(float acceleration, MovingMode movingMode) {
+        float potentialResult = GameWorldConfig.HERO_ACCELERATION * acceleration;
         if (movingMode == MovingMode.RUNNING) {
             potentialResult *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
-            maxSpeed *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
         } else if (movingMode == MovingMode.JUMPING) {
             potentialResult *= GameWorldConfig.HERO_JUMPING_ACCELERATION_SCALE;
-            maxSpeed *= GameWorldConfig.HERO_JUMPING_ACCELERATION_SCALE;
         }
-        float maxEnabledImpulse = maxSpeed - velocity;
-        float minEnabledImpulse = -maxSpeed - velocity;
-        return Math.min(
-                Math.max(potentialResult, minEnabledImpulse),
-                maxEnabledImpulse);
+        return potentialResult;
     }
 
     /**
@@ -86,9 +101,15 @@ public abstract class HeroController {
         hero.setAngularVelocity(targetVel * GameWorldConfig.HERO_ROTATION_SPEED);
     }
 
+    @Getter
+    @RequiredArgsConstructor
     protected enum MovingMode {
-        NORMAL,
-        RUNNING,
-        JUMPING  // как рывок в сторону
+        NORMAL (0, 0, 0),
+        RUNNING(0, 1000, 1),
+        JUMPING(100, 100, 900);  // как рывок в сторону
+
+        private final long minDuration;
+        private final long maxDuration;
+        private final float staminaCost;  // стоимость в секундах
     }
 }

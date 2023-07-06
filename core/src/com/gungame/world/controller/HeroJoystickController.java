@@ -43,8 +43,10 @@ public class HeroJoystickController extends HeroController {
         } else if (controller.getButton(mapping.buttonA)) {
             movingMode = MovingMode.RUNNING;
         }
+        tryChangeMovingMode(movingMode);
 
-        used |= move(normalized(controller.getAxis(mapping.axisLeftX)), -normalized(controller.getAxis(mapping.axisLeftY)), movingMode);
+        used |= move(normalized(controller.getAxis(mapping.axisLeftX)),
+                -normalized(controller.getAxis(mapping.axisLeftY)));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
         if (r1Pressed && !r1WasPressed) {

@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.world.controller.ControllersManager;
 import com.gungame.world.objects.imaginary.GroundContainer;
@@ -23,6 +24,7 @@ public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
     private ControllersManager controllersManager;
+    private UiEngine uiEngine;
     private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
     private World world;
@@ -48,12 +50,15 @@ public class GameWorld implements Disposable {
 
         var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
         controllersManager = new ControllersManager(hero, camera);
+        uiEngine = new UiEngine(hero);
+
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
     }
 
     @Override
     public void dispose() {
+        uiEngine.dispose();
         factoryManager.dispose();
         groundContainer.dispose();
         world.dispose();
@@ -77,5 +82,7 @@ public class GameWorld implements Disposable {
         if (debugRenderer != null) {
             debugRenderer.render(world, camera.combined);
         }
+
+        uiEngine.draw(batch, camera);
     }
 }

@@ -40,6 +40,7 @@ public class HeroKeyboardHeroController extends HeroController {
         } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             movingMode = MovingMode.RUNNING;
         }
+        tryChangeMovingMode(movingMode);
 
         Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         if (lastMouseX != mousePos.x || lastMouseY != mousePos.y) {
@@ -56,7 +57,7 @@ public class HeroKeyboardHeroController extends HeroController {
         mousePos = mousePos.nor();
         impulse = impulse.nor();
 
-        used |= move(impulse.x, impulse.y, movingMode);
+        used |= move(impulse.x, impulse.y);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             hero.fire();

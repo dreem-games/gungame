@@ -12,12 +12,17 @@ import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectType;
+import lombok.Getter;
 
 public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
+    private static final float MAX_STAMINA = 100f;
 
     private float xScale;
     private float yScale;
+    private @Getter float stamina = MAX_STAMINA;
+    private long lastStaminaUpdate = System.nanoTime();
+    private boolean staminaRegenBlocked = false;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -66,6 +71,35 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     @Override
+    public void applyImpulse(float x, float y) {
+        super.applyImpulse(x, y);
+
+        // по хардкору либо передвигаемся, либо регенерируем стамину
+        staminaRegenBlocked = true;
+    }
+
+    public boolean tryUseStamina(float stamina) {
+        if (this.stamina >= stamina) {
+            this.stamina -= stamina;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        long now = System.nanoTime();
+        if (!staminaRegenBlocked && stamina < MAX_STAMINA) {
+            long delta = now - lastStaminaUpdate;
+            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f);
+        }
+        lastStaminaUpdate = now;
+        staminaRegenBlocked = false;
+    }
+
+    @Override
     public void setupCollisionFilter(Filter filter) {
         filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
         filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
@@ -99,5 +133,9 @@ public class Hero extends DynamicVisibleGameObject {
     @Override
     public int getDrawLevel() {
         return 1;
+    }
+
+    public float getMaxStamina() {
+        return MAX_STAMINA;
     }
 }
