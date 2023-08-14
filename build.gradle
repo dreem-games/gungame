@@ -78,6 +78,6 @@ project(":core") {
         implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.5'
 
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
-        implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.5'
+        implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.11'
     }
 }
