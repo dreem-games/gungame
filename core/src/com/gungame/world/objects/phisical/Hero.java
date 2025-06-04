@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
@@ -93,7 +94,7 @@ public class Hero extends DynamicVisibleGameObject {
         long now = System.nanoTime();
         if (!staminaRegenBlocked && stamina < MAX_STAMINA) {
             long delta = now - lastStaminaUpdate;
-            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f);
+            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f * GameWorldConfig.HERO_STAMINA_REGEN_SPEED);
         }
         lastStaminaUpdate = now;
         staminaRegenBlocked = false;
