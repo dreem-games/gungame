@@ -23,6 +23,8 @@ public class Hero extends DynamicVisibleGameObject {
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUpdate = System.nanoTime();
     private boolean staminaRegenBlocked = false;
+    private long reloadingTimer = 0;
+    private int reloadingTime = 1;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -36,15 +38,18 @@ public class Hero extends DynamicVisibleGameObject {
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
 
-        var hidesBox = hidesBox(x, y);
-        CustomObjectInitializationConfig customInitConfig = null;
-        if (hidesBox != null) {
-            customInitConfig = new CustomObjectInitializationConfig();
-            customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
-        }
+        if (System.nanoTime() - reloadingTimer > reloadingTime * 1000000000) {
+            var hidesBox = hidesBox(x, y);
+            CustomObjectInitializationConfig customInitConfig = null;
+            if (hidesBox != null) {
+                customInitConfig = new CustomObjectInitializationConfig();
+                customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+            }
 
-        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
-                bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+            bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+                    bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+            reloadingTimer = System.nanoTime();
+        }
     }
 
     private Box hidesBox(float x, float y) {
