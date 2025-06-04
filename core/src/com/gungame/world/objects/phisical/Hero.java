@@ -38,8 +38,9 @@ public class Hero extends DynamicVisibleGameObject {
 
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
+        long nanoTime = System.nanoTime();
 
-        if (System.nanoTime() - reloadingTimer > RELOADING_TIME * 1000000000) {
+        if (nanoTime - reloadingTimer > RELOADING_TIME * 1000000000) {
             var hidesBox = hidesBox(x, y);
             CustomObjectInitializationConfig customInitConfig = null;
             if (hidesBox != null) {
@@ -49,7 +50,7 @@ public class Hero extends DynamicVisibleGameObject {
 
             bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
-            reloadingTimer = System.nanoTime();
+            reloadingTimer = nanoTime;
         }
     }
 
