@@ -41,16 +41,12 @@ public class Hero extends DynamicVisibleGameObject {
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
 
-
-
-
         var hidesBox = hidesBox(x, y);
         CustomObjectInitializationConfig customInitConfig = null;
         if (hidesBox != null) {
             customInitConfig = new CustomObjectInitializationConfig();
             customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
         }
-
 
         bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                 bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
