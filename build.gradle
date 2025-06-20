@@ -10,7 +10,6 @@ buildscript {
     dependencies {
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
         classpath "io.freefair.gradle:lombok-plugin:6.6.1"
-//        classpath 'org.gretty:gretty:3.0.7'
     }
 }
 
@@ -20,12 +19,8 @@ allprojects {
     version = '0.1-dev'
     ext {
         appName = "gungame"
-        gdxVersion = '1.11.0'
-        roboVMVersion = '2.3.16'
-        box2DLightsVersion = '1.5'
-        ashleyVersion = '1.7.4'
-        aiVersion = '1.8.2'
-        gdxControllersVersion = '2.2.2'
+        gdxVersion = '1.12.1'
+        gdxControllersVersion = '2.2.3'
     }
 
     repositories {
@@ -67,7 +62,7 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
         // https://mvnrepository.com/artifact/org.projectlombok/lombok
-        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.38'
 
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 

@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
@@ -20,13 +21,15 @@ public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float MAX_STAMINA = 100f;
     private static final float BULLET_SPREAD = 0.03f;
+    private static final int RELOADING_TIME = 1000;
     private static final Random random = new Random();
-
+  
     private float xScale;
     private float yScale;
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUpdate = System.nanoTime();
     private boolean staminaRegenBlocked = false;
+    private long reloadingTimer = 0;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -38,18 +41,23 @@ public class Hero extends DynamicVisibleGameObject {
         float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
         float angle = getAngle() + bulletDeviation;
         float virtualAngle = angle - .3f;
+
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
+        long nanoTime = System.currentTimeMillis();
 
-        var hidesBox = hidesBox(x, y);
-        CustomObjectInitializationConfig customInitConfig = null;
-        if (hidesBox != null) {
-            customInitConfig = new CustomObjectInitializationConfig();
-            customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+        if (nanoTime - reloadingTimer > RELOADING_TIME) {
+            var hidesBox = hidesBox(x, y);
+            CustomObjectInitializationConfig customInitConfig = null;
+            if (hidesBox != null) {
+                customInitConfig = new CustomObjectInitializationConfig();
+                customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+            }
+
+            bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+                    bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+            reloadingTimer = nanoTime;
         }
-
-        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
-                bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
     }
 
     private Box hidesBox(float x, float y) {
@@ -98,7 +106,7 @@ public class Hero extends DynamicVisibleGameObject {
         long now = System.nanoTime();
         if (!staminaRegenBlocked && stamina < MAX_STAMINA) {
             long delta = now - lastStaminaUpdate;
-            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f);
+            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f * GameWorldConfig.HERO_STAMINA_REGEN_SPEED);
         }
         lastStaminaUpdate = now;
         staminaRegenBlocked = false;
