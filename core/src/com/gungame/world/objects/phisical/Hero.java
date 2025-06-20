@@ -15,11 +15,15 @@ import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectType;
 import lombok.Getter;
 
+import java.util.Random;
+
 public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float MAX_STAMINA = 100f;
+    private static final float BULLET_SPREAD = 0.03f;
     private static final int RELOADING_TIME = 1000;
-
+    private static final Random random = new Random();
+  
     private float xScale;
     private float yScale;
     private @Getter float stamina = MAX_STAMINA;
@@ -34,7 +38,8 @@ public class Hero extends DynamicVisibleGameObject {
     public void fire() {
         var bulletFactory = GameObjectFactoryManager.getInstance(getWorld()).getBulletFactory();
         var position = getPosition();
-        float angle = getAngle();
+        float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
+        float angle = getAngle() + bulletDeviation;
         float virtualAngle = angle - .3f;
 
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
