@@ -66,6 +66,10 @@ public class HeroKeyboardHeroController extends HeroController {
 
         rotate(mousePos.x, mousePos.y);
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            Gdx.app.exit();
+        }
+
         return used;
     }
 }
