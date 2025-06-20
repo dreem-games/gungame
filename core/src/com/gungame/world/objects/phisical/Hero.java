@@ -18,7 +18,7 @@ import lombok.Getter;
 public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float MAX_STAMINA = 100f;
-    private static int RELOADING_TIME = 1;
+    private static final int RELOADING_TIME = 1000;
 
     private float xScale;
     private float yScale;
@@ -39,9 +39,9 @@ public class Hero extends DynamicVisibleGameObject {
 
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
-        long nanoTime = System.nanoTime();
+        long nanoTime = System.currentTimeMillis();
 
-        if (nanoTime - reloadingTimer > RELOADING_TIME * 1000000000) {
+        if (nanoTime - reloadingTimer > RELOADING_TIME) {
             var hidesBox = hidesBox(x, y);
             CustomObjectInitializationConfig customInitConfig = null;
             if (hidesBox != null) {
