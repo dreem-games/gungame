@@ -1,5 +1,7 @@
 package com.gungame.world.objects.phisical;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -22,6 +24,7 @@ public class Hero extends DynamicVisibleGameObject {
     private static final float MAX_STAMINA = 100f;
     private static final float BULLET_SPREAD = 0.03f;
     private static final int RELOADING_TIME = 1000;
+    private static final Sound shotSound = Gdx.audio.newSound(Gdx.files.internal("sound/shot.wav"));
     private static final Random random = new Random();
   
     private float xScale;
@@ -56,6 +59,7 @@ public class Hero extends DynamicVisibleGameObject {
 
             bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+            shotSound.play();
             reloadingTimer = nanoTime;
         }
     }
@@ -79,6 +83,7 @@ public class Hero extends DynamicVisibleGameObject {
                 }
             }
         }
+        shotSound.play();
 
         return nearestBox;
     }
