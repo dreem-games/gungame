@@ -18,12 +18,14 @@ import lombok.Getter;
 public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float MAX_STAMINA = 100f;
+    private static final int RELOADING_TIME = 1000;
 
     private float xScale;
     private float yScale;
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUpdate = System.nanoTime();
     private boolean staminaRegenBlocked = false;
+    private long reloadingTimer = 0;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -34,18 +36,23 @@ public class Hero extends DynamicVisibleGameObject {
         var position = getPosition();
         float angle = getAngle();
         float virtualAngle = angle - .3f;
+
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
+        long nanoTime = System.currentTimeMillis();
 
-        var hidesBox = hidesBox(x, y);
-        CustomObjectInitializationConfig customInitConfig = null;
-        if (hidesBox != null) {
-            customInitConfig = new CustomObjectInitializationConfig();
-            customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+        if (nanoTime - reloadingTimer > RELOADING_TIME) {
+            var hidesBox = hidesBox(x, y);
+            CustomObjectInitializationConfig customInitConfig = null;
+            if (hidesBox != null) {
+                customInitConfig = new CustomObjectInitializationConfig();
+                customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+            }
+
+            bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+                    bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+            reloadingTimer = nanoTime;
         }
-
-        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
-                bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
     }
 
     private Box hidesBox(float x, float y) {
