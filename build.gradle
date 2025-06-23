@@ -20,7 +20,7 @@ allprojects {
     ext {
         appName = "gungame"
         gdxVersion = '1.12.1'
-        gdxControllersVersion = '2.2.3'
+        gdxControllersVersion = '2.2.4'
     }
 
     repositories {
