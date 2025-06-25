@@ -1,5 +1,7 @@
 package com.gungame.world.objects.phisical;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -21,8 +23,12 @@ public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float MAX_STAMINA = 100f;
     private static final float BULLET_SPREAD = 0.03f;
-    private static final int RELOADING_TIME = 1000;
+    private static final int RELOADING_TIME = 3000;
+    private static final int RATE_OF_FIRE = 500;
+    private static final int MAGAZINE_SIZE = 9;
     private static final Random random = new Random();
+    private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
+    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
   
     private float xScale;
     private float yScale;
@@ -30,6 +36,9 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastStaminaUpdate = System.nanoTime();
     private boolean staminaRegenBlocked = false;
     private long reloadingTimer = 0;
+    private boolean reloading = false;
+    private @Getter int magazine = MAGAZINE_SIZE;
+    private @Getter int ammo = 24;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -41,23 +50,46 @@ public class Hero extends DynamicVisibleGameObject {
         float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
         float angle = getAngle() + bulletDeviation;
         float virtualAngle = angle - .3f;
-
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
         long nanoTime = System.currentTimeMillis();
 
-        if (nanoTime - reloadingTimer > RELOADING_TIME) {
+        if (nanoTime - reloadingTimer > RATE_OF_FIRE && magazine > 0 && !reloading) {
             var hidesBox = hidesBox(x, y);
             CustomObjectInitializationConfig customInitConfig = null;
             if (hidesBox != null) {
                 customInitConfig = new CustomObjectInitializationConfig();
                 customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
             }
-
             bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
             reloadingTimer = nanoTime;
+            magazine--;
+            shootSound.play();
+            System.out.println(ammo);
+        } else if (magazine == 0) {
+            reloadStart();
         }
+    }
+
+    public void reloadStart() {
+        if (magazine < MAGAZINE_SIZE && ammo > 0 && !reloading) {
+            reloading = true;
+            reloadingSound.play();
+            reloadingTimer = System.currentTimeMillis();
+        }
+
+    }
+
+    public void reloadEnd() {
+        if (ammo >= MAGAZINE_SIZE - magazine) {
+            ammo = ammo - (MAGAZINE_SIZE - magazine);
+            magazine = MAGAZINE_SIZE;
+        } else {
+            magazine += ammo;
+            ammo = 0;
+        }
+        reloading = false;
     }
 
     private Box hidesBox(float x, float y) {
@@ -107,6 +139,9 @@ public class Hero extends DynamicVisibleGameObject {
         if (!staminaRegenBlocked && stamina < MAX_STAMINA) {
             long delta = now - lastStaminaUpdate;
             stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f * GameWorldConfig.HERO_STAMINA_REGEN_SPEED);
+        }
+        if (reloading && System.currentTimeMillis() - reloadingTimer > RELOADING_TIME) {
+            reloadEnd();
         }
         lastStaminaUpdate = now;
         staminaRegenBlocked = false;
