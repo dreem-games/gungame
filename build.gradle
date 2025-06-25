@@ -13,14 +13,19 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.github.johnrengelman.shadow" version "8.1.1" apply false
+    id "io.freefair.lombok"          version "8.14" apply false
+}
+
 allprojects {
     apply plugin: "eclipse"
 
     version = '0.1-dev'
     ext {
         appName = "gungame"
-        gdxVersion = '1.12.1'
-        gdxControllersVersion = '2.2.3'
+        gdxVersion = '1.13.5'
+        gdxControllersVersion = '2.2.4'
     }
 
     repositories {
@@ -39,6 +44,12 @@ project(":desktop") {
     apply plugin: "java-library"
     apply plugin: 'com.github.johnrengelman.shadow'
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
     dependencies {
         implementation project(":core")
         api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
@@ -55,6 +66,11 @@ project(":core") {
     apply plugin: "java-library"
     apply plugin: "io.freefair.lombok"
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -66,6 +82,7 @@ project(":core") {
 
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 
+        // TODO: логгирование бы дефолтное от игрового движка использовать, а это вырезать...
         // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
         implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
 
