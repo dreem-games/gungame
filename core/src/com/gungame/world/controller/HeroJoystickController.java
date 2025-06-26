@@ -55,6 +55,12 @@ public class HeroJoystickController extends HeroController {
         }
         r1WasPressed = r1Pressed;
 
+        if (controller.getButton(mapping.buttonX)) {
+            hero.reloadStart();
+        }
+
+
+
         if (used) {
             rotate(rightVec.x, rightVec.y);
         }
