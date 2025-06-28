@@ -6,7 +6,9 @@ import com.badlogic.gdx.physics.box2d.Filter;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import lombok.Getter;
 
+@Getter
 public class Box extends DynamicVisibleGameObject {
     private static short minGroupIndex = 0;  // заготовочка для пуль
 
@@ -17,14 +19,14 @@ public class Box extends DynamicVisibleGameObject {
         groupIndex = --minGroupIndex;
     }
 
-    public short getGroupIndex() {
-        return groupIndex;
-    }
-
     @Override
     public void setupCollisionFilter(Filter filter) {
         filter.groupIndex = groupIndex;
         filter.categoryBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
         filter.maskBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
+    }
+
+    @Override
+    public void dispose() {
     }
 }
