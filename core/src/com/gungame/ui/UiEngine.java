@@ -29,5 +29,6 @@ public class UiEngine implements Disposable {
 
     public void initUis() {
         uis.add(new HeroStaminaBar());
+        uis.add(new Ammo());
     }
 }

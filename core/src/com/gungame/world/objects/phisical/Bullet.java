@@ -57,4 +57,8 @@ public class Bullet extends VisibleGameObject {
     public int getDrawLevel() {
         return 2;
     }
+
+    @Override
+    public void dispose() {
+    }
 }

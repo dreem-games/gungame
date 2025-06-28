@@ -22,4 +22,8 @@ public class StaticGameObject extends VisibleGameObject {
     public void activate() {
         throw new IllegalStateException("Static object activated!");
     }
+
+    @Override
+    public void dispose() {
+    }
 }

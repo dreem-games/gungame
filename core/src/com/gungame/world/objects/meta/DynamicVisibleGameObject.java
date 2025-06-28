@@ -3,8 +3,7 @@ package com.gungame.world.objects.meta;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 
-public class DynamicVisibleGameObject extends VisibleGameObject {
-
+public abstract class DynamicVisibleGameObject extends VisibleGameObject {
     private boolean isActive;  // становится true при первом взаимодействии, например, передвижении
 
     public DynamicVisibleGameObject(GameObjectType type, Body body, Sprite sprite) {

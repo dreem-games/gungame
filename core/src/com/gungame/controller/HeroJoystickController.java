@@ -1,10 +1,11 @@
-package com.gungame.world.controller;
+package com.gungame.controller;
 
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
 import com.gungame.world.objects.phisical.Hero;
+import com.gungame.world.objects.phisical.MovingMode;
 
 public class HeroJoystickController extends HeroController {
 
@@ -42,10 +43,12 @@ public class HeroJoystickController extends HeroController {
             movingMode = MovingMode.JUMPING;
         } else if (controller.getButton(mapping.buttonA)) {
             movingMode = MovingMode.RUNNING;
+        } else if (!used) {
+            movingMode = MovingMode.STANDING;
         }
-        tryChangeMovingMode(movingMode);
+        hero.tryChangeMovingMode(movingMode);
 
-        used |= move(normalized(controller.getAxis(mapping.axisLeftX)),
+        used |= hero.move(normalized(controller.getAxis(mapping.axisLeftX)),
                 -normalized(controller.getAxis(mapping.axisLeftY)));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
@@ -54,6 +57,10 @@ public class HeroJoystickController extends HeroController {
             used = true;
         }
         r1WasPressed = r1Pressed;
+
+        if (controller.getButton(mapping.buttonX)) {
+            hero.reloadStart();
+        }
 
         if (used) {
             rotate(rightVec.x, rightVec.y);

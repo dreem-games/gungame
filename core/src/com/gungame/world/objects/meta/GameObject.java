@@ -4,10 +4,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.collision.CollisionCategory;
 
-public abstract class GameObject {
-
+public abstract class GameObject implements Disposable {
     protected final GameObjectType type;
     protected final Body body;
     private boolean toDestroy = false;

@@ -1,4 +1,4 @@
-package com.gungame.world.controller;
+package com.gungame.controller;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.gungame.world.objects.phisical.Hero;

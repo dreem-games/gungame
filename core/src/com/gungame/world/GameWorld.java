@@ -10,7 +10,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
-import com.gungame.world.controller.ControllersManager;
+import com.gungame.controller.ControllersManager;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
@@ -61,6 +61,7 @@ public class GameWorld implements Disposable {
         uiEngine.dispose();
         factoryManager.dispose();
         groundContainer.dispose();
+        GameObjectUtils.getGameObjectsStream(world).forEach(GameObject::dispose);
         world.dispose();
     }
 
@@ -71,7 +72,7 @@ public class GameWorld implements Disposable {
 
         timeAccumulator += frameTime;
         if (timeAccumulator >= WORLD_STEP_TIME) {
-            GameObjectUtils.getGameObjects(world).forEach(GameObject::update);
+            GameObjectUtils.getGameObjectsStream(world).forEach(GameObject::update);
             factoryManager.executeUpdates();
             controllersManager.control();
             world.step(WORLD_STEP_TIME, 6, 2);
