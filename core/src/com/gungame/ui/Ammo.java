@@ -5,9 +5,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.gungame.world.objects.phisical.Hero;
 
-public class Ammo implements  Ui {
-
-    BitmapFont font = new BitmapFont();
+public class Ammo implements Ui {
+    private final BitmapFont font = new BitmapFont();
 
     @Override
     public void draw(SpriteBatch batch, Camera camera, Hero hero) {

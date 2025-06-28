@@ -35,7 +35,7 @@ class HeroStaminaBar implements Ui {
         float y = camera.position.y + camera.viewportHeight / 2 - height * 2;
 
         batch.draw(staminaBackgroundTexture, x, y, width, height);
-        batch.draw(staminaTexture, x, y, width * hero.getStamina() / hero.getMaxStamina(), height);
+        batch.draw(staminaTexture, x, y, width * hero.getStamina() / Hero.MAX_STAMINA, height);
     }
 
     @Override

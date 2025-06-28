@@ -1,4 +1,4 @@
-package com.gungame.world.controller;
+package com.gungame.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.gungame.world.objects.phisical.Hero;
+import com.gungame.world.objects.phisical.MovingMode;
 
 public class HeroKeyboardHeroController extends HeroController {
 
@@ -35,12 +36,20 @@ public class HeroKeyboardHeroController extends HeroController {
             used = true;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            movingMode = MovingMode.JUMPING;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
-            movingMode = MovingMode.RUNNING;
+        if (used) {
+            if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+                movingMode = MovingMode.JUMPING;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+                movingMode = MovingMode.RUNNING;
+            }
+            hero.tryChangeMovingMode(movingMode);
+        } else {
+            hero.tryChangeMovingMode(MovingMode.STANDING);
         }
-        tryChangeMovingMode(movingMode);
+
+        if (Gdx.input.isKeyPressed(Input.Keys.R)) {
+            hero.reloadStart();
+        }
 
         if (Gdx.input.isKeyPressed(Input.Keys.R)) {
             hero.reloadStart();
@@ -61,7 +70,7 @@ public class HeroKeyboardHeroController extends HeroController {
         mousePos = mousePos.nor();
         impulse = impulse.nor();
 
-        used |= move(impulse.x, impulse.y);
+        used |= hero.move(impulse.x, impulse.y);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             hero.fire();

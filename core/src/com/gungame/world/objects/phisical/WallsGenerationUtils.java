@@ -1,9 +1,8 @@
 package com.gungame.world.objects.phisical;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.gungame.world.objects.meta.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
@@ -11,8 +10,8 @@ import static com.gungame.world.GameWorldConfig.HORIZONTAL_SIZE;
 import static com.gungame.world.GameWorldConfig.VERTICAL_SIZE;
 
 public class WallsGenerationUtils {
+    private static final String LOG_TAG = WallsGenerationUtils.class.getSimpleName();
     private static final Random random = new Random();
-    private static final Logger logger = LoggerFactory.getLogger(WallsGenerationUtils.class);
 
     public static void generateWalls(GameObjectFactory<StaticGameObject> wallsFactory, float x, float y, float width, float height) {
         var wallSize = wallsFactory.getObjectMetadata().getSize();
@@ -40,7 +39,7 @@ public class WallsGenerationUtils {
             generateBox(boxFactory, x, y, width, height);
         }
 
-        logger.debug("generated " + totalToGenerate + " boxes");
+        Gdx.app.debug(LOG_TAG, "generated " + totalToGenerate + " boxes");
     }
 
     private static void generateBox(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height) {
@@ -48,7 +47,7 @@ public class WallsGenerationUtils {
         float boxY = random.nextFloat(y, y + height);
         float boxRotation = random.nextFloat(-180, 180);
         boxFactory.create(boxX, boxY, boxRotation);
-        logger.debug("creating box(x={}, y={}, rotation={})", boxX, boxY, boxRotation);
+        Gdx.app.debug(LOG_TAG, "creating box(x=%s, y=%s, rotation=%s)".formatted(boxX, boxY, boxRotation));
     }
 
     public static void recreateBoxIfNecessaryOnCollision(GameObject objectA, GameObject objectB) {
@@ -59,8 +58,8 @@ public class WallsGenerationUtils {
         var toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
 
         toDestroy.markForDestroy();
-        logger.debug("destroying box(x={}, y={}, angle={})",
-                toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle());
+        Gdx.app.debug(LOG_TAG, "destroying box(x=%s, y=%s, angle=%s)".formatted(
+                toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle()));
 
         var factoryManager = GameObjectFactoryManager.getInstance(toDestroy.getWorld());
         var wallSize = factoryManager.getWallFactory().getObjectMetadata().getSize();

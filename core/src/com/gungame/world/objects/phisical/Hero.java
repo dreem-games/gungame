@@ -16,35 +16,53 @@ import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectType;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.Random;
 
 public class Hero extends DynamicVisibleGameObject {
+    public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
+    public static final float MAX_STAMINA = 100f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
-    private static final float MAX_STAMINA = 100f;
-    private static final float BULLET_SPREAD = 0.03f;
+    private static final float BULLET_SPREAD = 0.035f;
     private static final int RELOADING_TIME = 3000;
-    private static final int RATE_OF_FIRE = 500;
+    private static final int RATE_OF_FIRE = 300;
     private static final int MAGAZINE_SIZE = 9;
-    private static final Random random = new Random();
-    private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
-    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
+    private static final int MAX_AMMO = 99;
+
+    private final Random random = new Random();
+    private final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
+    private final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
   
     private float xScale;
     private float yScale;
+    private @NonNull MovingMode movingMode = MovingMode.STANDING;
     private @Getter float stamina = MAX_STAMINA;
-    private long lastStaminaUpdate = System.nanoTime();
-    private boolean staminaRegenBlocked = false;
-    private long reloadingTimer = 0;
+    private long lastStaminaUsage = System.currentTimeMillis();
+    private long lastStaminaRegen = lastStaminaUsage;
+    private long lastMovingModeChange = lastStaminaRegen;
+    private long reloadingTimer = lastStaminaRegen;
     private boolean reloading = false;
     private @Getter int magazine = MAGAZINE_SIZE;
-    private @Getter int ammo = 24;
+    private @Getter int ammo = MAX_AMMO;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
     }
 
     public void fire() {
+        if (magazine == 0) {
+            reloadStart();
+        }
+        if (reloading) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - reloadingTimer < RATE_OF_FIRE) {
+            return;
+        }
+
         var bulletFactory = GameObjectFactoryManager.getInstance(getWorld()).getBulletFactory();
         var position = getPosition();
         float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
@@ -52,24 +70,19 @@ public class Hero extends DynamicVisibleGameObject {
         float virtualAngle = angle - .3f;
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
-        long nanoTime = System.currentTimeMillis();
 
-        if (nanoTime - reloadingTimer > RATE_OF_FIRE && magazine > 0 && !reloading) {
-            var hidesBox = hidesBox(x, y);
-            CustomObjectInitializationConfig customInitConfig = null;
-            if (hidesBox != null) {
-                customInitConfig = new CustomObjectInitializationConfig();
-                customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
-            }
-            bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
-                    bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
-            reloadingTimer = nanoTime;
-            magazine--;
-            shootSound.play();
-            System.out.println(ammo);
-        } else if (magazine == 0) {
-            reloadStart();
+        var hidesBox = hidesBox(x, y);
+        CustomObjectInitializationConfig customInitConfig = null;
+        if (hidesBox != null) {
+            customInitConfig = new CustomObjectInitializationConfig();
+            customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
         }
+
+        magazine--;
+        shootSound.play();
+        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+                bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
+        reloadingTimer = now;
     }
 
     public void reloadStart() {
@@ -78,17 +91,12 @@ public class Hero extends DynamicVisibleGameObject {
             reloadingSound.play();
             reloadingTimer = System.currentTimeMillis();
         }
-
     }
 
     public void reloadEnd() {
-        if (ammo >= MAGAZINE_SIZE - magazine) {
-            ammo = ammo - (MAGAZINE_SIZE - magazine);
-            magazine = MAGAZINE_SIZE;
-        } else {
-            magazine += ammo;
-            ammo = 0;
-        }
+        int ammoToFillMagazine = Math.min(MAGAZINE_SIZE - magazine, ammo);
+        ammo -= ammoToFillMagazine;
+        magazine += ammoToFillMagazine;
         reloading = false;
     }
 
@@ -118,34 +126,88 @@ public class Hero extends DynamicVisibleGameObject {
     @Override
     public void applyImpulse(float x, float y) {
         super.applyImpulse(x, y);
-
-        // по хардкору либо передвигаемся, либо регенерируем стамину
-        staminaRegenBlocked = true;
     }
 
-    public boolean tryUseStamina(float stamina) {
-        if (this.stamina >= stamina) {
-            this.stamina -= stamina;
-            return true;
+    public boolean tryUseStamina(float staminaToUse) {
+        if (staminaToUse > this.stamina) {
+            return false;
         }
-        return false;
+        this.stamina -= staminaToUse;
+        this.lastStaminaUsage = System.currentTimeMillis();
+        return true;
     }
 
     @Override
     public void update() {
         super.update();
 
-        long now = System.nanoTime();
-        if (!staminaRegenBlocked && stamina < MAX_STAMINA) {
-            long delta = now - lastStaminaUpdate;
-            stamina = Math.min(MAX_STAMINA, stamina + delta / 100_000_000f * GameWorldConfig.HERO_STAMINA_REGEN_SPEED);
+        long now = System.currentTimeMillis();
+        if (stamina < MAX_STAMINA && movingMode.getStaminaCost() == 0) {
+            long delta = now - lastStaminaRegen;
+            float staminaRegenSpeed = MAX_STAMINA_REGEN_SPEED * movingMode.getStaminaRegenSpeed();
+            stamina = Math.min(MAX_STAMINA, stamina + delta * staminaRegenSpeed);
+            lastStaminaRegen = now;
         }
-        if (reloading && System.currentTimeMillis() - reloadingTimer > RELOADING_TIME) {
+        if (reloading && now - reloadingTimer > RELOADING_TIME) {
             reloadEnd();
         }
-        lastStaminaUpdate = now;
-        staminaRegenBlocked = false;
+        if (movingMode.getStaminaCost() != 0) {
+            lastStaminaRegen = now;
+        }
     }
+
+    public void tryChangeMovingMode(MovingMode newMovingMode) {
+        if (movingMode == newMovingMode) {
+            return;  // ни чего менять не требуется
+        }
+
+        var now = System.currentTimeMillis();
+        if (now - lastMovingModeChange < newMovingMode.getMinDuration()) {
+            return;
+        }
+        if (tryUseStamina(newMovingMode.getStaminaCost() * newMovingMode.getMinDuration())) {
+            movingMode = newMovingMode;
+            lastMovingModeChange = now;
+        }
+    }
+
+    /**
+     * Применяет к персонажу силу для его передвижения.
+     *
+     * @param x направление (часть вектора)
+     * @param y направление (часть вектора)
+     * @return true если сила применена
+     */
+    public boolean move(float x, float y) {
+        if (x * x + y * y < .1f) {
+            return false;  // может быть небольшая погрешность
+        }
+
+        long now = System.currentTimeMillis();
+        long delta = now - lastStaminaUsage;
+        if (movingMode.getMaxDuration() > 0 && delta > movingMode.getMaxDuration()
+                || (delta > movingMode.getMinDuration()
+                && !tryUseStamina(movingMode.getStaminaCost() * delta))) {
+            movingMode = MovingMode.NORMAL;
+            lastMovingModeChange = now;
+        }
+
+        float impulseX = getImpulse(x, movingMode);
+        float impulseY = getImpulse(y, movingMode);
+        applyImpulse(impulseX, impulseY);
+        return true;
+    }
+
+    private float getImpulse(float acceleration, MovingMode movingMode) {
+        float potentialResult = GameWorldConfig.HERO_ACCELERATION * acceleration;
+        if (movingMode == MovingMode.RUNNING) {
+            potentialResult *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
+        } else if (movingMode == MovingMode.JUMPING) {
+            potentialResult *= GameWorldConfig.HERO_JUMPING_ACCELERATION_SCALE;
+        }
+        return potentialResult;
+    }
+
 
     @Override
     public void setupCollisionFilter(Filter filter) {
@@ -183,7 +245,9 @@ public class Hero extends DynamicVisibleGameObject {
         return 1;
     }
 
-    public float getMaxStamina() {
-        return MAX_STAMINA;
+    @Override
+    public void dispose() {
+        reloadingSound.dispose();
+        shootSound.dispose();
     }
 }
