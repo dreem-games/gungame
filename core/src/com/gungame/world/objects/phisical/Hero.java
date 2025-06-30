@@ -51,8 +51,9 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void fire() {
-        if (magazine == 0) {
+        if (magazine == 0 && ammo <= 0) {
             reloadStart();
+            return;
         }
         if (reloading) {
             return;
