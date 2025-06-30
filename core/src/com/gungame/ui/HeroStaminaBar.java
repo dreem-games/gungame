@@ -10,8 +10,10 @@ import com.gungame.world.objects.phisical.Hero;
 class HeroStaminaBar implements Ui {
     private final Texture staminaTexture;
     private final Texture staminaBackgroundTexture;
+    private final boolean isMainHero;
 
-    HeroStaminaBar() {
+    HeroStaminaBar(boolean isMainHero) {
+        this.isMainHero = isMainHero;
         // Создаем простую текстуру с определенным цветом
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.GREEN); // Задаем цвет прямоугольника
@@ -30,10 +32,14 @@ class HeroStaminaBar implements Ui {
     public void draw(SpriteBatch batch, Camera camera, Hero hero) {
         float width = camera.viewportWidth / 6;
         float height = camera.viewportHeight / 100;
-
-        float x = camera.position.x - camera.viewportWidth / 2;
-        float y = camera.position.y + camera.viewportHeight / 2 - height * 2;
-
+        float x;
+        float y;
+        if (isMainHero) {
+            x = camera.position.x - camera.viewportWidth / 2;
+        } else {
+            x = camera.position.x - camera.viewportWidth / 2 + 80;
+        }
+        y = camera.position.y + camera.viewportHeight / 2 - height * 2;
         batch.draw(staminaBackgroundTexture, x, y, width, height);
         batch.draw(staminaTexture, x, y, width * hero.getStamina() / Hero.MAX_STAMINA, height);
     }

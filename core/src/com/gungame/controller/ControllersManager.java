@@ -8,10 +8,12 @@ public class ControllersManager {
     private final HeroController joystickController;
     private final HeroController keyboardController;
     private HeroController activeController;
+    private boolean isKeyboard;
 
-    public ControllersManager(Hero hero, Camera camera) {
+    public ControllersManager(Hero hero, Camera camera, boolean keyboard) {
         joystickController = new HeroJoystickController(hero, camera);
         keyboardController = new HeroKeyboardHeroController(hero, camera);
+        this.isKeyboard = keyboard;
     }
 
     public void control() {
@@ -21,9 +23,9 @@ public class ControllersManager {
             }
         }
 
-        if (joystickController.control()) {
+        if (!isKeyboard) {
             activeController = joystickController;
-        } else if (keyboardController.control()) {
+        } else {
             activeController = keyboardController;
         }
     }
