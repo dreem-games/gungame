@@ -8,7 +8,7 @@ public class ControllersManager {
     private final HeroController joystickController;
     private final HeroController keyboardController;
     private HeroController activeController;
-    private boolean isKeyboard;
+    private final boolean isKeyboard;
 
     public ControllersManager(Hero hero, Camera camera, boolean keyboard) {
         joystickController = new HeroJoystickController(hero, camera);
