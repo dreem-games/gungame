@@ -7,12 +7,13 @@ import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.objects.phisical.Box;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
+import lombok.Getter;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
+@Getter
 public class GameObjectFactoryManager implements Disposable {
     private static final Map<World, GameObjectFactoryManager> instances = Collections.synchronizedMap(new IdentityHashMap<>());
 
@@ -64,22 +65,6 @@ public class GameObjectFactoryManager implements Disposable {
 
     public static GameObjectFactoryManager getInstance(World world) {
         return instances.computeIfAbsent(world, GameObjectFactoryManager::new);
-    }
-
-    public GameObjectFactory<StaticGameObject> getWallFactory() {
-        return wallFactory;
-    }
-
-    public GameObjectFactory<Box> getBoxFactory() {
-        return boxFactory;
-    }
-
-    public GameObjectFactory<Hero> getHeroFactory() {
-        return heroFactory;
-    }
-
-    public GameObjectFactory<Bullet> getBulletFactory() {
-        return bulletFactory;
     }
 
     public void executeUpdates() {

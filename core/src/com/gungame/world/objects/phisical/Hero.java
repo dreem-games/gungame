@@ -50,11 +50,16 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastStaminaUsage = System.currentTimeMillis();
     private long lastStaminaRegen = lastStaminaUsage;
     private long lastMovingModeChange = lastStaminaRegen;
-    private long reloadingTimer = lastStaminaRegen;
     private boolean reloading = false;
     private @Getter int magazine = MAGAZINE_SIZE;
     private @Getter int ammo = MAX_AMMO;
     private @Getter int health = 100;
+
+    /**
+     * Время с последнего выстрела или начала перезарядки если reloading=true.
+     * Используется для ограничения скорострельности и отсчёта времени перезарядки.
+     */
+    private long reloadingTimer = lastStaminaRegen;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -74,10 +79,13 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void fire() {
-        if (magazine == 0) {
-            reloadStart();
-        }
         if (reloading) {
+            return;
+        }
+        if (magazine == 0) {
+            if (ammo > 0) {
+                reloadStart();
+            }
             return;
         }
 
