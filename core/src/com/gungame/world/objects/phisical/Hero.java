@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
@@ -30,6 +31,8 @@ public class Hero extends DynamicVisibleGameObject {
     private static final int MAGAZINE_SIZE = 9;
     private static final int MAX_AMMO = 99;
 
+    // TODO: много всего уже создаётся, нужны легковесы (https://refactoring.guru/ru/design-patterns/flyweight), где метаданные общие в отдельном обьекте!
+    //       Но не будет ли проблем с тем же dispose...
     private final Random random = new Random();
     private final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
     private final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
@@ -39,9 +42,9 @@ public class Hero extends DynamicVisibleGameObject {
     };
     private final Sound[] dashSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"))
     };
-    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
   
     private float xScale;
     private float yScale;
@@ -73,8 +76,8 @@ public class Hero extends DynamicVisibleGameObject {
         }
     }
 
-    public void death(){
-        deathSound.play();
+    public void death() {
+        dashSounds[random.nextInt(dashSounds.length)].play();
         markForDestroy();
     }
 
@@ -280,5 +283,6 @@ public class Hero extends DynamicVisibleGameObject {
     public void dispose() {
         reloadingSound.dispose();
         shootSound.dispose();
+        Stream.concat(Stream.of(dashSounds), Stream.of(dashSounds)).forEach(Sound::dispose);
     }
 }

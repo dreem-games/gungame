@@ -10,6 +10,8 @@ import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.MovingMode;
 import lombok.Getter;
 
+import java.util.Objects;
+
 public class HeroJoystickController extends HeroController {
 
     private Vector2 lastRightVec = new Vector2();
@@ -20,7 +22,7 @@ public class HeroJoystickController extends HeroController {
     public HeroJoystickController(Hero hero, Camera camera, @Null HeroJoystickController other) {
         super(hero, camera);
         if (other == null) {
-            controller = Controllers.getCurrent();
+            controller = Objects.requireNonNull(Controllers.getCurrent());
         } else {
             Controller found = null;
             Array<Controller> controllers = Controllers.getControllers();
@@ -44,10 +46,6 @@ public class HeroJoystickController extends HeroController {
 
     @Override
     public boolean control() {
-        if (controller == null) {
-            return false;
-        }
-
         boolean used = false;
         var mapping = controller.getMapping();
 
