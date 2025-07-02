@@ -7,24 +7,24 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.gungame.world.objects.phisical.Hero;
 
-class HeroStaminaBar implements Ui {
-    private final Texture staminaTexture;
-    private final Texture staminaBackgroundTexture;
+public class HeroHealthBar implements Ui {
+    private final Texture healthTexture;
+    private final Texture healthBackgroundTexture;
     private final boolean isMainHero;
 
-    HeroStaminaBar(boolean isMainHero) {
+    HeroHealthBar(boolean isMainHero) {
         this.isMainHero = isMainHero;
         // Создаем простую текстуру с определенным цветом
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.GREEN); // Задаем цвет прямоугольника
+        pixmap.setColor(Color.RED); // Задаем цвет прямоугольника
         pixmap.fill(); // Заливаем прямоугольник цветом
-        staminaTexture = new Texture(pixmap);
+        healthTexture = new Texture(pixmap);
         pixmap.dispose(); // Освобождаем ресурсы пиксельной карты
 
         pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.BLACK); // Задаем цвет прямоугольника
         pixmap.fill(); // Заливаем прямоугольник цветом
-        staminaBackgroundTexture = new Texture(pixmap);
+        healthBackgroundTexture = new Texture(pixmap);
         pixmap.dispose(); // Освобождаем ресурсы пиксельной карты
     }
 
@@ -39,14 +39,14 @@ class HeroStaminaBar implements Ui {
         } else {
             x = camera.position.x - camera.viewportWidth / 2 + 80;
         }
-        y = camera.position.y + camera.viewportHeight / 2 - height * 2 - 2;
-        batch.draw(staminaBackgroundTexture, x, y, width, height);
-        batch.draw(staminaTexture, x, y, width * hero.getStamina() / Hero.MAX_STAMINA, height);
+        y = camera.position.y + camera.viewportHeight / 2 - height * 2;
+        batch.draw(healthBackgroundTexture, x, y, width, height);
+        batch.draw(healthTexture, x, y, width * hero.getHealth() / Hero.MAX_STAMINA, height);
     }
 
     @Override
     public void dispose() {
-        staminaTexture.dispose();
-        staminaBackgroundTexture.dispose();
+        healthTexture.dispose();
+        healthBackgroundTexture.dispose();
     }
 }

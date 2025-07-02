@@ -33,6 +33,15 @@ public class Hero extends DynamicVisibleGameObject {
     private final Random random = new Random();
     private final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
     private final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
+    private final Sound[] damageSounds = {
+            Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
+    };
+    private final Sound[] dashSounds = {
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
+    };
+    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
   
     private float xScale;
     private float yScale;
@@ -45,9 +54,23 @@ public class Hero extends DynamicVisibleGameObject {
     private boolean reloading = false;
     private @Getter int magazine = MAGAZINE_SIZE;
     private @Getter int ammo = MAX_AMMO;
+    private @Getter int health = 100;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
+    }
+
+    public void takeDamage(int damage) {
+        damageSounds[random.nextInt(damageSounds.length)].play();
+        health -= damage;
+        if (health <= 0) {
+            death();
+        }
+    }
+
+    public void death(){
+        deathSound.play();
+        markForDestroy();
     }
 
     public void fire() {
