@@ -23,16 +23,18 @@ public class GameContactListener implements ContactListener {
         // мб как-нибудь потом нормальную генерацию сделаем...
         WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
 
-        if (objectA.getType() == GameObjectType.BULLET) {
-            objectA.markForDestroy();
-        }
         if (objectB.getType() == GameObjectType.BULLET) {
             objectB.markForDestroy();
+            if (objectA.getType() == GameObjectType.BULLET) {
+                objectA.markForDestroy();
+                return;
+            }
+            var tmp = objectA;
+            objectA = objectB;
+            objectB = tmp;
         }
-        if (objectA.getType() == GameObjectType.HERO && objectB.getType() == GameObjectType.BULLET) {
-            ((Hero) objectA).takeDamage(20);
-        }
-        if (objectB.getType() == GameObjectType.HERO && objectA.getType() == GameObjectType.BULLET) {
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
             ((Hero) objectB).takeDamage(20);
         }
     }

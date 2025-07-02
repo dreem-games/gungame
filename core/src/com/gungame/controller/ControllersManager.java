@@ -1,32 +1,43 @@
 package com.gungame.controller;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.utils.Null;
 import com.gungame.world.objects.phisical.Hero;
 
 public class ControllersManager {
-
     private final HeroController joystickController;
+    private final @Null HeroController additionalJoystickController;
     private final HeroController keyboardController;
-    private HeroController activeController;
-    private final boolean isKeyboard;
+    private HeroController activeHeroController;
 
-    public ControllersManager(Hero hero, Camera camera, boolean keyboard) {
-        joystickController = new HeroJoystickController(hero, camera);
-        keyboardController = new HeroKeyboardHeroController(hero, camera);
-        this.isKeyboard = keyboard;
+    public ControllersManager(Hero hero, @Null Hero additionalHero, Camera camera) {
+        joystickController = new HeroJoystickController(hero, camera, null);
+        keyboardController = new HeroKeyboardHeroController(hero, camera);  // только для гг работает
+
+        if (additionalHero != null && HeroJoystickController.connectedControllersCount() > 1) {
+            additionalJoystickController = new HeroJoystickController(additionalHero, camera, (HeroJoystickController) joystickController);
+        } else {
+            additionalJoystickController = null;
+        }
     }
 
     public void control() {
-        if (activeController != null) {
-            if (activeController.control()) {
+        if (additionalJoystickController != null) {
+            additionalJoystickController.control();
+        }
+
+        if (activeHeroController != null) {
+            if (activeHeroController.control()) {
                 return;
             }
         }
 
-        if (!isKeyboard) {
-            activeController = joystickController;
+        if (!joystickController.control()) {
+            activeHeroController = joystickController;
+        } else if (keyboardController.control()) {
+            activeHeroController = keyboardController;
         } else {
-            activeController = keyboardController;
+            activeHeroController = null;
         }
     }
 }

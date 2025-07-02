@@ -4,19 +4,42 @@ import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Null;
 import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.MovingMode;
+import lombok.Getter;
 
 public class HeroJoystickController extends HeroController {
 
-    Vector2 lastRightVec = new Vector2();
-    boolean r1WasPressed;
+    private Vector2 lastRightVec = new Vector2();
+    private boolean r1WasPressed;
 
-    private final Controller controller;
+    private final @Getter Controller controller;
 
-    public HeroJoystickController(Hero hero, Camera camera) {
+    public HeroJoystickController(Hero hero, Camera camera, @Null HeroJoystickController other) {
         super(hero, camera);
-        controller = Controllers.getCurrent();
+        if (other == null) {
+            controller = Controllers.getCurrent();
+        } else {
+            Controller found = null;
+            Array<Controller> controllers = Controllers.getControllers();
+            for (int i = 0; i < controllers.size; i++) {
+                Controller it = controllers.get(i);
+                if (it != other.controller) {
+                    found = it;
+                    break;
+                }
+            }
+            if (found == null) {
+                throw new RuntimeException("Gay pad not found");
+            }
+            controller = found;
+        }
+    }
+
+    public static int connectedControllersCount() {
+        return Controllers.getControllers().size;
     }
 
     @Override

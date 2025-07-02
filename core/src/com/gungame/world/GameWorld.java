@@ -8,8 +8,6 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.gungame.controller.HeroJoystickController;
-import com.gungame.controller.HeroKeyboardHeroController;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.controller.ControllersManager;
@@ -26,10 +24,7 @@ public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
     private ControllersManager controllersManager;
-    private ControllersManager controllersManager2;
     private UiEngine uiEngine;
-    private HeroJoystickController joystickController;
-    private HeroKeyboardHeroController keyboardHeroController;
     private UiEngine uiEngine2;
     private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
@@ -55,12 +50,12 @@ public class GameWorld implements Disposable {
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
         var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
-        controllersManager = new ControllersManager(hero, camera, true );
         uiEngine = new UiEngine(hero, true);
 
         var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 20);
-        controllersManager2 = new ControllersManager(hero2, camera, false);
         uiEngine2 = new UiEngine(hero2, false);
+
+        controllersManager = new ControllersManager(hero, hero2, camera);
 
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
@@ -85,7 +80,6 @@ public class GameWorld implements Disposable {
             GameObjectUtils.getGameObjectsStream(world).forEach(GameObject::update);
             factoryManager.executeUpdates();
             controllersManager.control();
-            controllersManager2.control();
             world.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }
