@@ -43,7 +43,7 @@ public class GameObjectFactoryManager implements Disposable {
     private static final GameObjectMetadata BULLET_METADATA = new GameObjectMetadataBuilder()
             .setType(GameObjectType.BULLET)
             .setBodyName("bullet", "png")
-            .setSize(.5f, .1f)
+            .setSize(1.f, .2f)
             .setMassData(.0f, .8f, .11f)
             .setLinearDamping(0)
             .setAngularDamping(10)

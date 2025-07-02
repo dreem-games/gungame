@@ -32,6 +32,8 @@ public class GameContactListener implements ContactListener {
             var tmp = objectA;
             objectA = objectB;
             objectB = tmp;
+        } else if (objectA.getType() == GameObjectType.BULLET) {
+            objectA.markForDestroy();
         }
 
         if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {

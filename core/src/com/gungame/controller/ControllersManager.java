@@ -13,7 +13,7 @@ public class ControllersManager {
         if (controllersCount > 1) {
             heroController = new HeroJoystickController(hero, camera, null);
         } else {
-            heroController = new HeroKeyboardHeroController(hero, camera);;
+            heroController = new HeroKeyboardHeroController(hero, camera);
         }
 
         if (additionalHero != null && controllersCount > 0) {

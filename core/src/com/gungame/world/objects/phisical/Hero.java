@@ -42,10 +42,10 @@ public class Hero extends DynamicVisibleGameObject {
     };
     private final Sound[] dashSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"))
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
-  
+    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+
     private float xScale;
     private float yScale;
     private @NonNull MovingMode movingMode = MovingMode.STANDING;
@@ -77,7 +77,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void death() {
-        dashSounds[random.nextInt(dashSounds.length)].play();
+        deathSound.play();
         markForDestroy();
     }
 
@@ -202,6 +202,9 @@ public class Hero extends DynamicVisibleGameObject {
         if (tryUseStamina(newMovingMode.getStaminaCost() * newMovingMode.getMinDuration())) {
             movingMode = newMovingMode;
             lastMovingModeChange = now;
+            if (movingMode == MovingMode.JUMPING) {
+                dashSounds[random.nextInt(dashSounds.length)].play();
+            }
         }
     }
 
