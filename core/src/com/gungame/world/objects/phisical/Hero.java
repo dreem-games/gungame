@@ -18,7 +18,9 @@ import com.gungame.world.objects.meta.GameObjectType;
 import lombok.Getter;
 import lombok.NonNull;
 
+
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
@@ -30,10 +32,19 @@ public class Hero extends DynamicVisibleGameObject {
     private static final int MAGAZINE_SIZE = 9;
     private static final int MAX_AMMO = 99;
 
-    private final Random random = new Random();
-    private final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
-    private final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
-  
+    private static final Random random = new Random();
+    private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
+    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
+    private static final Sound[] damageSounds = {
+            Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
+    };
+    private static final Sound[] dashSounds = {
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
+    };
+    private static final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+
     private float xScale;
     private float yScale;
     private @NonNull MovingMode movingMode = MovingMode.STANDING;
@@ -42,8 +53,10 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastStaminaRegen = lastStaminaUsage;
     private long lastMovingModeChange = lastStaminaRegen;
     private boolean reloading = false;
+    private boolean isAbleToRun;
     private @Getter int magazine = MAGAZINE_SIZE;
     private @Getter int ammo = MAX_AMMO;
+    private @Getter int health = 100;
 
     /**
      * Время с последнего выстрела или начала перезарядки если reloading=true.
@@ -53,6 +66,19 @@ public class Hero extends DynamicVisibleGameObject {
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
+    }
+
+    public void takeDamage(int damage) {
+        damageSounds[random.nextInt(damageSounds.length)].play();
+        health -= damage;
+        if (health <= 0) {
+            death();
+        }
+    }
+
+    public void death() {
+        deathSound.play();
+        markForDestroy();
     }
 
     public void fire() {
@@ -165,8 +191,14 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
-        if (movingMode == newMovingMode) {
+        if (stamina > 20) {
+            isAbleToRun = true;
+        }
+        if (movingMode == newMovingMode || !isAbleToRun) {
             return;  // ни чего менять не требуется
+        }
+        if (stamina < 1) {
+            isAbleToRun = false;
         }
 
         var now = System.currentTimeMillis();
@@ -176,6 +208,9 @@ public class Hero extends DynamicVisibleGameObject {
         if (tryUseStamina(newMovingMode.getStaminaCost() * newMovingMode.getMinDuration())) {
             movingMode = newMovingMode;
             lastMovingModeChange = now;
+            if (movingMode == MovingMode.JUMPING) {
+                dashSounds[random.nextInt(dashSounds.length)].play();
+            }
         }
     }
 
@@ -257,5 +292,6 @@ public class Hero extends DynamicVisibleGameObject {
     public void dispose() {
         reloadingSound.dispose();
         shootSound.dispose();
+        Stream.concat(Stream.of(dashSounds), Stream.of(deathSound)).forEach(Sound::dispose);
     }
 }

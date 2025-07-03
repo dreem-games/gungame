@@ -51,10 +51,6 @@ public class HeroKeyboardHeroController extends HeroController {
             hero.reloadStart();
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.R)) {
-            hero.reloadStart();
-        }
-
         Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         if (lastMouseX != mousePos.x || lastMouseY != mousePos.y) {
             used = true;

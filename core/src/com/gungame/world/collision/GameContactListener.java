@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.WallsGenerationUtils;
 
 public class GameContactListener implements ContactListener {
@@ -22,11 +23,21 @@ public class GameContactListener implements ContactListener {
         // мб как-нибудь потом нормальную генерацию сделаем...
         WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
 
-        if (objectA.getType() == GameObjectType.BULLET) {
-            objectA.markForDestroy();
-        }
         if (objectB.getType() == GameObjectType.BULLET) {
             objectB.markForDestroy();
+            if (objectA.getType() == GameObjectType.BULLET) {
+                objectA.markForDestroy();
+                return;
+            }
+            var tmp = objectA;
+            objectA = objectB;
+            objectB = tmp;
+        } else if (objectA.getType() == GameObjectType.BULLET) {
+            objectA.markForDestroy();
+        }
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
+            ((Hero) objectB).takeDamage(20);
         }
     }
 

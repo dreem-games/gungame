@@ -1,30 +1,33 @@
 package com.gungame.controller;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.utils.Null;
 import com.gungame.world.objects.phisical.Hero;
 
 public class ControllersManager {
+    private final HeroController heroController;
+    private final @Null HeroController additionalJoystickController;
 
-    private final HeroController joystickController;
-    private final HeroController keyboardController;
-    private HeroController activeController;
+    public ControllersManager(Hero hero, @Null Hero additionalHero, Camera camera) {
+        int controllersCount = HeroJoystickController.connectedControllersCount();
+        if (controllersCount > 1) {
+            heroController = new HeroJoystickController(hero, camera, null);
+        } else {
+            heroController = new HeroKeyboardHeroController(hero, camera);
+        }
 
-    public ControllersManager(Hero hero, Camera camera) {
-        joystickController = new HeroJoystickController(hero, camera);
-        keyboardController = new HeroKeyboardHeroController(hero, camera);
+        if (additionalHero != null && controllersCount > 0) {
+            HeroJoystickController heroJoystickController = controllersCount > 1 ? (HeroJoystickController) heroController : null;
+            additionalJoystickController = new HeroJoystickController(additionalHero, camera, heroJoystickController);
+        } else {
+            additionalJoystickController = null;
+        }
     }
 
     public void control() {
-        if (activeController != null) {
-            if (activeController.control()) {
-                return;
-            }
-        }
-
-        if (joystickController.control()) {
-            activeController = joystickController;
-        } else if (keyboardController.control()) {
-            activeController = keyboardController;
+        heroController.control();
+        if (additionalJoystickController != null) {
+            additionalJoystickController.control();
         }
     }
 }
