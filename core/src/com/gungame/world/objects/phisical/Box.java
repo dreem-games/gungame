@@ -3,6 +3,7 @@ package com.gungame.world.objects.phisical;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
+import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -14,8 +15,8 @@ public class Box extends DynamicVisibleGameObject {
 
     private final short groupIndex;
 
-    public Box(GameObjectType type, Body body, Sprite sprite) {
-        super(type, body, sprite);
+    public Box(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+        super(gameWorld, type, body, sprite);
         groupIndex = --minGroupIndex;
     }
 

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
+import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
@@ -15,8 +16,8 @@ public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
 
-    public Bullet(GameObjectType type, Body body, Sprite sprite) {
-        super(type, body, sprite);
+    public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+        super(gameWorld, type, body, sprite);
     }
 
     public void setGroupIndex(short groupIndex) {

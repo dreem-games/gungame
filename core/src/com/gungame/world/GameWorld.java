@@ -17,18 +17,19 @@ import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectUtils;
 import com.gungame.world.objects.phisical.WallsGenerationUtils;
+import lombok.Getter;
 
 import static com.gungame.world.GameWorldConfig.*;
 
 public class GameWorld implements Disposable {
     private static final float WORLD_STEP_TIME = 1/60f;
 
+    private @Getter World phisicsWorld;
+    private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private ControllersManager controllersManager;
     private UiEngine uiEngine;
     private UiEngine uiEngine2;
-    private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
-    private World world;
     private Box2DDebugRenderer debugRenderer;
 
     private float lastWorldStepTime;
@@ -40,34 +41,35 @@ public class GameWorld implements Disposable {
             debugRenderer = new Box2DDebugRenderer(true, true, true, true, true, true);
         }
 
-        world = new World(new Vector2(0, 0), true);
-        world.setContactListener(new GameContactListener());
-        factoryManager = GameObjectFactoryManager.getInstance(world);
+        phisicsWorld = new World(new Vector2(0, 0), true);
+        phisicsWorld.setContactListener(new GameContactListener());
+        physicalObjectFactoryManager = new GameObjectFactoryManager(this);
         groundContainer = new GroundContainer();
 
-        WallsGenerationUtils.generateWalls(factoryManager.getWallFactory(), 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
-        var wallsSize = factoryManager.getWallFactory().getObjectMetadata().getSize();
+        WallsGenerationUtils.generateWalls(physicalObjectFactoryManager.getWallFactory(), 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
+        var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        var hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(10, 10, 20);
         uiEngine = new UiEngine(hero, true);
 
-        var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        var hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(80, 40, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
 
-        GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
-        WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
+        GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW * 2, HORIZONTAL_SIZE - wallH * 2);
+        float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
+        WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
     }
 
     @Override
     public void dispose() {
         uiEngine.dispose();
-        factoryManager.dispose();
+        physicalObjectFactoryManager.dispose();
         groundContainer.dispose();
-        GameObjectUtils.getGameObjectsStream(world).forEach(GameObject::dispose);
-        world.dispose();
+        GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::dispose);
+        phisicsWorld.dispose();
     }
 
     public void render(SpriteBatch batch, Camera camera) {
@@ -77,16 +79,16 @@ public class GameWorld implements Disposable {
 
         timeAccumulator += frameTime;
         if (timeAccumulator >= WORLD_STEP_TIME) {
-            GameObjectUtils.getGameObjectsStream(world).forEach(GameObject::update);
-            factoryManager.executeUpdates();
+            GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
+            physicalObjectFactoryManager.executeUpdates();
             controllersManager.control();
-            world.step(WORLD_STEP_TIME, 6, 2);
+            phisicsWorld.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
         }
         groundContainer.drawBatch(batch);
-        GameObjectUtils.getVisibleGameObjects(world).forEach(it -> it.draw(batch));
+        GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
-            debugRenderer.render(world, camera.combined);
+            debugRenderer.render(phisicsWorld, camera.combined);
         }
 
         uiEngine.draw(batch, camera);

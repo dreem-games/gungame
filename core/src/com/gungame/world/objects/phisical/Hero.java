@@ -9,15 +9,14 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
-import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectType;
 import lombok.Getter;
 import lombok.NonNull;
-
 
 import java.util.Random;
 import java.util.stream.Stream;
@@ -64,8 +63,8 @@ public class Hero extends DynamicVisibleGameObject {
      */
     private long reloadingTimer = lastStaminaRegen;
 
-    public Hero(GameObjectType type, Body body, Sprite sprite) {
-        super(type, body, sprite);
+    public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+        super(gameWorld, type, body, sprite);
     }
 
     public void takeDamage(int damage) {
@@ -97,7 +96,7 @@ public class Hero extends DynamicVisibleGameObject {
             return;
         }
 
-        var bulletFactory = GameObjectFactoryManager.getInstance(getWorld()).getBulletFactory();
+        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
         var position = getPosition();
         float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
         float angle = getAngle() + bulletDeviation;
@@ -136,7 +135,7 @@ public class Hero extends DynamicVisibleGameObject {
 
     private Box hidesBox(float x, float y) {
         var arr = new Array<Body>();
-        getWorld().getBodies(arr);
+        getWorld().getPhisicsWorld().getBodies(arr);
 
         Box nearestBox = null;
         float nearestDistance = Float.MAX_VALUE;
@@ -155,11 +154,6 @@ public class Hero extends DynamicVisibleGameObject {
         }
 
         return nearestBox;
-    }
-
-    @Override
-    public void applyImpulse(float x, float y) {
-        super.applyImpulse(x, y);
     }
 
     public boolean tryUseStamina(float staminaToUse) {
@@ -262,7 +256,7 @@ public class Hero extends DynamicVisibleGameObject {
     public void postConstruct() {
         super.postConstruct();
 
-        var defaultMassData = GameObjectFactoryManager.getInstance(getWorld())
+        var defaultMassData = getWorld().getPhysicalObjectFactoryManager()
                 .getHeroFactory()
                 .getObjectMetadata()
                 .getMassData();

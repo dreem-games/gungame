@@ -21,7 +21,7 @@ public class Ammo implements Ui {
         if (isMainHero) {
             x = camera.position.x - camera.viewportWidth / 2 + 2;
         } else {
-            x = camera.position.x - camera.viewportWidth / 2 + 87;
+            x = camera.position.x - camera.viewportWidth / 2 + 78;
         }
         y = camera.position.y + camera.viewportHeight / 2 - 3;
         font.getData().setScale(0.2f);
