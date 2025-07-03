@@ -19,12 +19,11 @@ public class Ammo implements Ui {
         float x;
         float y;
         if (isMainHero) {
-            x = camera.position.x - camera.viewportWidth / 2;
+            x = camera.position.x - camera.viewportWidth / 2 + 2;
         } else {
-            x = camera.position.x - camera.viewportWidth / 2 + 80;
-
+            x = camera.position.x - camera.viewportWidth / 2 + 87;
         }
-        y = camera.position.y + camera.viewportHeight / 2 - 5;
+        y = camera.position.y + camera.viewportHeight / 2 - 3;
         font.getData().setScale(0.2f);
         font.draw(batch, String.format((" %d  /  %d "), hero.getMagazine(), hero.getAmmo()), x, y);
 

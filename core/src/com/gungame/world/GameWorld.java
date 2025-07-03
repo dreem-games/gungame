@@ -52,7 +52,7 @@ public class GameWorld implements Disposable {
         var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
         uiEngine = new UiEngine(hero, true);
 
-        var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 20);
+        var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);

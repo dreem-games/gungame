@@ -32,8 +32,6 @@ public class Hero extends DynamicVisibleGameObject {
     private static final int MAGAZINE_SIZE = 9;
     private static final int MAX_AMMO = 99;
 
-    // TODO: много всего уже создаётся, нужны легковесы (https://refactoring.guru/ru/design-patterns/flyweight), где метаданные общие в отдельном обьекте!
-    //       Но не будет ли проблем с тем же dispose...
     private static final Random random = new Random();
     private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
     private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));

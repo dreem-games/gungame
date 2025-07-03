@@ -35,11 +35,11 @@ public class HeroHealthBar implements Ui {
         float x;
         float y;
         if (isMainHero) {
-            x = camera.position.x - camera.viewportWidth / 2;
+            x = camera.position.x - camera.viewportWidth / 2 + 2;
         } else {
-            x = camera.position.x - camera.viewportWidth / 2 + 80;
+            x = camera.position.x - camera.viewportWidth / 2 + 81;
         }
-        y = camera.position.y + camera.viewportHeight / 2 - height * 2;
+        y = camera.position.y + camera.viewportHeight / 2 - height * 2 - 0.25f;
         batch.draw(healthBackgroundTexture, x, y, width, height);
         batch.draw(healthTexture, x, y, width * hero.getHealth() / Hero.MAX_STAMINA, height);
     }
