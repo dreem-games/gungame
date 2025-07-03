@@ -17,10 +17,6 @@ public class GameContactListener implements ContactListener {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
-        if (objectA.isToDestroy() || objectB.isToDestroy()) {
-            return;
-        }
-
         // мб как-нибудь потом нормальную генерацию сделаем...
         WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
 
