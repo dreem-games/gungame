@@ -11,6 +11,7 @@ import com.gungame.world.objects.phisical.MovingMode;
 public class HeroKeyboardHeroController extends HeroController {
 
     private float lastMouseX, lastMouseY;
+    private boolean lmbWasPressed;
 
     public HeroKeyboardHeroController(Hero hero, Camera camera) {
         super(hero, camera);
@@ -68,9 +69,23 @@ public class HeroKeyboardHeroController extends HeroController {
 
         used |= hero.move(impulse.x, impulse.y);
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        var lmbPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        if (lmbPressed && (!lmbWasPressed || hero.getGun()[hero.getCurrentWeapon()].isAutomatic())) {
             hero.fire();
             used = true;
+        }
+        lmbWasPressed = lmbPressed;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
+            hero.setWeapon(0);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
+            hero.setWeapon(1);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
+            hero.setWeapon(2);
         }
 
         rotate(mousePos.x, mousePos.y);

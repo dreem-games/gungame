@@ -8,15 +8,24 @@ import com.badlogic.gdx.physics.box2d.Filter;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
+import lombok.Getter;
+import lombok.Setter;
 
 import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
 
 public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
+    public @Setter int damage;
+    public @Setter @Getter int shotID;
 
     public Bullet(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
+    }
+
+    public Bullet(GameObjectType type, Body body, Sprite sprite, int damage) {
+        super(type, body, sprite);
+        this.damage = damage;
     }
 
     public void setGroupIndex(short groupIndex) {
@@ -61,4 +70,6 @@ public class Bullet extends VisibleGameObject {
     @Override
     public void dispose() {
     }
+
+
 }
