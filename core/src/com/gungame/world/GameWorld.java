@@ -25,6 +25,7 @@ public class GameWorld implements Disposable {
 
     private ControllersManager controllersManager;
     private UiEngine uiEngine;
+    private UiEngine uiEngine2;
     private GameObjectFactoryManager factoryManager;
     private GroundContainer groundContainer;
     private World world;
@@ -49,8 +50,12 @@ public class GameWorld implements Disposable {
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
         var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
-        controllersManager = new ControllersManager(hero, camera);
-        uiEngine = new UiEngine(hero);
+        uiEngine = new UiEngine(hero, true);
+
+        var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        uiEngine2 = new UiEngine(hero2, false);
+
+        controllersManager = new ControllersManager(hero, hero2, camera);
 
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
@@ -85,5 +90,6 @@ public class GameWorld implements Disposable {
         }
 
         uiEngine.draw(batch, camera);
+        uiEngine2.draw(batch, camera);
     }
 }

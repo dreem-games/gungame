@@ -56,6 +56,8 @@ public class WallsGenerationUtils {
             return;
         }
         var toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
+        // TODO: Что тут происходит? А если две коробки столкнутся? зачем пересоздавать?
+        //      Надо это описать или переделать.
 
         toDestroy.markForDestroy();
         Gdx.app.debug(LOG_TAG, "destroying box(x=%s, y=%s, angle=%s)".formatted(
