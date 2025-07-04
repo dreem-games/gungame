@@ -18,7 +18,7 @@ import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.weapon.Gun;
 import com.gungame.world.objects.weapon.Rifle;
 import com.gungame.world.objects.weapon.Shothgun;
-import com.gungame.world.objects.weapon.Uzi;
+import com.gungame.world.objects.weapon.Smg;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -50,7 +50,7 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastMovingModeChange = lastStaminaRegen;
     private boolean isAbleToRun;
     private @Getter int health = 100;
-    private @Getter Gun[] gun = {new Rifle(), new Uzi(), new Shothgun()};
+    private @Getter Gun[] gun = {new Rifle(), new Smg(), new Shothgun()};
     private @Getter int currentWeapon = 0;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
@@ -62,6 +62,7 @@ public class Hero extends DynamicVisibleGameObject {
         health -= damage;
         if (health <= 0) {
             death();
+            health = 0; //что бы не уходило в минус
         }
     }
 

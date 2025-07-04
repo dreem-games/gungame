@@ -10,7 +10,7 @@ public class Ammo implements Ui {
     private final BitmapFont font = new BitmapFont();
     private static final Texture[] WEAPON_ICON = {
             new Texture("ui/rifle.png"),
-            new Texture("ui/uzi.png"),
+            new Texture("ui/SMG.png"),
             new Texture("ui/shotgun.png")};
 
     public Ammo(boolean isMainHero) {

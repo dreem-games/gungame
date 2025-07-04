@@ -11,7 +11,7 @@ import java.util.Random;
 public class Rifle implements Gun {
     private static final float BULLET_SPREAD = 0.035f;
     private static final int RELOADING_TIME = 3000;
-    private static final int RATE_OF_FIRE = 300;
+    private static final int RATE_OF_FIRE = 1000;
     private static final int MAGAZINE_SIZE = 9;
     private static final int MAX_AMMO = 99;
     private static final int DAMAGE = 20;
@@ -19,7 +19,7 @@ public class Rifle implements Gun {
     private static final Random random = new Random();
     private static final boolean IS_AUTOMATIC = false;    //Автоматическое оружие или нет
     private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
-    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
+    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"));
     private @Getter int magazine = MAGAZINE_SIZE;
     private  int ammo = MAX_AMMO;
     private @Getter long reloadingTimer;

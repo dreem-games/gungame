@@ -19,7 +19,7 @@ public class Shothgun implements Gun {
     private static final Random random = new Random();
     private static final boolean IS_AUTOMATIC = false;
     private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
-    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
+    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"));
     private @Getter int magazine = MAGAZINE_SIZE;
     private @Getter int ammo = MAX_AMMO;
     private @Getter long reloadingTimer;
