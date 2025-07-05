@@ -22,11 +22,11 @@ public class Ammo implements Ui {
         float width;
         if (isMainHero) {
             x = camera.position.x - camera.viewportWidth / 2 + 3;
-            xIcon = x + 1.7f;
+            xIcon = x + 1f;
             width = 12f;
         } else {
             x = camera.position.x - camera.viewportWidth / 2 + 78;
-            xIcon = x + 8f;
+            xIcon = x + 14f;
             width = -12f;
         }
         y = camera.position.y + camera.viewportHeight / 2 - 3;

@@ -24,8 +24,8 @@ public class Bullet extends VisibleGameObject {
         super(gameWorld, type, body, sprite);
     }
 
-    public Bullet(GameObjectType type, Body body, Sprite sprite, int damage) {
-        super(type, body, sprite);
+    public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite, int damage) {
+        super(gameWorld, type, body, sprite);
         this.damage = damage;
     }
 
