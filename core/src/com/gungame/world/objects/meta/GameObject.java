@@ -3,17 +3,19 @@ package com.gungame.world.objects.meta;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
+import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 
 public abstract class GameObject implements Disposable {
     protected final GameObjectType type;
     protected final Body body;
+    protected final GameWorld gameWorld;
     private boolean toDestroy = false;
 
-    public GameObject(GameObjectType type, Body body) {
+    public GameObject(GameWorld gameWorld, GameObjectType type, Body body) {
         this.type = type;
+        this.gameWorld = gameWorld;
         this.body = body;
     }
 
@@ -72,8 +74,8 @@ public abstract class GameObject implements Disposable {
         body.setAngularVelocity(velocity);
     }
 
-    public World getWorld() {
-        return body.getWorld();
+    public GameWorld getWorld() {
+        return gameWorld;
     }
 
     public GameObjectType getType() {

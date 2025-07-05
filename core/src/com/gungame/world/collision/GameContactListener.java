@@ -8,7 +8,6 @@ import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
-import com.gungame.world.objects.phisical.WallsGenerationUtils;
 
 public class GameContactListener implements ContactListener {
 
@@ -16,9 +15,6 @@ public class GameContactListener implements ContactListener {
     public void beginContact(Contact contact) {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
-
-        // мб как-нибудь потом нормальную генерацию сделаем...
-        WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
 
         if (objectB.getType() == GameObjectType.BULLET) {
             objectB.markForDestroy();

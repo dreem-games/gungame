@@ -19,7 +19,6 @@ public class GunGame extends ApplicationAdapter {
 	
 	@Override
 	public void create () {
-		// create the camera and the SpriteBatch
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, GameWorldConfig.VERTICAL_SIZE, GameWorldConfig.HORIZONTAL_SIZE);
 		batch = new SpriteBatch();

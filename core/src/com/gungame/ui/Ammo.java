@@ -25,7 +25,7 @@ public class Ammo implements Ui {
             xIcon = x + 1.7f;
             width = 12f;
         } else {
-            x = camera.position.x - camera.viewportWidth / 2 + 87;
+            x = camera.position.x - camera.viewportWidth / 2 + 78;
             xIcon = x + 8f;
             width = -12f;
         }
