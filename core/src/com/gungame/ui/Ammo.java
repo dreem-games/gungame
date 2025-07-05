@@ -1,17 +1,12 @@
 package com.gungame.ui;
 
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.gungame.world.objects.phisical.Hero;
 
 public class Ammo implements Ui {
     private final BitmapFont font = new BitmapFont();
-    private static final Texture[] WEAPON_ICON = {
-            new Texture("ui/rifle.png"),
-            new Texture("ui/SMG.png"),
-            new Texture("ui/shotgun.png")};
 
     public Ammo(boolean isMainHero) {
         this.isMainHero = isMainHero;
@@ -36,8 +31,9 @@ public class Ammo implements Ui {
         }
         y = camera.position.y + camera.viewportHeight / 2 - 3;
         font.getData().setScale(0.2f);
-        font.draw(batch, String.format((" %d  /  %d "), hero.getGun()[hero.getCurrentWeapon()].getMagazine(), hero.getGun()[hero.getCurrentWeapon()].getAmmo()), x, y);
-        batch.draw(WEAPON_ICON[hero.getCurrentWeapon()], xIcon, y - 9.5f, width, 12f);
+        font.draw(batch, String.format((" %d  /  %d "),
+                hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
+        batch.draw(hero.getCurrentGun().getTexture(), xIcon, y - 9.5f, width, 12f);
 
     }
 

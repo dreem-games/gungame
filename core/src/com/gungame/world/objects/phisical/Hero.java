@@ -31,7 +31,7 @@ public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final Random random = new Random();
-    private  final Sound[] damageSounds = {
+    private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
     };
@@ -50,8 +50,8 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastMovingModeChange = lastStaminaRegen;
     private boolean isAbleToRun;
     private @Getter int health = 100;
-    private @Getter Gun[] gun = {new Rifle(), new Smg(), new Shothgun()};
-    private @Getter int currentWeapon = 0;
+    private final Gun[] gun = {new Rifle(), new Smg(), new Shothgun()};
+    private int currentWeapon = 0;
 
     public Hero(GameObjectType type, Body body, Sprite sprite) {
         super(type, body, sprite);
@@ -72,7 +72,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void fire() {
-        var bullets = gun[currentWeapon].fire();
+        var bullets = getCurrentGun().fire();
         if (bullets == null) {
             return;
         }
@@ -94,26 +94,22 @@ public class Hero extends DynamicVisibleGameObject {
                 bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
                 bullet.setShotID(bulletData.shotID());
-                    });
+            });
         }
     }
 
     public void reloadStart() {
-        gun[currentWeapon].reloadStart();
-
+        getCurrentGun().reloadStart();
     }
 
     public void switchWeapon() {
-        if(!gun[currentWeapon].isReloading()) {
-            if (currentWeapon == 2) {
-                currentWeapon = 0;
-            } else {
-                currentWeapon++;
-            }
+        if(!getCurrentGun().isReloading()) {
+            currentWeapon = (currentWeapon + 1) % gun.length;
         }
     }
+
     public void setWeapon(int id) {
-        if(!gun[currentWeapon].isReloading()) {
+        if(!getCurrentGun().isReloading()) {
             currentWeapon = id;
         }
     }
@@ -166,7 +162,7 @@ public class Hero extends DynamicVisibleGameObject {
             stamina = Math.min(MAX_STAMINA, stamina + delta * staminaRegenSpeed);
             lastStaminaRegen = now;
         }
-        gun[currentWeapon].isReloadingComplete(now);
+        getCurrentGun().isReloadingComplete(now);
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
@@ -233,6 +229,9 @@ public class Hero extends DynamicVisibleGameObject {
         return potentialResult;
     }
 
+    public final Gun getCurrentGun() {
+        return gun[currentWeapon];
+    }
 
     @Override
     public void setupCollisionFilter(Filter filter) {

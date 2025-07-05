@@ -41,8 +41,6 @@ public class GameWorld implements Disposable {
     public boolean isWorldToRestart = false;
     private int deathTimer = 0;
 
-
-
     public void init(Camera camera) {
         Box2D.init();
         if (PHYSICS_DEBUG_MODE) {

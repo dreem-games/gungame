@@ -2,6 +2,7 @@ package com.gungame.world.objects.weapon;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Texture;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,13 +19,15 @@ public class Smg implements Gun {
     private static final int BULLET_SPEED = 60;
     private static final Random random = new Random();
     private static final boolean IS_AUTOMATIC = true;    //Автоматическое оружие или нет
+
+    private static final Texture weaponIcon = new Texture("ui/SMG.png");
     private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
     private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/smgshootsound.wav"));
+
     private @Getter int magazine = MAGAZINE_SIZE;
-    private  int ammo = MAX_AMMO;
+    private int ammo = MAX_AMMO;
     private @Getter long reloadingTimer;
     private boolean reloading = false;
-
 
     public List<BulletData> fire() {
         long now = System.currentTimeMillis();
@@ -78,9 +81,15 @@ public class Smg implements Gun {
         return ammo;
     }
 
+    @Override
+    public Texture getTexture() {
+        return weaponIcon;
+    }
+
     public void dispose() {
         reloadingSound.dispose();
         shootSound.dispose();
+        weaponIcon.dispose();
     }
 
 }
