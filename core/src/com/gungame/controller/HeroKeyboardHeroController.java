@@ -70,7 +70,7 @@ public class HeroKeyboardHeroController extends HeroController {
         used |= hero.move(impulse.x, impulse.y);
 
         var lmbPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
-        if (lmbPressed && (!lmbWasPressed || hero.getGun()[hero.getCurrentWeapon()].isAutomatic())) {
+        if (lmbPressed && (!lmbWasPressed || hero.getCurrentGun().isAutomatic())) {
             hero.fire();
             used = true;
         }

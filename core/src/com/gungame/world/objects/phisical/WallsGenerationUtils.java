@@ -6,9 +6,6 @@ import com.gungame.world.objects.meta.*;
 
 import java.util.Random;
 
-import static com.gungame.world.GameWorldConfig.HORIZONTAL_SIZE;
-import static com.gungame.world.GameWorldConfig.VERTICAL_SIZE;
-
 public class WallsGenerationUtils {
     private static final String LOG_TAG = WallsGenerationUtils.class.getSimpleName();
     private static final Random random = new Random();
@@ -48,24 +45,5 @@ public class WallsGenerationUtils {
         float boxRotation = random.nextFloat(-180, 180);
         boxFactory.create(boxX, boxY, boxRotation);
         Gdx.app.debug(LOG_TAG, "creating box(x=%s, y=%s, rotation=%s)".formatted(boxX, boxY, boxRotation));
-    }
-
-    public static void recreateBoxIfNecessaryOnCollision(GameObject objectA, GameObject objectB) {
-        if (objectA.getType() != GameObjectType.BOX && objectB.getType() != GameObjectType.BOX
-                || objectA.isActive() || objectB.isActive()) {
-            return;
-        }
-        var toDestroy = objectA.getType() == GameObjectType.BOX ? objectA : objectB;
-        // TODO: Что тут происходит? А если две коробки столкнутся? зачем пересоздавать?
-        //      Надо это описать или переделать.
-
-        toDestroy.markForDestroy();
-        Gdx.app.debug(LOG_TAG, "destroying box(x=%s, y=%s, angle=%s)".formatted(
-                toDestroy.getPosition().x, toDestroy.getPosition().y, toDestroy.getAngle()));
-
-        var factoryManager = GameObjectFactoryManager.getInstance(toDestroy.getWorld());
-        var wallSize = factoryManager.getWallFactory().getObjectMetadata().getSize();
-        float wallW = wallSize.x, wallH = wallSize.y;
-        generateBox(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
     }
 }

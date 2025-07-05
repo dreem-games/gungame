@@ -74,7 +74,7 @@ public class HeroJoystickController extends HeroController {
                 -normalized(controller.getAxis(mapping.axisLeftY)));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
-        if (r1Pressed && (!r1WasPressed || hero.getGun()[hero.getCurrentWeapon()].isAutomatic())) {
+        if (r1Pressed && (!r1WasPressed || hero.getCurrentGun().isAutomatic())) {
             hero.fire();
             used = true;
         }

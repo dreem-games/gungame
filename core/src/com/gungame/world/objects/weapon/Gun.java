@@ -1,5 +1,7 @@
 package com.gungame.world.objects.weapon;
 
+import com.badlogic.gdx.graphics.Texture;
+
 import java.util.List;
 
 public interface Gun {
@@ -11,6 +13,7 @@ public interface Gun {
     int getMagazine();
     boolean isAutomatic();
     boolean isReloading();
+    Texture getTexture();
 
     default boolean isAbleToShoot(boolean reloading, int magazine, int ammo, long reloadingTimer, int rateOfFire, long now) {
         if (reloading) {

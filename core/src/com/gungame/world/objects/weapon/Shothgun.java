@@ -2,6 +2,7 @@ package com.gungame.world.objects.weapon;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Texture;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,13 +19,15 @@ public class Shothgun implements Gun {
     private static final int BULLET_SPEED = 70;
     private static final Random random = new Random();
     private static final boolean IS_AUTOMATIC = false;
+
+    private static final Texture weaponIcon = new Texture("ui/shotgun.png");
     private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
     private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"));
+
     private @Getter int magazine = MAGAZINE_SIZE;
     private @Getter int ammo = MAX_AMMO;
     private @Getter long reloadingTimer;
-    private boolean reloading = false;
-
+    private @Getter boolean reloading = false;
 
     public List<BulletData> fire() {
         List<BulletData> bullets = new ArrayList<>();
@@ -64,27 +67,19 @@ public class Shothgun implements Gun {
         }
     }
 
-    public int getMagazineSize() {
-        return magazine;
-    }
-
-    public int getAmmo() {
-        return ammo;
-    }
-
-    public boolean isReloading() {
-        return reloading;
-    }
-
-
-
     public boolean isAutomatic() {
         return IS_AUTOMATIC;
+    }
+
+    @Override
+    public Texture getTexture() {
+        return weaponIcon;
     }
 
     public void dispose() {
         reloadingSound.dispose();
         shootSound.dispose();
+        weaponIcon.dispose();
     }
 
 }

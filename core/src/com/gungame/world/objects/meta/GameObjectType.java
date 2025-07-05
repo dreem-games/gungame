@@ -3,6 +3,7 @@ package com.gungame.world.objects.meta;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.gungame.world.GameWorld;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.Box;
@@ -29,14 +30,14 @@ public enum GameObjectType {
 
         try {
             try {
-                var methodType = MethodType.methodType(void.class, GameObjectType.class, Body.class, Sprite.class);
+                var methodType = MethodType.methodType(void.class, GameWorld.class, GameObjectType.class, Body.class, Sprite.class);
                 var constructorHandle = lookup.findConstructor(subjectClass, methodType);
-                return (body, sprite) -> (GameObject) constructorHandle.invoke(this, body, sprite);
+                return (gameWorld, body, sprite) -> (GameObject) constructorHandle.invoke(gameWorld, this, body, sprite);
             } catch (NoSuchMethodException e) {
                 try {
-                    var methodType = MethodType.methodType(void.class, GameObjectType.class, Body.class);
+                    var methodType = MethodType.methodType(void.class, GameWorld.class, GameObjectType.class, Body.class);
                     var constructorHandle = lookup.findConstructor(subjectClass, methodType);
-                    return (InvisibleGameObjectCreator) (body) -> (GameObject) constructorHandle.invoke(this, body);
+                    return (InvisibleGameObjectCreator) (gameWorld, body) -> (GameObject) constructorHandle.invoke(gameWorld, this, body);
                 } catch (NoSuchMethodException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -50,9 +51,9 @@ public enum GameObjectType {
         return bodyType;
     }
 
-    public GameObject createInstance(Body body, Sprite sprite) {
+    public GameObject createInstance(GameWorld gameWorld, Body body, Sprite sprite) {
         try {
-            return instanceCreator.createInstance(body, sprite);
+            return instanceCreator.createInstance(gameWorld, body, sprite);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -61,17 +62,17 @@ public enum GameObjectType {
     @FunctionalInterface
     public interface GameObjectCreator {
 
-        GameObject createInstance(Body body, Sprite sprite) throws Throwable;
+        GameObject createInstance(GameWorld gameWorld, Body body, Sprite sprite) throws Throwable;
     }
 
     @FunctionalInterface
     public interface InvisibleGameObjectCreator extends GameObjectCreator {
 
         @Override
-        default GameObject createInstance(Body body, Sprite sprite) throws Throwable {
-            return createInstance(body);
+        default GameObject createInstance(GameWorld gameWorld, Body body, Sprite sprite) throws Throwable {
+            return createInstance(gameWorld, body);
         }
 
-        GameObject createInstance(Body body) throws Throwable;
+        GameObject createInstance(GameWorld gameWorld, Body body) throws Throwable;
     }
 }
