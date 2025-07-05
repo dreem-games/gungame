@@ -39,7 +39,7 @@ public class GameWorld implements Disposable {
     private float lastWorldStepTime;
     private float timeAccumulator;
     public boolean isWorldToRestart = false;
-    private long deathTime = 0;
+    private int deathTimer = 0;
 
 
 
@@ -76,15 +76,13 @@ public class GameWorld implements Disposable {
      * после смерти одного из героев
      * затем сообщает что его нужно перезапустить
      */
-    public void isWorldToRestart(long now) {
-        if (((hero.isToDestroy() || hero2.isToDestroy())) && deathTime == 0)  {
-            deathTime = now;
-            return;
-        } else if (deathTime == 0) {
-            return;
-        }
-        if (now - deathTime > 3000) {
-            isWorldToRestart = true;
+    public void isWorldToRestart() {
+        if (hero.isToDestroy() || hero2.isToDestroy()) {
+            deathTimer++;
+            System.out.println(deathTimer);
+            if (deathTimer > 180) {
+                isWorldToRestart = true;
+            }
         }
     }
 
@@ -119,6 +117,6 @@ public class GameWorld implements Disposable {
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
 
-        isWorldToRestart((long)currentTime);
+        isWorldToRestart();
     }
 }
