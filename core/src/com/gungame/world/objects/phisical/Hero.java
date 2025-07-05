@@ -31,15 +31,15 @@ public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final Random random = new Random();
-    private static final Sound[] damageSounds = {
+    private  final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
     };
-    private static final Sound[] dashSounds = {
+    private final Sound[] dashSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
-    private static final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
 
     private float xScale;
     private float yScale;

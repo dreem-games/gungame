@@ -17,7 +17,9 @@ import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectUtils;
+import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.WallsGenerationUtils;
+import lombok.Getter;
 
 import static com.gungame.world.GameWorldConfig.*;
 
@@ -31,9 +33,15 @@ public class GameWorld implements Disposable {
     private GroundContainer groundContainer;
     private World world;
     private Box2DDebugRenderer debugRenderer;
+    private @Getter Hero hero;
+    private @Getter Hero hero2;
 
     private float lastWorldStepTime;
     private float timeAccumulator;
+    public boolean isWorldToRestart = false;
+    private int deathTimer = 0;
+
+
 
     public void init(Camera camera) {
         Box2D.init();
@@ -51,16 +59,31 @@ public class GameWorld implements Disposable {
         var wallsSize = factoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        var hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        hero = factoryManager.getHeroFactory().createImmediately(10, 10, 20);
         uiEngine = new UiEngine(hero, true);
 
-        var hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        hero2 = factoryManager.getHeroFactory().createImmediately(80, 40, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
 
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH);
         WallsGenerationUtils.generateBoxes(factoryManager.getBoxFactory(), wallW, wallH, VERTICAL_SIZE - wallW, HORIZONTAL_SIZE - wallH, .4f);
+    }
+
+    /**
+     * Метод отсчитывает 180 кадров (3 секунды)
+     * после смерти одного из героев
+     * затем сообщает что его нужно перезапустить
+     */
+    public void isWorldToRestart() {
+        if (hero.isToDestroy() || hero2.isToDestroy()) {
+            deathTimer++;
+            System.out.println(deathTimer);
+            if (deathTimer > 180) {
+                isWorldToRestart = true;
+            }
+        }
     }
 
     @Override
@@ -93,5 +116,7 @@ public class GameWorld implements Disposable {
 
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
+
+        isWorldToRestart();
     }
 }
