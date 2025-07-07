@@ -15,10 +15,7 @@ import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
-import com.gungame.world.objects.weapon.Gun;
-import com.gungame.world.objects.weapon.Rifle;
-import com.gungame.world.objects.weapon.Shothgun;
-import com.gungame.world.objects.weapon.Smg;
+import com.gungame.world.objects.weapon.*;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -49,7 +46,7 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastMovingModeChange = lastStaminaRegen;
     private boolean isAbleToRun;
     private @Getter int health = 100;
-    private final Gun[] gun = {new Rifle(), new Smg(), new Shothgun()};
+    private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
     private int currentWeapon = 0;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
@@ -81,18 +78,19 @@ public class Hero extends DynamicVisibleGameObject {
         float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
         float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
         var hidesBox = hidesBox(x, y);
-        CustomObjectInitializationConfig customInitConfig = null;
+        CustomObjectInitializationConfig customInitConfig;
+        customInitConfig = new CustomObjectInitializationConfig();
+        customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         if (hidesBox != null) {
-            customInitConfig = new CustomObjectInitializationConfig();
             customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
         }
+        System.out.println(customInitConfig.getGroupIndex());
         for (var bulletData : bullets) {
             float angle = getAngle() + bulletData.deviation();
             bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> {
                 bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
-                bullet.setShotID(bulletData.shotID());
             });
         }
     }

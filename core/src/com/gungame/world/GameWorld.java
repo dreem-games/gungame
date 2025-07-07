@@ -9,7 +9,6 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.ui.UiEngine;
-import com.gungame.world.collision.GameContactFilter;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.controller.ControllersManager;
 import com.gungame.world.objects.imaginary.GroundContainer;
@@ -39,7 +38,7 @@ public class GameWorld implements Disposable {
     private float lastWorldStepTime;
     private float timeAccumulator;
     public boolean isWorldToRestart = false;
-    private int deathTimer = 0;
+    private float deathTime = 0;
 
     public void init(Camera camera) {
         Box2D.init();
@@ -48,7 +47,6 @@ public class GameWorld implements Disposable {
         }
 
         phisicsWorld = new World(new Vector2(0, 0), true);
-        phisicsWorld.setContactFilter(new GameContactFilter());
         phisicsWorld.setContactListener(new GameContactListener());
         physicalObjectFactoryManager = new GameObjectFactoryManager(this);
         groundContainer = new GroundContainer();
@@ -75,13 +73,12 @@ public class GameWorld implements Disposable {
      * после смерти одного из героев
      * затем сообщает что его нужно перезапустить
      */
-    public void isWorldToRestart() {
-        if (hero.isToDestroy() || hero2.isToDestroy()) {
-            deathTimer++;
-            System.out.println(deathTimer);
-            if (deathTimer > 180) {
-                isWorldToRestart = true;
+    public void isWorldToRestart(float now) {
+        if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
+            deathTime = now ;
             }
+        if (now - deathTime > 3000 && now - deathTime < 10000) {
+            isWorldToRestart = true;
         }
     }
 
@@ -116,6 +113,6 @@ public class GameWorld implements Disposable {
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
 
-        isWorldToRestart();
+        isWorldToRestart(currentTime);
     }
 }

@@ -14,6 +14,7 @@ public class GameContactFilter implements ContactFilter {
         if (objectB.getType() == GameObjectType.BULLET && objectA.getType() == GameObjectType.BULLET) { //если пули от одного выстрела, они не уничтожаются
             return ((Bullet) objectA).getShotID() != ((Bullet) objectB).getShotID();
         }
+        System.out.println(true);
         return true;
     }
 }
