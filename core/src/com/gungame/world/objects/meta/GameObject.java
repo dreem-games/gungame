@@ -6,10 +6,11 @@ import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
+import lombok.Getter;
 
 public abstract class GameObject implements Disposable {
     protected final GameObjectType type;
-    protected final Body body;
+    protected final @Getter Body body;
     protected final GameWorld gameWorld;
     private boolean toDestroy = false;
 

@@ -1,6 +1,8 @@
 package com.gungame.world;
 
+import box2dLight.RayHandler;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2D;
@@ -26,6 +28,8 @@ public class GameWorld implements Disposable {
 
     private @Getter World phisicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
+    private @Getter RayHandler rayHandler;
+
     private ControllersManager controllersManager;
     private UiEngine uiEngine;
     private UiEngine uiEngine2;
@@ -43,6 +47,13 @@ public class GameWorld implements Disposable {
 
         phisicsWorld = new World(new Vector2(0, 0), true);
         phisicsWorld.setContactListener(new GameContactListener());
+
+        rayHandler = new RayHandler(phisicsWorld);
+        rayHandler.setAmbientLight(0f); // Тьма вне источников света
+        rayHandler.setCulling(true);    // Оптимизация
+        rayHandler.setBlur(true); // необязательно
+        rayHandler.setShadows(true); // обязательно!
+
         physicalObjectFactoryManager = new GameObjectFactoryManager(this);
         groundContainer = new GroundContainer();
 
@@ -70,9 +81,10 @@ public class GameWorld implements Disposable {
         groundContainer.dispose();
         GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::dispose);
         phisicsWorld.dispose();
+        rayHandler.dispose();
     }
 
-    public void render(SpriteBatch batch, Camera camera) {
+    public void render(SpriteBatch batch, OrthographicCamera camera) {
         float currentTime = TimeUtils.nanoTime() / 1000000f;
         float frameTime = Math.min(currentTime - lastWorldStepTime, 0.25f);
         lastWorldStepTime = currentTime;
@@ -84,6 +96,7 @@ public class GameWorld implements Disposable {
             controllersManager.control();
             phisicsWorld.step(WORLD_STEP_TIME, 6, 2);
             timeAccumulator -= WORLD_STEP_TIME;
+            rayHandler.update();
         }
         groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
@@ -93,5 +106,7 @@ public class GameWorld implements Disposable {
 
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
+        rayHandler.setCombinedMatrix(camera);
+        rayHandler.render();
     }
 }

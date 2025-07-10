@@ -26,6 +26,7 @@ public class UiEngine implements Disposable {
     }
 
     public void draw(SpriteBatch batch, Camera camera) {
+        // TODO: вне мира это рисовать бы...
         uis.forEach(it -> it.draw(batch, camera, hero));
     }
 

@@ -1,7 +1,9 @@
 package com.gungame.world.objects.phisical;
 
+import box2dLight.PointLight;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -46,6 +48,7 @@ public class Hero extends DynamicVisibleGameObject {
 
     private float xScale;
     private float yScale;
+    private final PointLight playerLight;
     private @NonNull MovingMode movingMode = MovingMode.STANDING;
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUsage = System.currentTimeMillis();
@@ -65,6 +68,18 @@ public class Hero extends DynamicVisibleGameObject {
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
+        // Свет от персонажа
+        playerLight = new PointLight(getWorld().getRayHandler(), 128);
+        playerLight.attachToBody(getBody());
+        playerLight.setDistance(50f);
+        playerLight.setSoft(true);
+        playerLight.setIgnoreAttachedBody(true);
+        Filter filter = new Filter();
+        filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
+        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
+        playerLight.setSoftnessLength(10f);
+        playerLight.setContactFilter(filter);
+        playerLight.setColor(Color.WHITE);
     }
 
     public void takeDamage(int damage) {
@@ -245,7 +260,6 @@ public class Hero extends DynamicVisibleGameObject {
         return potentialResult;
     }
 
-
     @Override
     public void setupCollisionFilter(Filter filter) {
         filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
@@ -287,5 +301,6 @@ public class Hero extends DynamicVisibleGameObject {
         reloadingSound.dispose();
         shootSound.dispose();
         Stream.concat(Stream.of(dashSounds), Stream.of(deathSound)).forEach(Sound::dispose);
+        playerLight.dispose();
     }
 }
