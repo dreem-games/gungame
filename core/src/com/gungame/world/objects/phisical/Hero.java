@@ -70,16 +70,16 @@ public class Hero extends DynamicVisibleGameObject {
         super(gameWorld, type, body, sprite);
         // Свет от персонажа
         playerLight = new PointLight(getWorld().getRayHandler(), 128);
-        playerLight.attachToBody(getBody());
-        playerLight.setDistance(50f);
+        playerLight.attachToBody(getBody(), 1.5f, 2f);
+        playerLight.setDistance(70f);
         playerLight.setSoft(true);
+        playerLight.setSoftnessLength(7.5f);
         playerLight.setIgnoreAttachedBody(true);
         Filter filter = new Filter();
-        filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
-        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
-        playerLight.setSoftnessLength(10f);
+        filter.categoryBits = CollisionCategory.ILLUMINABLE.getBitMask();
+        filter.maskBits = CollisionCategory.ILLUMINABLE.getBitMask();
         playerLight.setContactFilter(filter);
-        playerLight.setColor(Color.WHITE);
+        playerLight.setColor(new Color(1f, 0.75f, 0.8f, 0.85f));
     }
 
     public void takeDamage(int damage) {

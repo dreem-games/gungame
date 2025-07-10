@@ -32,6 +32,7 @@ public class Bullet extends VisibleGameObject {
     public void setupCollisionFilter(Filter filter) {
         filter.groupIndex = groupIndex;
         filter.categoryBits = CollisionCategory.ALL.getBitMask();
+        filter.categoryBits &= (short) ~CollisionCategory.ILLUMINABLE.getBitMask();
         filter.maskBits = CollisionCategory.ALL.getBitMask();
     }
 
