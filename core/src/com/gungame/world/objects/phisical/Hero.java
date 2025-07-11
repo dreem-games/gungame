@@ -80,8 +80,7 @@ public class Hero extends DynamicVisibleGameObject {
 
         Vector2 firePosition = getFirePosition();
         var hidesBox = hidesBox(firePosition);
-        CustomObjectInitializationConfig customInitConfig;
-        customInitConfig = new CustomObjectInitializationConfig();
+        CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
         if (hidesBox != null) {
             customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
         } else {
