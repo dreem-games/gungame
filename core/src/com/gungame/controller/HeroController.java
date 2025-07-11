@@ -27,24 +27,43 @@ public abstract class HeroController {
      * Рекомендуется передавать координаты в нормализованном виде.
      */
     protected void rotate(float x, float y) {
-        float angle = hero.getAngle();
-        if (angle < 0) {
-            angle += MathUtils.PI2;
+        rotate(MathUtils.atan2(y, x));
+    }
+
+    /**
+     * Поворачивает персонажа учитывая его положение
+     *  и точку куда он должен смотреть.
+     */
+    protected void rotateToPoint(float targetX, float targetY) {
+        if (isMouseOverBody(targetX, targetY)) {
+            return;
+        }
+        Vector2 firePos = hero.getFirePosition(); // мировая позиция дула
+        rotate(targetX - firePos.x, targetY - firePos.y);
+    }
+
+    private void rotate(float targetAngle) {
+        float currentAngle = hero.getAngle();
+        float delta = targetAngle - currentAngle;
+
+        // Нормализуем угол от -π до +π
+        while (delta > MathUtils.PI) delta -= MathUtils.PI2;
+        while (delta < -MathUtils.PI) delta += MathUtils.PI2;
+
+        if (Math.abs(delta) < 0.01f) {
+            return;
         }
 
-        var heroVector = new Vector2(1, 0);
-        float targetAngle = MathUtils.acos(heroVector.dot(x, y));
-        if (y < 0) {
-            targetAngle = MathUtils.PI2 - targetAngle;
-        }
+        // Установка угловой скорости
+        hero.setAngularVelocity(delta * GameWorldConfig.HERO_ROTATION_SPEED);
+    }
 
-        float targetVel = targetAngle - angle;
-        while (targetVel > MathUtils.PI) {
-            targetVel -= MathUtils.PI2;
-        }
-        while (targetVel < -MathUtils.PI) {
-            targetVel += MathUtils.PI2;
-        }
-        hero.setAngularVelocity(targetVel * GameWorldConfig.HERO_ROTATION_SPEED);
+    protected boolean isMouseOverBody(float mouseX, float mouseY) {
+        Vector2 pos = hero.getPosition();
+        float radius = hero.getBodyRadius();
+
+        float dx = mouseX - pos.x;
+        float dy = mouseY - pos.y;
+        return dx * dx + dy * dy < radius * radius;
     }
 }

@@ -1,6 +1,7 @@
 package com.gungame.world;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2D;
@@ -23,8 +24,6 @@ import lombok.Getter;
 import static com.gungame.world.GameWorldConfig.*;
 
 public class GameWorld implements Disposable {
-    private static final float WORLD_STEP_TIME = 1/60f;
-
     private @Getter World phisicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private ControllersManager controllersManager;
@@ -36,7 +35,6 @@ public class GameWorld implements Disposable {
     private @Getter Hero hero2;
 
     private float lastWorldStepTime;
-    private float timeAccumulator;
     public boolean isWorldToRestart = false;
     private float deathTime = 0;
 
@@ -91,25 +89,23 @@ public class GameWorld implements Disposable {
         phisicsWorld.dispose();
     }
 
-    public void render(SpriteBatch batch, Camera camera) {
+    public void render(SpriteBatch batch, OrthographicCamera camera) {
         float currentTime = TimeUtils.nanoTime() / 1000000f;
         float frameTime = Math.min(currentTime - lastWorldStepTime, 0.25f);
         lastWorldStepTime = currentTime;
 
-        timeAccumulator += frameTime;
-        if (timeAccumulator >= WORLD_STEP_TIME) {
-            GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
-            physicalObjectFactoryManager.executeUpdates();
-            controllersManager.control();
-            phisicsWorld.step(WORLD_STEP_TIME, 6, 2);
-            timeAccumulator -= WORLD_STEP_TIME;
-        }
+        // шаг физического мира
+        GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
+        physicalObjectFactoryManager.executeUpdates();
+        controllersManager.control();
+        phisicsWorld.step(frameTime, 6, 2);
+
+        // отрисовка графического
         groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(phisicsWorld, camera.combined);
         }
-
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
 

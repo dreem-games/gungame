@@ -4,6 +4,7 @@ import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Disposable;
@@ -56,6 +57,12 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
                        CustomObjectInitializationConfig customObjectInitializationConfig,
                        Consumer<T> initializer) {
         updates.add(() -> initializer.accept(createImmediately(x, y, rotation, customObjectInitializationConfig)));
+    }
+
+    public void create(Vector2 pos, float rotation,
+                       CustomObjectInitializationConfig customObjectInitializationConfig,
+                       Consumer<T> initializer) {
+        create(pos.x, pos.y, rotation, customObjectInitializationConfig, initializer);
     }
 
     public T createImmediately(float x, float y, float rotation,

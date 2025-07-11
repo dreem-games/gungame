@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
@@ -25,8 +26,11 @@ import java.util.stream.Stream;
 import static com.badlogic.gdx.math.MathUtils.random;
 
 public class Hero extends DynamicVisibleGameObject {
-    public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     public static final float MAX_STAMINA = 100f;
+    public static final float FIRE_POSITION_DX = 0.7f;
+    public static final float FIRE_POSITION_DY = 0.15f;
+
+    private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
@@ -73,12 +77,9 @@ public class Hero extends DynamicVisibleGameObject {
         if (bullets == null) {
             return;
         }
-        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
-        var position = getPosition();
-        float virtualAngle = getAngle() - .3f;
-        float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
-        float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
-        var hidesBox = hidesBox(x, y);
+
+        Vector2 firePosition = getFirePosition();
+        var hidesBox = hidesBox(firePosition);
         CustomObjectInitializationConfig customInitConfig;
         customInitConfig = new CustomObjectInitializationConfig();
         if (hidesBox != null) {
@@ -86,14 +87,34 @@ public class Hero extends DynamicVisibleGameObject {
         } else {
             customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         }
+
+        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
         for (var bulletData : bullets) {
             float angle = getAngle() + bulletData.deviation();
-            bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+            bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> {
                 bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
             });
         }
+    }
+
+    /**
+     * Расчёт места появления пули
+     */
+    public Vector2 getFirePosition() {
+        float totalOffsetX = FIRE_POSITION_DX * xScale;
+        float totalOffsetY = FIRE_POSITION_DY * yScale;
+
+        // Вращаем вокруг центра массы
+        float cos = MathUtils.cos(body.getAngle());
+        float sin = MathUtils.sin(body.getAngle());
+        float rotatedX = totalOffsetX * cos - totalOffsetY * sin;
+        float rotatedY = totalOffsetX * sin + totalOffsetY * cos;
+
+        float fireX = body.getPosition().x + rotatedX;
+        float fireY = body.getPosition().y + rotatedY;
+        return new Vector2(fireX, fireY);
     }
 
     public void reloadStart() {
@@ -112,7 +133,7 @@ public class Hero extends DynamicVisibleGameObject {
         }
     }
 
-    private Box hidesBox(float x, float y) {
+    private Box hidesBox(Vector2 pos) {
         var arr = new Array<Body>();
         getWorld().getPhisicsWorld().getBodies(arr);
 
@@ -124,7 +145,7 @@ public class Hero extends DynamicVisibleGameObject {
         for (var body : arr) {
             var userData = body.getUserData();
             if (userData instanceof Box box) {
-                var distance = box.getPosition().dst(x, y);
+                var distance = box.getPosition().dst(pos);
                 if (distance < minDistance && distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestBox = box;
@@ -224,6 +245,10 @@ public class Hero extends DynamicVisibleGameObject {
 
     public final Gun getCurrentGun() {
         return gun[currentWeapon];
+    }
+
+    public float getBodyRadius() {
+        return Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
     }
 
     @Override

@@ -59,12 +59,8 @@ public class HeroKeyboardHeroController extends HeroController {
             lastMouseY = mousePos.y;
         }
         camera.unproject(mousePos);
+        rotateToPoint(mousePos.x, mousePos.y);
 
-        var heroPosition = hero.getPosition();
-        mousePos.x -= heroPosition.x;
-        mousePos.y -= heroPosition.y;
-
-        mousePos = mousePos.nor();
         impulse = impulse.nor();
 
         used |= hero.move(impulse.x, impulse.y);
@@ -87,8 +83,6 @@ public class HeroKeyboardHeroController extends HeroController {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
             hero.setWeapon(2);
         }
-
-        rotate(mousePos.x, mousePos.y);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
