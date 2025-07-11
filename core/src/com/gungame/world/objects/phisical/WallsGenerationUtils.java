@@ -2,13 +2,13 @@ package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.objects.meta.*;
+import com.gungame.world.objects.meta.GameObjectFactory;
+import com.gungame.world.objects.meta.StaticGameObject;
 
-import java.util.Random;
+import static com.badlogic.gdx.math.MathUtils.random;
 
 public class WallsGenerationUtils {
     private static final String LOG_TAG = WallsGenerationUtils.class.getSimpleName();
-    private static final Random random = new Random();
 
     public static void generateWalls(GameObjectFactory<StaticGameObject> wallsFactory, float x, float y, float width, float height) {
         var wallSize = wallsFactory.getObjectMetadata().getSize();

@@ -35,6 +35,7 @@ public abstract class GameObject implements Disposable {
     }
 
     public void postConstruct() {
+        update();
     }
 
     public void update() {

@@ -9,23 +9,14 @@ import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
-import lombok.Getter;
-import lombok.Setter;
 
 import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
 
-public class Bullet extends VisibleGameObject {
-
+public class Grenade extends VisibleGameObject {
     private short groupIndex = 0;
-    public @Setter int damage;
 
-    public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+    public Grenade(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
-    }
-
-    public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite, int damage) {
-        super(gameWorld, type, body, sprite);
-        this.damage = damage;
     }
 
     public void setGroupIndex(short groupIndex) {
@@ -40,7 +31,6 @@ public class Bullet extends VisibleGameObject {
     public void setupCollisionFilter(Filter filter) {
         filter.groupIndex = groupIndex;
         filter.categoryBits = CollisionCategory.ALL.getBitMask();
-        filter.categoryBits &= (short) ~CollisionCategory.ILLUMINABLE.getBitMask();
         filter.maskBits = CollisionCategory.ALL.getBitMask();
     }
 
@@ -61,8 +51,6 @@ public class Bullet extends VisibleGameObject {
 
         sprite.setColor(Color.RED);
         body.setBullet(true);
-
-        super.postConstruct();
     }
 
     @Override
@@ -73,6 +61,4 @@ public class Bullet extends VisibleGameObject {
     @Override
     public void dispose() {
     }
-
-
 }

@@ -18,14 +18,13 @@ import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactoryManager;
 import com.gungame.world.objects.meta.GameObjectUtils;
+import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.WallsGenerationUtils;
 import lombok.Getter;
 
 import static com.gungame.world.GameWorldConfig.*;
 
 public class GameWorld implements Disposable {
-    private static final float WORLD_STEP_TIME = 1/60f;
-
     private @Getter World phisicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private @Getter RayHandler rayHandler;
@@ -35,9 +34,12 @@ public class GameWorld implements Disposable {
     private UiEngine uiEngine2;
     private GroundContainer groundContainer;
     private Box2DDebugRenderer debugRenderer;
+    private @Getter Hero hero;
+    private @Getter Hero hero2;
 
     private float lastWorldStepTime;
-    private float timeAccumulator;
+    public boolean isWorldToRestart = false;
+    private float deathTime = 0;
 
     public void init(Camera camera) {
         Box2D.init();
@@ -61,10 +63,10 @@ public class GameWorld implements Disposable {
         var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        var hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(10, 10, 20);
         uiEngine = new UiEngine(hero, true);
 
-        var hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(80, 40, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
@@ -72,6 +74,20 @@ public class GameWorld implements Disposable {
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW * 2, HORIZONTAL_SIZE - wallH * 2);
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
         WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
+    }
+
+    /**
+     * Метод отсчитывает 3 секунды
+     * после смерти одного из героев
+     * затем сообщает что его нужно перезапустить
+     */
+    public void checkWorldForRestart(float now) {
+        if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
+            deathTime = now;
+        }
+        if (now - deathTime > 3000 && now - deathTime < 10000) {
+            isWorldToRestart = true;
+        }
     }
 
     @Override
@@ -89,24 +105,24 @@ public class GameWorld implements Disposable {
         float frameTime = Math.min(currentTime - lastWorldStepTime, 0.25f);
         lastWorldStepTime = currentTime;
 
-        timeAccumulator += frameTime;
-        if (timeAccumulator >= WORLD_STEP_TIME) {
-            GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
-            physicalObjectFactoryManager.executeUpdates();
-            controllersManager.control();
-            phisicsWorld.step(WORLD_STEP_TIME, 6, 2);
-            timeAccumulator -= WORLD_STEP_TIME;
-            rayHandler.update();
-        }
+        // шаг физического мира
+        GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
+        physicalObjectFactoryManager.executeUpdates();
+        controllersManager.control();
+        phisicsWorld.step(frameTime, 6, 2);
+        rayHandler.update();
+
+        // отрисовка графического
         groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
         if (debugRenderer != null) {
             debugRenderer.render(phisicsWorld, camera.combined);
         }
-
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
         rayHandler.setCombinedMatrix(camera);
         rayHandler.render();
+
+        checkWorldForRestart(currentTime);
     }
 }

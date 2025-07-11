@@ -18,14 +18,22 @@ public class Ammo implements Ui {
     public void draw(SpriteBatch batch, Camera camera, Hero hero) {
         float x;
         float y;
+        float xIcon;
+        float width;
         if (isMainHero) {
-            x = camera.position.x - camera.viewportWidth / 2 + 2;
+            x = camera.position.x - camera.viewportWidth / 2 + 3;
+            xIcon = x + 1f;
+            width = 12f;
         } else {
             x = camera.position.x - camera.viewportWidth / 2 + 78;
+            xIcon = x + 14f;
+            width = -12f;
         }
         y = camera.position.y + camera.viewportHeight / 2 - 3;
         font.getData().setScale(0.2f);
-        font.draw(batch, String.format((" %d  /  %d "), hero.getMagazine(), hero.getAmmo()), x, y);
+        font.draw(batch, String.format((" %d  /  %d "),
+                hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
+        batch.draw(hero.getCurrentGun().getTexture(), xIcon, y - 9.5f, width, 12f);
 
     }
 
