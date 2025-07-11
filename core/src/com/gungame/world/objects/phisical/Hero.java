@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Filter;
@@ -22,8 +23,11 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 public class Hero extends DynamicVisibleGameObject {
-    public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     public static final float MAX_STAMINA = 100f;
+    public static final float FIRE_POSITION_DX = 0.7f;
+    public static final float FIRE_POSITION_DY = 0.15f;
+
+    private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private static final float BULLET_SPREAD = 0.035f;
     private static final int RELOADING_TIME = 3000;
@@ -96,15 +100,11 @@ public class Hero extends DynamicVisibleGameObject {
             return;
         }
 
-        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
-        var position = getPosition();
         float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
         float angle = getAngle() + bulletDeviation;
-        float virtualAngle = angle - .3f;
-        float x = position.x + MathUtils.cos(virtualAngle) * xScale / 1.7f;
-        float y = position.y + MathUtils.sin(virtualAngle) * yScale / 1.7f;
+        Vector2 firePosition = getFirePosition();
 
-        var hidesBox = hidesBox(x, y);
+        var hidesBox = hidesBox(firePosition);
         CustomObjectInitializationConfig customInitConfig = null;
         if (hidesBox != null) {
             customInitConfig = new CustomObjectInitializationConfig();
@@ -113,9 +113,28 @@ public class Hero extends DynamicVisibleGameObject {
 
         magazine--;
         shootSound.play();
-        bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,
+        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
+        bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
                 bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
         reloadingTimer = now;
+    }
+
+    /**
+     * Расчёт места появления пули
+     */
+    public Vector2 getFirePosition() {
+        float totalOffsetX = FIRE_POSITION_DX * xScale;
+        float totalOffsetY = FIRE_POSITION_DY * yScale;
+
+        // Вращаем вокруг центра массы
+        float cos = MathUtils.cos(body.getAngle());
+        float sin = MathUtils.sin(body.getAngle());
+        float rotatedX = totalOffsetX * cos - totalOffsetY * sin;
+        float rotatedY = totalOffsetX * sin + totalOffsetY * cos;
+
+        float fireX = body.getPosition().x + rotatedX;
+        float fireY = body.getPosition().y + rotatedY;
+        return new Vector2(fireX, fireY);
     }
 
     public void reloadStart() {
@@ -133,7 +152,7 @@ public class Hero extends DynamicVisibleGameObject {
         reloading = false;
     }
 
-    private Box hidesBox(float x, float y) {
+    private Box hidesBox(Vector2 pos) {
         var arr = new Array<Body>();
         getWorld().getPhisicsWorld().getBodies(arr);
 
@@ -145,7 +164,7 @@ public class Hero extends DynamicVisibleGameObject {
         for (var body : arr) {
             var userData = body.getUserData();
             if (userData instanceof Box box) {
-                var distance = box.getPosition().dst(x, y);
+                var distance = box.getPosition().dst(pos);
                 if (distance < minDistance && distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestBox = box;
@@ -245,6 +264,9 @@ public class Hero extends DynamicVisibleGameObject {
         return potentialResult;
     }
 
+    public float getBodyRadius() {
+        return Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
+    }
 
     @Override
     public void setupCollisionFilter(Filter filter) {

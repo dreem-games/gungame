@@ -52,6 +52,8 @@ public class Bullet extends VisibleGameObject {
 
         sprite.setColor(Color.RED);
         body.setBullet(true);
+
+        super.postConstruct();
     }
 
     @Override
