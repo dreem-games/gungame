@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum GunData {
     RIFLE(0.035f,
-            20,
+            35,
             70,
             3000,
             1000,

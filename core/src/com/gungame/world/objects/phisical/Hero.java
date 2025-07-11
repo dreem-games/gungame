@@ -80,11 +80,11 @@ public class Hero extends DynamicVisibleGameObject {
         var hidesBox = hidesBox(x, y);
         CustomObjectInitializationConfig customInitConfig;
         customInitConfig = new CustomObjectInitializationConfig();
-        customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         if (hidesBox != null) {
             customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+        } else {
+            customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         }
-        System.out.println(customInitConfig.getGroupIndex());
         for (var bulletData : bullets) {
             float angle = getAngle() + bulletData.deviation();
             bulletFactory.create(x, y, angle * MathUtils.radiansToDegrees, customInitConfig,

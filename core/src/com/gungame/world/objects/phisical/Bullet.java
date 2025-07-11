@@ -18,7 +18,6 @@ public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
     public @Setter int damage;
-    public @Setter @Getter int shotID;
 
     public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);

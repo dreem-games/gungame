@@ -80,11 +80,11 @@ public class HeroJoystickController extends HeroController {
         }
         r1WasPressed = r1Pressed;
 
-        var y1Pressed = controller.getButton(controller.getMapping().buttonY);
-        if(y1Pressed && !yWasPressed) {
+        var yPressed = controller.getButton(controller.getMapping().buttonY);
+        if(yPressed && !yWasPressed) {
             hero.switchWeapon();
         }
-        yWasPressed = y1Pressed;
+        yWasPressed = yPressed;
 
         if (controller.getButton(mapping.buttonX)) {
             hero.reloadStart();

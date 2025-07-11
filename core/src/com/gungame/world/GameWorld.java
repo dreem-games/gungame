@@ -69,14 +69,14 @@ public class GameWorld implements Disposable {
     }
 
     /**
-     * Метод отсчитывает 180 кадров (3 секунды)
+     * Метод отсчитывает 3 секунды
      * после смерти одного из героев
      * затем сообщает что его нужно перезапустить
      */
-    public void isWorldToRestart(float now) {
+    public void checkWorldForRestart(float now) {
         if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
             deathTime = now ;
-            }
+        }
         if (now - deathTime > 3000 && now - deathTime < 10000) {
             isWorldToRestart = true;
         }
@@ -113,6 +113,6 @@ public class GameWorld implements Disposable {
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
 
-        isWorldToRestart(currentTime);
+        checkWorldForRestart(currentTime);
     }
 }

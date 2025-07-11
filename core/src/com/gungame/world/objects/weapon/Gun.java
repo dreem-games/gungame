@@ -62,7 +62,7 @@ public class Gun {
         if (now - reloadingTimer < rateOfFire) {
             return null;
         }
-        int id = ThreadLocalRandom.current().nextInt(Short.MIN_VALUE, 0); //Создаем id выстрела
+        int id = random.nextInt(Short.MIN_VALUE, -1); //Создаем id выстрела
         for (int i = 0; i < bulletsCountInOneShot; i++) {
             float bulletDeviation = (float) random.nextGaussian() * bulletSpread;
             bullets.add(new BulletData(bulletSpeed, bulletDeviation, damage, (short) id));
