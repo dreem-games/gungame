@@ -75,7 +75,7 @@ public class GameWorld implements Disposable {
      */
     public void checkWorldForRestart(float now) {
         if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
-            deathTime = now ;
+            deathTime = now;
         }
         if (now - deathTime > 3000 && now - deathTime < 10000) {
             isWorldToRestart = true;

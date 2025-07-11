@@ -22,11 +22,12 @@ import lombok.NonNull;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import static com.badlogic.gdx.math.MathUtils.random;
+
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     public static final float MAX_STAMINA = 100f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
-    private static final Random random = new Random();
     private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))

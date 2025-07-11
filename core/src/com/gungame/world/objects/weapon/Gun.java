@@ -1,29 +1,15 @@
 package com.gungame.world.objects.weapon;
 
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+
+import static com.badlogic.gdx.math.MathUtils.random;
 
 public class Gun {
-    private final float bulletSpread;
-    private final int reloadingTime;
-    private final int rateOfFire;
-    private final int magazineSize;
-    private final int maxAmmo;
-    private final int damage;
-    private final int bulletSpeed;
-    private final Random random = new Random();
-    private final boolean isAutomatic;
-    private final int bulletsCountInOneShot;//Автоматическое оружие или нет
-
-    private final Texture weaponIcon;
-    private final Sound reloadingSound;
-    private final Sound shootSound;
+    private final GunData gunData;
 
     private @Getter int magazine;
     private int ammo;
@@ -31,20 +17,9 @@ public class Gun {
     private boolean reloading = false;
 
     public Gun(GunData gunData) {
-        this.bulletSpread = gunData.getBulletSpread();
-        this.reloadingTime = gunData.getReloadingTime();
-        this.rateOfFire = gunData.getRateOfFire();
-        this.magazineSize = gunData.getMagazineSize();
-        this.maxAmmo = gunData.getMaxAmmo();
-        this.damage = gunData.getBulletDamage();
-        this.bulletSpeed = gunData.getBulletSpeed();
-        this.isAutomatic = gunData.isAutomatic();
-        this.bulletsCountInOneShot = gunData.getBulletCountInOneShot();
-        this.weaponIcon = gunData.getWeaponIcon();
-        this.reloadingSound = gunData.getReloadingSound();
-        this.shootSound = gunData.getShootSound();
-        magazine = magazineSize;
-        ammo = maxAmmo;
+        this.gunData = gunData;
+        this.magazine = gunData.getMagazineSize();
+        this.ammo = gunData.getMaxAmmo();
     }
 
     public List<BulletData> fire() {
@@ -59,37 +34,37 @@ public class Gun {
             return null;
         }
         long now = System.currentTimeMillis();
-        if (now - reloadingTimer < rateOfFire) {
+        if (now - reloadingTimer < gunData.getRateOfFire()) {
             return null;
         }
         int id = random.nextInt(Short.MIN_VALUE, -1); //Создаем id выстрела
-        for (int i = 0; i < bulletsCountInOneShot; i++) {
-            float bulletDeviation = (float) random.nextGaussian() * bulletSpread;
-            bullets.add(new BulletData(bulletSpeed, bulletDeviation, damage, (short) id));
+        for (int i = 0; i < gunData.getBulletCountInOneShot(); i++) {
+            float bulletDeviation = (float) random.nextGaussian() * gunData.getBulletSpread();
+            bullets.add(new BulletData(gunData.getBulletSpeed(), bulletDeviation, gunData.getBulletDamage(), (short) id));
         }
         magazine--;
-        shootSound.play();
+        gunData.getShootSound().play();
         reloadingTimer = now;
         return bullets;
     }
 
     public void reloadStart() {
-        if (magazine < magazineSize && ammo > 0 && !reloading) {
+        if (magazine < gunData.getMagazineSize() && ammo > 0 && !reloading) {
             reloading = true;
-            reloadingSound.play();
+            gunData.getReloadingSound().play();
             reloadingTimer = System.currentTimeMillis();
         }
     }
 
     public void reloadEnd() {
-        int ammoToFillMagazine = Math.min(magazineSize - magazine, ammo);
+        int ammoToFillMagazine = Math.min(gunData.getMagazineSize() - magazine, ammo);
         ammo -= ammoToFillMagazine;
         magazine += ammoToFillMagazine;
         reloading = false;
     }
 
     public void isReloadingComplete(long now) {
-        if (reloading && now - reloadingTimer > reloadingTime) {
+        if (reloading && now - reloadingTimer > gunData.getReloadingTime()) {
             reloadEnd();
         }
     }
@@ -99,7 +74,7 @@ public class Gun {
     }
 
     public boolean isAutomatic() {
-        return isAutomatic;
+        return gunData.isAutomatic();
     }
 
     public int getAmmo() {
@@ -111,12 +86,10 @@ public class Gun {
     }
 
     public void dispose() {
-        weaponIcon.dispose();
-        reloadingSound.dispose();
-        shootSound.dispose();
+        gunData.dispose();
     }
 
     public Texture getTexture() {
-        return weaponIcon;
+        return gunData.getWeaponIcon();
     }
 }
