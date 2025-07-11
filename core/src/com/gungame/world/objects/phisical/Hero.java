@@ -16,11 +16,14 @@ import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.weapon.*;
 import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Random;
 import java.util.stream.Stream;
+
+import static com.badlogic.gdx.math.MathUtils.random;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
@@ -29,24 +32,15 @@ public class Hero extends DynamicVisibleGameObject {
 
     private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
-    private static final float BULLET_SPREAD = 0.035f;
-    private static final int RELOADING_TIME = 3000;
-    private static final int RATE_OF_FIRE = 300;
-    private static final int MAGAZINE_SIZE = 9;
-    private static final int MAX_AMMO = 99;
-
-    private static final Random random = new Random();
-    private static final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
-    private static final Sound shootSound = Gdx.audio.newSound(Gdx.files.internal("sound/shoot.wav"));
-    private static final Sound[] damageSounds = {
+    private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
     };
-    private static final Sound[] dashSounds = {
+    private final Sound[] dashSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
-    private static final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
 
     private float xScale;
     private float yScale;
@@ -55,17 +49,10 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastStaminaUsage = System.currentTimeMillis();
     private long lastStaminaRegen = lastStaminaUsage;
     private long lastMovingModeChange = lastStaminaRegen;
-    private boolean reloading = false;
     private boolean isAbleToRun;
-    private @Getter int magazine = MAGAZINE_SIZE;
-    private @Getter int ammo = MAX_AMMO;
     private @Getter int health = 100;
-
-    /**
-     * Время с последнего выстрела или начала перезарядки если reloading=true.
-     * Используется для ограничения скорострельности и отсчёта времени перезарядки.
-     */
-    private long reloadingTimer = lastStaminaRegen;
+    private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
+    private int currentWeapon = 0;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -76,6 +63,7 @@ public class Hero extends DynamicVisibleGameObject {
         health -= damage;
         if (health <= 0) {
             death();
+            health = 0; //что бы не уходило в минус
         }
     }
 
@@ -85,38 +73,29 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void fire() {
-        if (reloading) {
-            return;
-        }
-        if (magazine == 0) {
-            if (ammo > 0) {
-                reloadStart();
-            }
+        var bullets = getCurrentGun().fire();
+        if (bullets == null) {
             return;
         }
 
-        long now = System.currentTimeMillis();
-        if (now - reloadingTimer < RATE_OF_FIRE) {
-            return;
-        }
-
-        float bulletDeviation = (float) random.nextGaussian() * BULLET_SPREAD;
-        float angle = getAngle() + bulletDeviation;
         Vector2 firePosition = getFirePosition();
-
         var hidesBox = hidesBox(firePosition);
-        CustomObjectInitializationConfig customInitConfig = null;
+        CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
         if (hidesBox != null) {
-            customInitConfig = new CustomObjectInitializationConfig();
             customInitConfig.setGroupIndex(hidesBox.getGroupIndex());
+        } else {
+            customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         }
 
-        magazine--;
-        shootSound.play();
         var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
-        bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
-                bullet -> bullet.setVelocity(MathUtils.cos(angle) * 70, MathUtils.sin(angle) * 70));
-        reloadingTimer = now;
+        for (var bulletData : bullets) {
+            float angle = getAngle() + bulletData.deviation();
+            bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
+                    bullet -> {
+                bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
+                bullet.setDamage(bulletData.damage());
+            });
+        }
     }
 
     /**
@@ -138,18 +117,19 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void reloadStart() {
-        if (magazine < MAGAZINE_SIZE && ammo > 0 && !reloading) {
-            reloading = true;
-            reloadingSound.play();
-            reloadingTimer = System.currentTimeMillis();
+        getCurrentGun().reloadStart();
+    }
+
+    public void switchWeapon() {
+        if(!getCurrentGun().isReloading()) {
+            currentWeapon = (currentWeapon + 1) % gun.length;
         }
     }
 
-    public void reloadEnd() {
-        int ammoToFillMagazine = Math.min(MAGAZINE_SIZE - magazine, ammo);
-        ammo -= ammoToFillMagazine;
-        magazine += ammoToFillMagazine;
-        reloading = false;
+    public void setWeapon(int id) {
+        if(!getCurrentGun().isReloading()) {
+            currentWeapon = id;
+        }
     }
 
     private Box hidesBox(Vector2 pos) {
@@ -195,9 +175,7 @@ public class Hero extends DynamicVisibleGameObject {
             stamina = Math.min(MAX_STAMINA, stamina + delta * staminaRegenSpeed);
             lastStaminaRegen = now;
         }
-        if (reloading && now - reloadingTimer > RELOADING_TIME) {
-            reloadEnd();
-        }
+        getCurrentGun().isReloadingComplete(now);
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
@@ -264,6 +242,10 @@ public class Hero extends DynamicVisibleGameObject {
         return potentialResult;
     }
 
+    public final Gun getCurrentGun() {
+        return gun[currentWeapon];
+    }
+
     public float getBodyRadius() {
         return Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
     }
@@ -306,8 +288,6 @@ public class Hero extends DynamicVisibleGameObject {
 
     @Override
     public void dispose() {
-        reloadingSound.dispose();
-        shootSound.dispose();
         Stream.concat(Stream.of(dashSounds), Stream.of(deathSound)).forEach(Sound::dispose);
     }
 }

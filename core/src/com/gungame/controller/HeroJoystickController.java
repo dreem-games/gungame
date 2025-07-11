@@ -16,6 +16,7 @@ public class HeroJoystickController extends HeroController {
 
     private Vector2 lastRightVec = new Vector2();
     private boolean r1WasPressed;
+    private boolean yWasPressed;
 
     private final @Getter Controller controller;
 
@@ -73,11 +74,17 @@ public class HeroJoystickController extends HeroController {
                 -normalized(controller.getAxis(mapping.axisLeftY)));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
-        if (r1Pressed && !r1WasPressed) {
+        if (r1Pressed && (!r1WasPressed || hero.getCurrentGun().isAutomatic())) {
             hero.fire();
             used = true;
         }
         r1WasPressed = r1Pressed;
+
+        var yPressed = controller.getButton(controller.getMapping().buttonY);
+        if(yPressed && !yWasPressed) {
+            hero.switchWeapon();
+        }
+        yWasPressed = yPressed;
 
         if (controller.getButton(mapping.buttonX)) {
             hero.reloadStart();

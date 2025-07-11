@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
 
 public class GameContactListener implements ContactListener {
@@ -14,10 +15,6 @@ public class GameContactListener implements ContactListener {
     public void beginContact(Contact contact) {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
-
-        if (objectA.isToDestroy() || objectB.isToDestroy()) {
-            return;
-        }
 
         if (objectB.getType() == GameObjectType.BULLET) {
             objectB.markForDestroy();
@@ -33,7 +30,7 @@ public class GameContactListener implements ContactListener {
         }
 
         if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
-            ((Hero) objectB).takeDamage(20);
+            ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
         }
     }
 
