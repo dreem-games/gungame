@@ -18,11 +18,11 @@ import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
-import com.gungame.world.objects.weapon.*;
+import com.gungame.world.objects.weapon.Gun;
+import com.gungame.world.objects.weapon.GunData;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.Random;
 import java.util.stream.Stream;
 
 import static com.badlogic.gdx.math.MathUtils.random;
@@ -60,9 +60,9 @@ public class Hero extends DynamicVisibleGameObject {
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
         // Свет от персонажа
-        playerLight = new PointLight(getWorld().getRayHandler(), 128);
+        playerLight = new PointLight(getWorld().getRayHandler(), 512);
         playerLight.attachToBody(getBody(), 1.5f, 2f);
-        playerLight.setDistance(70f);
+        playerLight.setDistance(75f);
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
         playerLight.setIgnoreAttachedBody(true);
@@ -70,7 +70,7 @@ public class Hero extends DynamicVisibleGameObject {
         filter.categoryBits = CollisionCategory.ILLUMINABLE.getBitMask();
         filter.maskBits = CollisionCategory.ILLUMINABLE.getBitMask();
         playerLight.setContactFilter(filter);
-        playerLight.setColor(new Color(1f, 0.75f, 0.8f, 0.85f));
+        playerLight.setColor(new Color(0f, 0f, 0f, 1f));
     }
 
     public void takeDamage(int damage) {

@@ -10,9 +10,9 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.gungame.controller.ControllersManager;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
-import com.gungame.controller.ControllersManager;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
@@ -97,7 +97,6 @@ public class GameWorld implements Disposable {
         groundContainer.dispose();
         GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::dispose);
         phisicsWorld.dispose();
-        rayHandler.dispose();
     }
 
     public void render(SpriteBatch batch, OrthographicCamera camera) {
@@ -110,18 +109,24 @@ public class GameWorld implements Disposable {
         physicalObjectFactoryManager.executeUpdates();
         controllersManager.control();
         phisicsWorld.step(frameTime, 6, 2);
-        rayHandler.update();
 
-        // отрисовка графического
+        // отрисовка графического мира
         groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
+
+        // теперь лучи!
+        rayHandler.setCombinedMatrix(camera);
+        rayHandler.update();
+        batch.end();
+        rayHandler.render();  // рендорить лучи надо вне рисования спрайтов!
+        batch.begin();
+
+        // рисуем UI
         if (debugRenderer != null) {
             debugRenderer.render(phisicsWorld, camera.combined);
         }
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
-        rayHandler.setCombinedMatrix(camera);
-        rayHandler.render();
 
         checkWorldForRestart(currentTime);
     }
