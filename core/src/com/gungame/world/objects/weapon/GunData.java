@@ -22,7 +22,7 @@ public enum GunData implements Disposable {
             new Texture("ui/rifle.png"),
             Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))
-            ),
+    ),
     SHOTGUN(0.1f,
             4,
             50,
@@ -35,9 +35,9 @@ public enum GunData implements Disposable {
             new Texture("ui/shotgun.png"),
             Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"))
-            ),
+    ),
     SMG(0.035f,
-            4,
+            5,
             75,
             3000,
             100,

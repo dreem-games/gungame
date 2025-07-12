@@ -1,5 +1,6 @@
 package com.gungame.world.objects.phisical;
 
+import box2dLight.ConeLight;
 import box2dLight.PointLight;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -32,6 +33,12 @@ public class Hero extends DynamicVisibleGameObject {
     public static final float FIRE_POSITION_DX = 0.7f;
     public static final float FIRE_POSITION_DY = 0.15f;
 
+    private static final Filter RAY_CONTACT_FILTER = new Filter();
+    static {
+        RAY_CONTACT_FILTER.categoryBits = CollisionCategory.ILLUMINABLE.getBitMask();
+        RAY_CONTACT_FILTER.maskBits = CollisionCategory.ILLUMINABLE.getBitMask();
+    }
+
     private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
     private final Sound[] damageSounds = {
@@ -47,6 +54,7 @@ public class Hero extends DynamicVisibleGameObject {
     private float xScale;
     private float yScale;
     private final PointLight playerLight;
+    private ConeLight fireLight;
     private @NonNull MovingMode movingMode = MovingMode.STANDING;
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUsage = System.currentTimeMillis();
@@ -66,10 +74,7 @@ public class Hero extends DynamicVisibleGameObject {
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
         playerLight.setIgnoreAttachedBody(true);
-        Filter filter = new Filter();
-        filter.categoryBits = CollisionCategory.ILLUMINABLE.getBitMask();
-        filter.maskBits = CollisionCategory.ILLUMINABLE.getBitMask();
-        playerLight.setContactFilter(filter);
+        playerLight.setContactFilter(RAY_CONTACT_FILTER);
         playerLight.setColor(new Color(0f, 0f, 0f, 1f));
     }
 
@@ -102,15 +107,21 @@ public class Hero extends DynamicVisibleGameObject {
             customInitConfig.setGroupIndex(bullets.getFirst().shotID());
         }
 
-        var bulletFactory = getWorld().getPhysicalObjectFactoryManager().getBulletFactory();
+        GameWorld world = getWorld();
+        var bulletFactory = world.getPhysicalObjectFactoryManager().getBulletFactory();
+        float bodyAngle = getAngle();
         for (var bulletData : bullets) {
-            float angle = getAngle() + bulletData.deviation();
+            float angle = bodyAngle + bulletData.deviation();
             bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> {
                 bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
             });
         }
+
+        fireLight = new ConeLight(world.getRayHandler(), 64, Color.RED, 5,
+                firePosition.x, firePosition.y, bodyAngle + 30f, 30);
+        fireLight.setContactFilter(RAY_CONTACT_FILTER);
     }
 
     /**
@@ -190,7 +201,14 @@ public class Hero extends DynamicVisibleGameObject {
             stamina = Math.min(MAX_STAMINA, stamina + delta * staminaRegenSpeed);
             lastStaminaRegen = now;
         }
-        getCurrentGun().isReloadingComplete(now);
+
+        Gun currentGun = getCurrentGun();
+        currentGun.checkReloadingComplete(now);
+        if (fireLight != null && now - currentGun.getReloadingTimer() > 10) {
+            fireLight.remove();
+            fireLight = null;
+        }
+
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }

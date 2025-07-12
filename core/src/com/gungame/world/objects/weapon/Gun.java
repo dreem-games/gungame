@@ -63,7 +63,7 @@ public class Gun {
         reloading = false;
     }
 
-    public void isReloadingComplete(long now) {
+    public void checkReloadingComplete(long now) {
         if (reloading && now - reloadingTimer > gunData.getReloadingTime()) {
             reloadEnd();
         }
