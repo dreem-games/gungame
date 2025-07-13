@@ -9,5 +9,3 @@ jar {
         attributes 'Main-Class': project.ext.mainClassName
     }
 }
-
-eclipse.project.name = appName + "-desktop"
