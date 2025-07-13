@@ -4,10 +4,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.gungame.world.GameWorld;
-import com.gungame.world.objects.phisical.Barrel;
-import com.gungame.world.objects.phisical.Bullet;
-import com.gungame.world.objects.phisical.Hero;
-import com.gungame.world.objects.phisical.Box;
+import com.gungame.world.objects.phisical.*;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
@@ -16,7 +14,8 @@ public enum GameObjectType {
     BOX(BodyDef.BodyType.DynamicBody, Box.class),
     HERO(BodyDef.BodyType.DynamicBody, Hero.class),
     BULLET(BodyDef.BodyType.DynamicBody, Bullet.class),
-    BARREL(BodyDef.BodyType.DynamicBody, Barrel.class);
+    BARREL(BodyDef.BodyType.DynamicBody, Barrel.class),
+    GRENADE(BodyDef.BodyType.DynamicBody, Grenade.class),;
 
     private final BodyDef.BodyType bodyType;
     private final GameObjectCreator instanceCreator;

@@ -4,10 +4,7 @@ import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.GameWorld;
-import com.gungame.world.objects.phisical.Barrel;
-import com.gungame.world.objects.phisical.Box;
-import com.gungame.world.objects.phisical.Bullet;
-import com.gungame.world.objects.phisical.Hero;
+import com.gungame.world.objects.phisical.*;
 import lombok.Getter;
 
 @Getter
@@ -17,6 +14,7 @@ public class GameObjectFactoryManager implements Disposable {
     private final GameObjectFactory<Barrel> barrelFactory;
     private final GameObjectFactory<Hero> heroFactory;
     private final GameObjectFactory<Bullet> bulletFactory;
+    private final GameObjectFactory<Grenade> grenadeFactory;
 
     public GameObjectFactoryManager(GameWorld world) {
         var wallMetadata = new GameObjectMetadataBuilder()
@@ -59,13 +57,22 @@ public class GameObjectFactoryManager implements Disposable {
                 .setLinearDamping(10)
                 .setAngularDamping(100)
                 .createGameObjectMetadata();
-
+        var grenadeMetadata = new GameObjectMetadataBuilder()
+                .setType(GameObjectType.GRENADE)
+                .setBodyName("grenade", "png")
+                .setSize(2f, 2f)
+                .setMassData(.0f, .8f, .11f)
+                .setLinearDamping(0)
+                .setAngularDamping(10)
+                .setFriction(0f)
+                .createGameObjectMetadata();
         var bodyLoader = new BodyEditorLoader(Gdx.files.internal("texture/bodies.json"));
         wallFactory = new GameObjectFactory<>(world, bodyLoader, wallMetadata);
         boxFactory = new GameObjectFactory<>(world, bodyLoader, boxMetadata);
         heroFactory = new GameObjectFactory<>(world, bodyLoader, heroMetadata);
         bulletFactory = new GameObjectFactory<>(world, bodyLoader, bulletMetadata);
         barrelFactory = new GameObjectFactory<>(world, bodyLoader, barrelMetadata);
+        grenadeFactory = new GameObjectFactory<>(world, bodyLoader, grenadeMetadata);
     }
 
     public void executeUpdates() {
@@ -74,6 +81,7 @@ public class GameObjectFactoryManager implements Disposable {
         heroFactory.executeObjectsUpdates();
         bulletFactory.executeObjectsUpdates();
         barrelFactory.executeObjectsUpdates();
+        grenadeFactory.executeObjectsUpdates();
     }
 
     @Override
@@ -83,5 +91,6 @@ public class GameObjectFactoryManager implements Disposable {
         heroFactory.dispose();
         bulletFactory.dispose();
         barrelFactory.dispose();
+        grenadeFactory.dispose();
     }
 }
