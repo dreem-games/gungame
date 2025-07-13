@@ -5,15 +5,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.gungame.world.GameWorld;
 
 public abstract class VisibleGameObject extends GameObject {
-
     private final Vector2 lastPosition;
     protected final Sprite sprite;
     private float lastAngle;
 
-    public VisibleGameObject(GameObjectType type, Body body, Sprite sprite) {
-        super(type, body);
+    public VisibleGameObject(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+        super(gameWorld, type, body);
         this.sprite = sprite;
 
         lastPosition = new Vector2(body.getWorldCenter());

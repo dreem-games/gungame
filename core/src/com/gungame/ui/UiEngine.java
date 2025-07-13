@@ -9,12 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UiEngine implements Disposable {
-    private final Hero mainHero;
+    private final Hero hero;
     private final List<Ui> uis;
+    private final boolean isMainHero;
 
-    public UiEngine(Hero mainHero) {
+    public UiEngine(Hero hero, boolean isMainHero) {
+        this.isMainHero = isMainHero;
         this.uis = new ArrayList<>();
-        this.mainHero = mainHero;
+        this.hero = hero;
         initUis();
     }
 
@@ -24,10 +26,12 @@ public class UiEngine implements Disposable {
     }
 
     public void draw(SpriteBatch batch, Camera camera) {
-        uis.forEach(it -> it.draw(batch, camera, mainHero));
+        uis.forEach(it -> it.draw(batch, camera, hero));
     }
 
     public void initUis() {
-        uis.add(new HeroStaminaBar());
+        uis.add(new HeroStaminaBar(isMainHero));
+        uis.add(new Ammo(isMainHero));
+        uis.add(new HeroHealthBar(isMainHero));
     }
 }

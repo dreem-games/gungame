@@ -4,18 +4,18 @@ import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
+import com.gungame.world.GameWorld;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;
 
 public class GameObjectFactory <T extends GameObject> implements Disposable {
-
-    protected final World world;
+    protected final GameWorld world;
     private final Texture texture;
     private final BodyEditorLoader bodyLoader;
     private final GameObjectMetadata objectMetadata;
@@ -23,7 +23,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
     // такие действия как создание объектов можно выполнять только вне симуляции
     private final Queue<Runnable> updates = new LinkedList<>();
 
-    public GameObjectFactory(World world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
+    public GameObjectFactory(GameWorld world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
         this.world = world;
         this.texture = new Texture(metadata.getTexturePath());
         this.bodyLoader = bodyLoader;
@@ -59,6 +59,12 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         updates.add(() -> initializer.accept(createImmediately(x, y, rotation, customObjectInitializationConfig)));
     }
 
+    public void create(Vector2 pos, float rotation,
+                       CustomObjectInitializationConfig customObjectInitializationConfig,
+                       Consumer<T> initializer) {
+        create(pos.x, pos.y, rotation, customObjectInitializationConfig, initializer);
+    }
+
     public T createImmediately(float x, float y, float rotation,
                                CustomObjectInitializationConfig customObjectInitializationConfig) {
         BodyDef bodyDef = new BodyDef();
@@ -68,11 +74,11 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         bodyDef.angularDamping = objectMetadata.getAngularDamping();
         bodyDef.angle = rotation * MathUtils.degreesToRadians;
 
-        var body = world.createBody(bodyDef);
+        var body = world.getPhisicsWorld().createBody(bodyDef);
         Sprite sprite = new Sprite(texture);
         T gameObject;
         try {
-            gameObject = (T) objectMetadata.getType().createInstance(body, sprite);
+            gameObject = (T) objectMetadata.getType().createInstance(world, body, sprite);
         } catch (ClassCastException e) {
             throw new IllegalStateException("expected ");
         }
