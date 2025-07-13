@@ -3,22 +3,24 @@ package com.gungame.world.objects.phisical;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
+import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.concurrent.ThreadLocalRandom;
+
+@Getter
 public class Box extends DynamicVisibleGameObject {
     private static short minGroupIndex = 0;  // заготовочка для пуль
 
-    private final short groupIndex;
+    private @Setter short groupIndex;
 
-    public Box(GameObjectType type, Body body, Sprite sprite) {
-        super(type, body, sprite);
-        groupIndex = --minGroupIndex;
-    }
-
-    public short getGroupIndex() {
-        return groupIndex;
+    public Box(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
+        super(gameWorld, type, body, sprite);
+        groupIndex = (short) ThreadLocalRandom.current().nextInt(Short.MIN_VALUE, 0);
     }
 
     @Override
@@ -26,5 +28,9 @@ public class Box extends DynamicVisibleGameObject {
         filter.groupIndex = groupIndex;
         filter.categoryBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
         filter.maskBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
+    }
+
+    @Override
+    public void dispose() {
     }
 }

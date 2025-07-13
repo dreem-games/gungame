@@ -8,10 +8,14 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-        classpath "io.freefair.gradle:lombok-plugin:6.6.1"
-//        classpath 'org.gretty:gretty:3.0.7'
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:8.0.0"
+        classpath "io.freefair.gradle:lombok-plugin:8.14"
     }
+}
+
+plugins {
+    id "com.github.johnrengelman.shadow" version "8.1.1" apply false
+    id "io.freefair.lombok"          version "8.14" apply false
 }
 
 allprojects {
@@ -20,12 +24,12 @@ allprojects {
     version = '0.1-dev'
     ext {
         appName = "gungame"
-        gdxVersion = '1.12.0'
+        gdxVersion = '1.13.5'
         roboVMVersion = '2.3.16'
         box2DLightsVersion = '1.5'
         ashleyVersion = '1.7.4'
         aiVersion = '1.8.2'
-        gdxControllersVersion = '2.2.2'
+        gdxControllersVersion = '2.2.4'
     }
 
     repositories {
@@ -44,6 +48,12 @@ project(":desktop") {
     apply plugin: "java-library"
     apply plugin: 'com.github.johnrengelman.shadow'
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
     dependencies {
         implementation project(":core")
         api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
@@ -60,6 +70,11 @@ project(":core") {
     apply plugin: "java-library"
     apply plugin: "io.freefair.lombok"
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -67,17 +82,8 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
         // https://mvnrepository.com/artifact/org.projectlombok/lombok
-        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.26'
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.38'
 
         implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
-
-        // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-        implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
-
-        // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-        implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.5'
-
-        // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
-        implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.5'
     }
 }
