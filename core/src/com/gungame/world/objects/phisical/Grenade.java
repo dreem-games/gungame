@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.World;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.collision.ExplosionUtils;
@@ -34,18 +35,22 @@ public class Grenade extends VisibleGameObject {
     }
 
     public void grenadeLifeCycle(long timeOfLife) {
-        if (timeOfLife < 1000) {
+        if (timeOfLife < 1500) {
             return;
         }
-        if (timeOfLife < 1100 && timeOfLife > 1000) {
+        if (timeOfLife < 1600 && timeOfLife > 1500) {
             setVelocity(0,0);
         }
-        if (timeOfLife > 2000) {
-            Vector2 center = body.getWorldCenter();
-            ExplosionUtils.createExplosion(getWorld().getPhisicsWorld(), center.x, center.y, 15f, 1500f);
-            explosionSpund.play();
-            markForDestroy();
+        if (timeOfLife > 3000) {
+            explode();
         }
+    }
+
+    public void explode() {
+        Vector2 center = body.getWorldCenter();
+        ExplosionUtils.createExplosion(getWorld().getPhisicsWorld(), center.x, center.y, 15f, 1500f);
+        explosionSpund.play();
+        markForDestroy();
     }
 
 

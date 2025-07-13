@@ -45,6 +45,10 @@ public class GameContactListener implements ContactListener {
                 ((Grenade) objectB).grenadeLifeCycle(Long.MAX_VALUE);
             }
         }
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.GRENADE) {
+            ((Grenade) objectB).explode();
+        }
     }
 
     @Override

@@ -4,9 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.collision.ExplosionUtils;
@@ -52,7 +50,6 @@ public class Barrel extends DynamicVisibleGameObject {
         filter.categoryBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
         filter.maskBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
     }
-
     @Override
     public void dispose() {
     }
