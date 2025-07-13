@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
 
@@ -31,6 +32,10 @@ public class GameContactListener implements ContactListener {
 
         if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
             ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
+        }
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.BARREL) {
+            ((Barrel) objectB).explode(objectB.getWorld().getPhisicsWorld());
         }
     }
 

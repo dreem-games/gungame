@@ -2,6 +2,7 @@ package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
+import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectFactory;
 import com.gungame.world.objects.meta.StaticGameObject;
 
@@ -27,23 +28,33 @@ public class WallsGenerationUtils {
         }
     }
 
-    public static void generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
+    public static void  generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
         Vector2 boxSize = boxFactory.getObjectMetadata().getSize();
         int totalFits = (int) Math.min((width - x) / boxSize.x, (height - y) / boxSize.y);
         int totalToGenerate = (int) (totalFits * filling);
 
         for (int i = 0; i < totalToGenerate; i++) {
-            generateBox(boxFactory, x, y, width, height);
+            generateObject(boxFactory, x, y, width, height);
         }
-
         Gdx.app.debug(LOG_TAG, "generated " + totalToGenerate + " boxes");
     }
 
-    private static void generateBox(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height) {
+    public static void generateBarrels(GameObjectFactory<Barrel> barrelFactory, float x, float y, float width, float height, float filling) {
+        Vector2 barrelSize = barrelFactory.getObjectMetadata().getSize();
+        int totalFits = (int) Math.min((width - x) / barrelSize.x, (height - y) / barrelSize.y);
+        int totalToGenerate = (int) (totalFits * filling);
+
+        for (int i = 0; i < totalToGenerate; i++) {
+            generateObject(barrelFactory, x, y, width, height);
+        }
+        Gdx.app.debug(LOG_TAG, "generated " + totalToGenerate + " boxes");
+    }
+
+    private static <T extends GameObject> void generateObject(GameObjectFactory<T> factory, float x, float y, float width, float height) {
         float boxX = random.nextFloat(x, x + width);
         float boxY = random.nextFloat(y, y + height);
         float boxRotation = random.nextFloat(-180, 180);
-        boxFactory.create(boxX, boxY, boxRotation);
+        factory.create(boxX, boxY, boxRotation);
         Gdx.app.debug(LOG_TAG, "creating box(x=%s, y=%s, rotation=%s)".formatted(boxX, boxY, boxRotation));
     }
 }

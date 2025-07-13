@@ -4,6 +4,7 @@ import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.GameWorld;
+import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Box;
 import com.gungame.world.objects.phisical.Bullet;
 import com.gungame.world.objects.phisical.Hero;
@@ -13,6 +14,7 @@ import lombok.Getter;
 public class GameObjectFactoryManager implements Disposable {
     private final GameObjectFactory<StaticGameObject> wallFactory;
     private final GameObjectFactory<Box> boxFactory;
+    private final GameObjectFactory<Barrel> barrelFactory;
     private final GameObjectFactory<Hero> heroFactory;
     private final GameObjectFactory<Bullet> bulletFactory;
 
@@ -49,12 +51,21 @@ public class GameObjectFactoryManager implements Disposable {
                 .setAngularDamping(10)
                 .setFriction(0f)
                 .createGameObjectMetadata();
+        var barrelMetadata = new GameObjectMetadataBuilder()
+                .setType(GameObjectType.BARREL)
+                .setBodyName("barrel", "png")
+                .setSize(6, 6)
+                .setMassData(10, .5f, .5f)
+                .setLinearDamping(10)
+                .setAngularDamping(100)
+                .createGameObjectMetadata();
 
         var bodyLoader = new BodyEditorLoader(Gdx.files.internal("texture/bodies.json"));
         wallFactory = new GameObjectFactory<>(world, bodyLoader, wallMetadata);
         boxFactory = new GameObjectFactory<>(world, bodyLoader, boxMetadata);
         heroFactory = new GameObjectFactory<>(world, bodyLoader, heroMetadata);
         bulletFactory = new GameObjectFactory<>(world, bodyLoader, bulletMetadata);
+        barrelFactory = new GameObjectFactory<>(world, bodyLoader, barrelMetadata);
     }
 
     public void executeUpdates() {
@@ -62,6 +73,7 @@ public class GameObjectFactoryManager implements Disposable {
         boxFactory.executeObjectsUpdates();
         heroFactory.executeObjectsUpdates();
         bulletFactory.executeObjectsUpdates();
+        barrelFactory.executeObjectsUpdates();
     }
 
     @Override
@@ -70,5 +82,6 @@ public class GameObjectFactoryManager implements Disposable {
         boxFactory.dispose();
         heroFactory.dispose();
         bulletFactory.dispose();
+        barrelFactory.dispose();
     }
 }

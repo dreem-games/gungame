@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Array;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
+import com.gungame.world.collision.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -32,6 +33,8 @@ public class Hero extends DynamicVisibleGameObject {
 
     private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
+    private static final int DEFAULT_DAMPING = 5;
+    private static final int DAMPING_RESTORE_TIME = 100;
     private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
@@ -41,6 +44,7 @@ public class Hero extends DynamicVisibleGameObject {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
     private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+
 
     private float xScale;
     private float yScale;
@@ -53,9 +57,11 @@ public class Hero extends DynamicVisibleGameObject {
     private @Getter int health = 100;
     private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
     private int currentWeapon = 0;
+    private long timeWhenDampingTimeChanged = 0;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
+        body.setUserData(this);
     }
 
     public void takeDamage(int damage) {
@@ -179,6 +185,8 @@ public class Hero extends DynamicVisibleGameObject {
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
+        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping
+                (body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
@@ -213,7 +221,7 @@ public class Hero extends DynamicVisibleGameObject {
      * @return true если сила применена
      */
     public boolean move(float x, float y) {
-        if (x * x + y * y < .1f) {
+        if (x * x + y * y < .1f || body.getLinearDamping() != DEFAULT_DAMPING) {
             return false;  // может быть небольшая погрешность
         }
 
