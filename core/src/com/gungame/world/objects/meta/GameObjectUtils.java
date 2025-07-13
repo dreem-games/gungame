@@ -1,40 +1,36 @@
 package com.gungame.world.objects.meta;
 
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class GameObjectUtils {
+    private static final Comparator<VisibleGameObject> drowLevelComparator
+            = Comparator.comparing(VisibleGameObject::getDrawLevel);
 
-    public static List<GameObject> getGameObjects(World world) {
+    public static Stream<GameObject> getGameObjectsStream(World world) {
         var bodies = new Array<Body>();
         world.getBodies(bodies);
-        List<GameObject> result = new ArrayList<>(bodies.size);
-        for (var body : bodies) {
-            var userData = (GameObject) body.getUserData();
-            if (userData != null)
-                result.add(userData);
-        }
-        return result;
+        return StreamSupport.stream(bodies.spliterator(), false)
+                .mapMulti((body, consumer) -> {
+                    var userData = (GameObject) body.getUserData();
+                    if (userData != null)
+                        consumer.accept(userData);
+                });
     }
 
     public static Stream<VisibleGameObject> getVisibleGameObjects(World world) {
-        return getGameObjects(world).stream()
-                .filter(it -> it instanceof VisibleGameObject)
-                .map(it -> (VisibleGameObject) it)
-                .sorted(Comparator.comparing(VisibleGameObject::getDrawLevel));
-    }
-
-    public static MassData createMassData(float mass, float originX, float originY) {
-        var res = new MassData();
-        res.mass = mass;
-        res.center.set(originX, originY);
-        return res;
+        return getGameObjectsStream(world)
+                .mapMulti((GameObject it, Consumer<VisibleGameObject> consumer) -> {
+                    if (it instanceof VisibleGameObject visible) {
+                        consumer.accept(visible);
+                    }
+                })
+                .sorted(drowLevelComparator);
     }
 }

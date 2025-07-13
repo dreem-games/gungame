@@ -6,7 +6,8 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
-import com.gungame.world.objects.phisical.WallsGenerationUtils;
+import com.gungame.world.objects.phisical.Bullet;
+import com.gungame.world.objects.phisical.Hero;
 
 public class GameContactListener implements ContactListener {
 
@@ -15,18 +16,21 @@ public class GameContactListener implements ContactListener {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
-        if (objectA.isToDestroy() || objectB.isToDestroy()) {
-            return;
-        }
-
-        // мб как-нибудь потом нормальную генерацию сделаем...
-        WallsGenerationUtils.recreateBoxIfNecessaryOnCollision(objectA, objectB);
-
-        if (objectA.getType() == GameObjectType.BULLET) {
-            objectA.markForDestroy();
-        }
         if (objectB.getType() == GameObjectType.BULLET) {
             objectB.markForDestroy();
+            if (objectA.getType() == GameObjectType.BULLET) {
+                objectA.markForDestroy();
+                return;
+            }
+            var tmp = objectA;
+            objectA = objectB;
+            objectB = tmp;
+        } else if (objectA.getType() == GameObjectType.BULLET) {
+            objectA.markForDestroy();
+        }
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
+            ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
         }
     }
 

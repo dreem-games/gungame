@@ -4,18 +4,18 @@ import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
+import com.gungame.world.GameWorld;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;
 
 public class GameObjectFactory <T extends GameObject> implements Disposable {
-
-    protected final World world;
+    protected final GameWorld world;
     private final Texture texture;
     private final BodyEditorLoader bodyLoader;
     private final GameObjectMetadata objectMetadata;
@@ -23,9 +23,9 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
     // такие действия как создание объектов можно выполнять только вне симуляции
     private final Queue<Runnable> updates = new LinkedList<>();
 
-    public GameObjectFactory(World world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
+    public GameObjectFactory(GameWorld world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
         this.world = world;
-        this.texture = new Texture(metadata.texturePath());
+        this.texture = new Texture(metadata.getTexturePath());
         this.bodyLoader = bodyLoader;
         this.objectMetadata = metadata;
     }
@@ -53,34 +53,51 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         updates.add(() -> initializer.accept(createImmediately(x, y, rotation)));
     }
 
-    public T createImmediately(float x, float y, float rotation) {
+    public void create(float x, float y, float rotation,
+                       CustomObjectInitializationConfig customObjectInitializationConfig,
+                       Consumer<T> initializer) {
+        updates.add(() -> initializer.accept(createImmediately(x, y, rotation, customObjectInitializationConfig)));
+    }
+
+    public void create(Vector2 pos, float rotation,
+                       CustomObjectInitializationConfig customObjectInitializationConfig,
+                       Consumer<T> initializer) {
+        create(pos.x, pos.y, rotation, customObjectInitializationConfig, initializer);
+    }
+
+    public T createImmediately(float x, float y, float rotation,
+                               CustomObjectInitializationConfig customObjectInitializationConfig) {
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = objectMetadata.type().getBodyType();
+        bodyDef.type = objectMetadata.getType().getBodyType();
         bodyDef.position.set(x, y);
-        bodyDef.linearDamping = 5;
-        bodyDef.angularDamping = 1;
+        bodyDef.linearDamping = objectMetadata.getLinearDamping();
+        bodyDef.angularDamping = objectMetadata.getAngularDamping();
         bodyDef.angle = rotation * MathUtils.degreesToRadians;
 
-        var body = world.createBody(bodyDef);
+        var body = world.getPhisicsWorld().createBody(bodyDef);
         Sprite sprite = new Sprite(texture);
         T gameObject;
         try {
-            gameObject = (T) objectMetadata.type().createInstance(body, sprite);
+            gameObject = (T) objectMetadata.getType().createInstance(world, body, sprite);
         } catch (ClassCastException e) {
             throw new IllegalStateException("expected ");
         }
 
         // инициализируем body
         var fixtureDef = new FixtureDef();
-        fixtureDef.friction = 0.99f;
-        fixtureDef.density = 50f;
+        fixtureDef.friction = objectMetadata.getFriction();
+        fixtureDef.density = objectMetadata.getDensity();
         gameObject.setupCollisionFilter(fixtureDef.filter);
-        bodyLoader.attachFixture(body, objectMetadata.bodyName(), fixtureDef, objectMetadata.size(), texture, objectMetadata.massData());
+        if (customObjectInitializationConfig != null) {
+            customObjectInitializationConfig.postprocessCollisionFilter(fixtureDef.filter);
+        }
+        bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef,
+                objectMetadata.getSize(), texture, objectMetadata.getMassData());
         body.resetMassData();
         body.setUserData(gameObject);
 
         // инициализируем спрайт
-        sprite.setSize(objectMetadata.size().x, objectMetadata.size().y);
+        sprite.setSize(objectMetadata.getSize().x, objectMetadata.getSize().y);
         sprite.setPosition(x, y);
         var localCenter = body.getLocalCenter();
         sprite.setOrigin(localCenter.x, localCenter.y);
@@ -88,5 +105,9 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
         gameObject.postConstruct();
         return gameObject;
+    }
+
+    public T createImmediately(float x, float y, float rotation) {
+        return createImmediately(x, y, rotation, null);
     }
 }

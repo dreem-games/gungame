@@ -21,10 +21,12 @@ public class GroundContainer implements Disposable {
         positions.add(new Vector2(x, y));
     }
 
-    public void draw(SpriteBatch batch) {
-        for (var it : positions) {
-            batch.draw(grassTexture, it.x, it.y, pieceSize.x, pieceSize.y);
-        }
+    public void drawBatch(SpriteBatch batch) {
+        positions.forEach(pos -> drawAt(batch, pos));
+    }
+
+    private void drawAt(SpriteBatch batch, Vector2 pos) {
+        batch.draw(grassTexture, pos.x, pos.y, pieceSize.x, pieceSize.y);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.gungame.world.controller;
+package com.gungame.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -6,10 +6,12 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.gungame.world.objects.phisical.Hero;
+import com.gungame.world.objects.phisical.MovingMode;
 
 public class HeroKeyboardHeroController extends HeroController {
 
     private float lastMouseX, lastMouseY;
+    private boolean lmbWasPressed;
 
     public HeroKeyboardHeroController(Hero hero, Camera camera) {
         super(hero, camera);
@@ -35,10 +37,19 @@ public class HeroKeyboardHeroController extends HeroController {
             used = true;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            movingMode = MovingMode.JUMPING;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
-            movingMode = MovingMode.RUNNING;
+        if (used) {
+            if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+                movingMode = MovingMode.JUMPING;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+                movingMode = MovingMode.RUNNING;
+            }
+            hero.tryChangeMovingMode(movingMode);
+        } else {
+            hero.tryChangeMovingMode(MovingMode.STANDING);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.R)) {
+            hero.reloadStart();
         }
 
         Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -48,23 +59,33 @@ public class HeroKeyboardHeroController extends HeroController {
             lastMouseY = mousePos.y;
         }
         camera.unproject(mousePos);
+        rotateToPoint(mousePos.x, mousePos.y);
 
-        var heroPosition = hero.getPosition();
-        mousePos.x -= heroPosition.x;
-        mousePos.y -= heroPosition.y;
-
-        mousePos = mousePos.nor();
         impulse = impulse.nor();
 
-        used |= move(impulse.x, impulse.y, movingMode);
+        used |= hero.move(impulse.x, impulse.y);
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        var lmbPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        if (lmbPressed && (!lmbWasPressed || hero.getCurrentGun().isAutomatic())) {
             hero.fire();
             used = true;
         }
+        lmbWasPressed = lmbPressed;
 
-        if (used) {
-            rotate(mousePos.x, mousePos.y);
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
+            hero.setWeapon(0);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
+            hero.setWeapon(1);
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
+            hero.setWeapon(2);
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            Gdx.app.exit();
         }
 
         return used;
