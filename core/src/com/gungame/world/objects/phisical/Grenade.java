@@ -2,16 +2,14 @@ package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.physics.box2d.World;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
-import com.gungame.world.collision.ExplosionUtils;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
 

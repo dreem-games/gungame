@@ -1,25 +1,27 @@
-package com.gungame.world.collision;
+package com.gungame.world.explosion;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Hero;
+import lombok.Getter;
 
 public class ExplosionUtils {
+    private @Getter static final Array<Explosion> EXPLOSIONS = new Array<>();
+
     public static void createExplosion(World world, float x, float y, float radius, float power) {
         final Vector2 explosionCenter = new Vector2(x, y);
-        final float explosionRadius = radius;
-        final float explosionPower = power;
 
         final Array<Body> affectedBodies = new Array<>();
 
+       EXPLOSIONS.add(new Explosion(x, y));
         // 1. Поиск тел в области через QueryAABB
         world.QueryAABB(fixture -> {
             Body body = fixture.getBody();
             Vector2 bodyPos = body.getWorldCenter();
             // Проверяем, что тело в круге (реальный радиус)
-            if (bodyPos.dst(explosionCenter) <= explosionRadius) {
+            if (bodyPos.dst(explosionCenter) <= radius) {
                 if (!affectedBodies.contains(body, true)) { // избегаем дублирования
                     affectedBodies.add(body);
                 }
@@ -39,7 +41,7 @@ public class ExplosionUtils {
             body.setLinearDamping(0);
 
             // Мягкое затухание импульса по расстоянию
-            float forceMag = explosionPower * (float)Math.pow(1 - distance/radius, 3);
+            float forceMag = power * (float)Math.pow(1 - distance/radius, 3);
             if (forceMag < 0) forceMag = 0;
             Vector2 impulse = forceDir.scl(forceMag);
             body.applyLinearImpulse(impulse, body.getWorldCenter(), true);

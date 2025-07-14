@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
-import com.gungame.world.collision.ExplosionUtils;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 import lombok.Getter;

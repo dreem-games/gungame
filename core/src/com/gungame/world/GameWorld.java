@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.controller.ControllersManager;
+import com.gungame.world.explosion.ExplosionAnimation;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
@@ -65,6 +67,7 @@ public class GameWorld implements Disposable {
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
         WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
         WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
+        ExplosionAnimation.init();
     }
 
     /**
@@ -109,7 +112,15 @@ public class GameWorld implements Disposable {
         }
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
-
+        var explosions = ExplosionUtils.getEXPLOSIONS();
+        for (int i = 0; i < explosions.size; i++) {
+            var explosion = explosions.get(i);
+            batch.draw(explosion.play(), explosion.x - 4, explosion.y - 4, 8, 8);
+            if (explosion.isFinished()) {
+                explosions.removeIndex(i);
+            }
+        }
         checkWorldForRestart(currentTime);
+
     }
 }

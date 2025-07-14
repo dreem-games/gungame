@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.Array;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
-import com.gungame.world.collision.ExplosionUtils;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -21,7 +21,6 @@ import com.gungame.world.objects.weapon.*;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.Random;
 import java.util.stream.Stream;
 
 import static com.badlogic.gdx.math.MathUtils.random;
@@ -59,7 +58,6 @@ public class Hero extends DynamicVisibleGameObject {
     private int currentWeapon = 0;
     private long timeWhenDampingTimeChanged = 0;
     private long throwTimer = 0;
-    private long now = System.currentTimeMillis();
 
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
