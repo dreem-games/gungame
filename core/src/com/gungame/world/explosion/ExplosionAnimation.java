@@ -17,6 +17,6 @@ public class ExplosionAnimation {
                 explosionFrames[index++] = tmp[i][j];
             }
         }
-        explosionAnimation = new Animation<>(1f, explosionFrames);
+        explosionAnimation = new Animation<>(0.8f, explosionFrames);
     }
 }
