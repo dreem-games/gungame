@@ -13,11 +13,9 @@ import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
 
-import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
-
 public class Grenade extends VisibleGameObject {
     private short groupIndex = 0;
-    private long createdTime = System.currentTimeMillis();
+    private final long createdTime = System.currentTimeMillis();
     private final Sound explosionSpund = Gdx.audio.newSound(Gdx.files.internal("sound/barrelExplosion.wav"));
 
     public Grenade(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
@@ -46,7 +44,7 @@ public class Grenade extends VisibleGameObject {
 
     public void explode() {
         Vector2 center = body.getWorldCenter();
-        ExplosionUtils.createExplosion(getWorld().getPhisicsWorld(), center.x, center.y, 15f, 1500f);
+        ExplosionUtils.createExplosion(getWorld().getPhisicsWorld(), center.x, center.y, 7f, 1500f);
         explosionSpund.play();
         markForDestroy();
     }
@@ -66,14 +64,6 @@ public class Grenade extends VisibleGameObject {
 
     @Override
     public void activate() {
-    }
-
-    @Override
-    public void postConstruct() {
-        float angle = getAngle();
-        float impulseX = MathUtils.cos(angle), impulseY = MathUtils.sin(angle);
-        applyImpulse(impulseX * BULLET_SPEED, impulseY * BULLET_SPEED);
-        body.setBullet(true);
     }
 
     @Override

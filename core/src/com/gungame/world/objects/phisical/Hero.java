@@ -80,15 +80,14 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void throwGrenade(float throwPower) {
-        System.out.println("Throwing grenad" + throwPower);
         var grenadeFactory = getWorld().getPhysicalObjectFactoryManager().getGrenadeFactory();
         float angle = getAngle();
         Vector2 firePosition = getFirePosition();
         CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
         grenadeFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
-                grenade -> {
-                    grenade.setVelocity(MathUtils.cos(angle) * (throwPower / 40) , MathUtils.sin(angle) * (throwPower / 40));
-        });
+                grenade -> grenade.setVelocity(
+                        MathUtils.cos(angle) * (throwPower / 40) ,
+                        MathUtils.sin(angle) * (throwPower / 40)));
     }
 
     public void throwGrenadeStart() {
@@ -213,8 +212,8 @@ public class Hero extends DynamicVisibleGameObject {
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
-        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping
-                (body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
+        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping(
+                body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
@@ -257,7 +256,7 @@ public class Hero extends DynamicVisibleGameObject {
         long delta = now - lastStaminaUsage;
         if (movingMode.getMaxDuration() > 0 && delta > movingMode.getMaxDuration()
                 || (delta > movingMode.getMinDuration()
-                && !tryUseStamina(movingMode.getStaminaCost() * delta))) {
+                    && !tryUseStamina(movingMode.getStaminaCost() * delta))) {
             movingMode = MovingMode.NORMAL;
             lastMovingModeChange = now;
         }

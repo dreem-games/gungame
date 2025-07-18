@@ -55,10 +55,10 @@ public class GameWorld implements Disposable {
         var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(5, 5, 20);
         uiEngine = new UiEngine(hero, true);
 
-        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(40, 20, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
@@ -100,8 +100,8 @@ public class GameWorld implements Disposable {
 
         // шаг физического мира
         GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
-        physicalObjectFactoryManager.executeUpdates();
         controllersManager.control();
+        physicalObjectFactoryManager.executeUpdates();
         phisicsWorld.step(frameTime, 6, 2);
 
         // отрисовка графического
@@ -115,12 +115,11 @@ public class GameWorld implements Disposable {
         var explosions = ExplosionUtils.getEXPLOSIONS();
         for (int i = 0; i < explosions.size; i++) {
             var explosion = explosions.get(i);
-            batch.draw(explosion.play(), explosion.x - 4, explosion.y - 4, 8, 8);
+            batch.draw(explosion.play(), explosion.x - 2, explosion.y - 2, 4, 4);
             if (explosion.isFinished()) {
                 explosions.removeIndex(i);
             }
         }
         checkWorldForRestart(currentTime);
-
     }
 }

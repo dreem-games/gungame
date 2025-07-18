@@ -21,20 +21,19 @@ public class Ammo implements Ui {
         float xIcon;
         float width;
         if (isMainHero) {
-            x = camera.position.x - camera.viewportWidth / 2 + 3;
-            xIcon = x + 1f;
-            width = 12f;
+            x = camera.position.x - camera.viewportWidth / 2 + 1.5f;
+            xIcon = x + 0.5f;
+            width = 6f;
         } else {
-            x = camera.position.x - camera.viewportWidth / 2 + 78;
-            xIcon = x + 14f;
-            width = -12f;
+            x = camera.position.x - camera.viewportWidth / 2 + 39;
+            xIcon = x + 7f;
+            width = -6f;
         }
-        y = camera.position.y + camera.viewportHeight / 2 - 3;
-        font.getData().setScale(0.2f);
-        font.draw(batch, String.format((" %d  /  %d "),
+        y = camera.position.y + camera.viewportHeight / 2 - 3f;
+        font.getData().setScale(0.1f);
+        font.draw(batch, String.format(("%d /  %d"),
                 hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
-        batch.draw(hero.getCurrentGun().getTexture(), xIcon, y - 9.5f, width, 12f);
-
+        batch.draw(hero.getCurrentGun().getTexture(), xIcon, y - 2.1f, width, 6f);
     }
 
     @Override
