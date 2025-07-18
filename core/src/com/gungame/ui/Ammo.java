@@ -31,7 +31,7 @@ public class Ammo implements Ui {
         }
         y = camera.position.y + camera.viewportHeight / 2 - 3f;
         font.getData().setScale(0.1f);
-        font.draw(batch, String.format(("%d /  %d"),
+        font.draw(batch, String.format(("%d  /  %d"),
                 hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
         batch.draw(hero.getCurrentGun().getTexture(), xIcon, y - 2.1f, width, 6f);
     }

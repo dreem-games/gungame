@@ -90,6 +90,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         var fixtureDef = new FixtureDef();
         fixtureDef.friction = objectMetadata.getFriction();
         fixtureDef.density = objectMetadata.getDensity();
+        fixtureDef.restitution = objectMetadata.getRestitution();
         gameObject.setupCollisionFilter(fixtureDef.filter);
         if (customObjectInitializationConfig != null) {
             customObjectInitializationConfig.postprocessCollisionFilter(fixtureDef.filter);

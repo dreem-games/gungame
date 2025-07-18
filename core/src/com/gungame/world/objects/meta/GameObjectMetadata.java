@@ -18,5 +18,7 @@ public class GameObjectMetadata {
         private final float angularDamping;
         private final float friction;
         private final float density;
+        private final float restitution;
         private final boolean isBullet;
+
 }

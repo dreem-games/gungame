@@ -8,12 +8,14 @@ import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
+import lombok.Getter;
 import lombok.Setter;
 
 public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
     public @Setter int damage;
+    public @Getter boolean hasHit = false;
 
     public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);

@@ -18,6 +18,11 @@ public class GameContactListener implements ContactListener {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
+        //Если один из объектов мы уже пометили под уничтожение,
+        //Но движок его не убрал, коллизию не просчитываем.
+        if (objectB.isToDestroy() || objectA.isToDestroy()) {
+            return;
+        }
         // приведём к нормальному виду - пусть
         // если есть взаимодействие с пулей, то она будет в objectA
         if (objectB.getType() == GameObjectType.BULLET) {

@@ -23,6 +23,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .setSize(2, 2)
                 .setLinearDamping(0)
                 .setAngularDamping(10)
+                .setRestitution(0.1f)
                 .createGameObjectMetadata();
         var boxMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BOX)
@@ -31,6 +32,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .setMassData(10, .5f, .5f)
                 .setLinearDamping(10)
                 .setAngularDamping(100)
+                .setRestitution(0.1f)
                 .createGameObjectMetadata();
         var heroMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.HERO)
@@ -62,6 +64,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .setMassData(.0f, .8f, .11f)
                 .setLinearDamping(0)
                 .setAngularDamping(10)
+                .setRestitution(0.7f)
                 .setFriction(0f)
                 .createGameObjectMetadata();
         var bodyLoader = new BodyEditorLoader(Gdx.files.internal("texture/bodies.json"));
