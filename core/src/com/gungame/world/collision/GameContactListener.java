@@ -44,7 +44,7 @@ public class GameContactListener implements ContactListener {
                 ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
             }
             if (objectB.getType() == GameObjectType.BARREL) {
-                ((Barrel) objectB).explode(objectB.getWorld().getPhisicsWorld());
+                ((Barrel) objectB).explode(objectB.getWorld());
             }
             if (objectB.getType() == GameObjectType.GRENADE) {
                 ((Grenade) objectB).grenadeLifeCycle(Long.MAX_VALUE);

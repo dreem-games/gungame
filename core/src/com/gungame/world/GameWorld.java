@@ -137,6 +137,7 @@ public class GameWorld implements Disposable {
             var explosion = explosions.get(i);
             batch.draw(explosion.play(), explosion.x - 2, explosion.y - 2, 4, 4);
             if (explosion.isFinished()) {
+                explosion.destroy();
                 explosions.removeIndex(i);
             }
         }

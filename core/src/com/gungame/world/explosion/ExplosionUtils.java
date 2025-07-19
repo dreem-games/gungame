@@ -3,6 +3,7 @@ package com.gungame.world.explosion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.world.GameWorld;
 import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Hero;
 import lombok.Getter;
@@ -10,14 +11,14 @@ import lombok.Getter;
 public class ExplosionUtils {
     private @Getter static final Array<Explosion> EXPLOSIONS = new Array<>();
 
-    public static void createExplosion(World world, float x, float y, float radius, float power) {
+    public static void createExplosion(GameWorld gameWorld, float x, float y, float radius, float power) {
         final Vector2 explosionCenter = new Vector2(x, y);
 
         final Array<Body> affectedBodies = new Array<>();
 
-       EXPLOSIONS.add(new Explosion(x, y));
+        EXPLOSIONS.add(new Explosion(gameWorld, x, y));
         // 1. Поиск тел в области через QueryAABB
-        world.QueryAABB(fixture -> {
+        gameWorld.getPhisicsWorld().QueryAABB(fixture -> {
             Body body = fixture.getBody();
             Vector2 bodyPos = body.getWorldCenter();
             // Проверяем, что тело в круге (реальный радиус)
@@ -51,7 +52,7 @@ public class ExplosionUtils {
             }
 
             if (body.getUserData() instanceof Barrel) {
-                ((Barrel) gameObject).explode(world);
+                ((Barrel) gameObject).explode(gameWorld);
             }
         }
     }

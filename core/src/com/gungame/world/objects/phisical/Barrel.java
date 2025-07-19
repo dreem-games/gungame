@@ -30,7 +30,7 @@ public class Barrel extends DynamicVisibleGameObject {
         groupIndex = (short) ThreadLocalRandom.current().nextInt(Short.MIN_VALUE, 0);
     }
 
-    public void explode(World world) {
+    public void explode(GameWorld world) {
         if (isExploded) {
             return;
         }

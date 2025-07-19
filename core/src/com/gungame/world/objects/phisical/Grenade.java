@@ -44,7 +44,7 @@ public class Grenade extends VisibleGameObject {
 
     public void explode() {
         Vector2 center = body.getWorldCenter();
-        ExplosionUtils.createExplosion(getWorld().getPhisicsWorld(), center.x, center.y, 7f, 1500f);
+        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 7f, 1500f);
         explosionSpund.play();
         markForDestroy();
     }
