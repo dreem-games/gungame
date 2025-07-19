@@ -1,5 +1,7 @@
 package com.gungame.controller;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
@@ -85,6 +87,16 @@ public class HeroJoystickController extends HeroController {
             hero.switchWeapon();
         }
         yWasPressed = yPressed;
+
+        if (controller.getButton(controller.getMapping().buttonDpadRight)) {
+            hero.setWeapon(0);
+        }
+        if (controller.getButton(controller.getMapping().buttonDpadUp)) {
+            hero.setWeapon(1);
+        }
+        if (controller.getButton(controller.getMapping().buttonDpadLeft)) {
+            hero.setWeapon(2);
+        }
 
         if (controller.getButton(mapping.buttonX)) {
             hero.reloadStart();

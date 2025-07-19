@@ -14,8 +14,14 @@ public class GameObjectMetadataBuilder {
     private MassData massData;
     private float linearDamping;
     private float angularDamping;
+    private float restitution;
     private float friction = .5f;
     private boolean isBullet;
+
+    public GameObjectMetadataBuilder setRestitution(float restitution) {
+        this.restitution = restitution;
+        return this;
+    }
 
     public GameObjectMetadataBuilder setType(@NonNull GameObjectType type) {
         this.type = type;
@@ -64,6 +70,6 @@ public class GameObjectMetadataBuilder {
         if (massData == null) {
             massData = DEFAULT_MASS_DATA;
         }
-        return new GameObjectMetadata(type, "texture/" + textureFilename, bodyName, size, massData, linearDamping, angularDamping, friction, 50, isBullet);
+        return new GameObjectMetadata(type, "texture/" + textureFilename, bodyName, size, massData, linearDamping, angularDamping, friction, 50, restitution,  isBullet);
     }
 }

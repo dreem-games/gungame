@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.gungame.world.GameWorld;
+import com.gungame.world.light.Lights;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 
@@ -34,7 +35,6 @@ public final class Laser {
     private final Vector2       from     = new Vector2();
     private final Vector2       endFull  = new Vector2();
     private final Vector2       hitPoint = new Vector2();
-    private boolean             hit;
 
     public Laser(GameWorld gw, Vector2 origin, float angleRad,
                  Body ignoreBody) {
@@ -51,6 +51,7 @@ public final class Laser {
         light.setSoft(true);
         light.setSoftnessLength(SOFTNESS);
         light.setStaticLight(false);
+        light.setContactFilter(Lights.RAY_CONTACT_FILTER);
 
         castInternal(ignoreBody);
     }
@@ -66,6 +67,7 @@ public final class Laser {
 
         return new TextureRegion(texture);
     }
+
     public static ShaderProgram createLaserShader() {
         String vertexShader = """
             attribute vec4 a_position;
@@ -118,6 +120,14 @@ public final class Laser {
         return shader;
     }
 
+    public void turnOff() {
+        light.setActive(false);
+    }
+
+    public void turnOn() {
+        light.setActive(true);
+    }
+
     public void update(Vector2 origin, float angleRad, Body ignoreBody) {
         from.set(origin);
         calcEnd(origin, angleRad, endFull);
@@ -127,6 +137,8 @@ public final class Laser {
     }
 
     public void render(SpriteBatch batch) {
+        if (!light.isActive()) return;
+
         batch.end();
 
         float dx = hitPoint.x - from.x;
@@ -154,9 +166,6 @@ public final class Laser {
         batch.begin();
     }
 
-    public Vector2 getHitPoint() { return hitPoint; }
-    public boolean hasHit()       { return hit;     }
-
     public void dispose() { light.remove(); }
 
     // ───── helpers ─────
@@ -166,7 +175,6 @@ public final class Laser {
     }
 
     private void castInternal(Body ignoreBody) {
-        hit = false;
         hitPoint.set(endFull);
 
         final float[] closest = {1f};
@@ -180,7 +188,6 @@ public final class Laser {
                 GameObjectType type = gameObject.getType();
                 if (type == GameObjectType.BULLET)
                     return 1f;
-                hit = true;
                 hitPoint.set(pt);
                 closest[0] = frac;
                 // TODO: тут можно дать ИИ сделать уворот или урон нанести если лазер боевой

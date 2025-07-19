@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.Array;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -29,20 +30,17 @@ import lombok.NonNull;
 import java.util.stream.Stream;
 
 import static com.badlogic.gdx.math.MathUtils.random;
+import static com.gungame.world.light.Lights.RAY_CONTACT_FILTER;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
     public static final float FIRE_POSITION_DX = 0.7f;
     public static final float FIRE_POSITION_DY = 0.22f;
 
-    private static final Filter RAY_CONTACT_FILTER = new Filter();
-    static {
-        RAY_CONTACT_FILTER.categoryBits = CollisionCategory.ILLUMINABLE.getBitMask();
-        RAY_CONTACT_FILTER.maskBits = CollisionCategory.ILLUMINABLE.getBitMask();
-    }
-
     private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
+    private static final int DEFAULT_DAMPING = 5;
+    private static final int DAMPING_RESTORE_TIME = 100;
     private final Sound[] damageSounds = {
             Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
@@ -52,6 +50,7 @@ public class Hero extends DynamicVisibleGameObject {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
     private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+
 
     private float xScale;
     private float yScale;
@@ -67,14 +66,18 @@ public class Hero extends DynamicVisibleGameObject {
     private @Getter int health = 100;
     private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
     private int currentWeapon = 0;
+    private long timeWhenDampingTimeChanged = 0;
+    private long throwTimer = 0;
+
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
+        body.setUserData(this);
 
         // Свет от персонажа
         playerLight = new PointLight(getWorld().getRayHandler(), 512);
         playerLight.attachToBody(getBody(), 1.5f, 2f);
-        playerLight.setDistance(75f);
+        playerLight.setDistance(25f);
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
         playerLight.setIgnoreAttachedBody(true);
@@ -95,8 +98,34 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void death() {
+        laser.turnOff();
         deathSound.play();
         markForDestroy();
+    }
+
+    public void throwGrenade(float throwPower) {
+        var grenadeFactory = getWorld().getPhysicalObjectFactoryManager().getGrenadeFactory();
+        float angle = getAngle();
+        Vector2 firePosition = getFirePosition();
+        CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
+        grenadeFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
+                grenade -> grenade.setVelocity(
+                        MathUtils.cos(angle) * (throwPower / 40) ,
+                        MathUtils.sin(angle) * (throwPower / 40)));
+    }
+
+    public void throwGrenadeStart() {
+        throwTimer = System.currentTimeMillis();
+    }
+
+    public void throwGrenadeEnd() {
+        float throwPower;
+        throwPower = (System.currentTimeMillis() - throwTimer) / 10f;
+        if (throwPower > 100) {
+            throwPower = 100;
+        }
+        throwGrenade(throwPower);
+        throwTimer = 0;
     }
 
     public void fire() {
@@ -219,6 +248,8 @@ public class Hero extends DynamicVisibleGameObject {
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
+        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping(
+                body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
 
         laser.update(getFirePosition(), getAngle(), getBody());
     }
@@ -255,7 +286,7 @@ public class Hero extends DynamicVisibleGameObject {
      * @return true если сила применена
      */
     public boolean move(float x, float y) {
-        if (x * x + y * y < .1f) {
+        if (x * x + y * y < .1f || body.getLinearDamping() != DEFAULT_DAMPING) {
             return false;  // может быть небольшая погрешность
         }
 
@@ -263,7 +294,7 @@ public class Hero extends DynamicVisibleGameObject {
         long delta = now - lastStaminaUsage;
         if (movingMode.getMaxDuration() > 0 && delta > movingMode.getMaxDuration()
                 || (delta > movingMode.getMinDuration()
-                && !tryUseStamina(movingMode.getStaminaCost() * delta))) {
+                    && !tryUseStamina(movingMode.getStaminaCost() * delta))) {
             movingMode = MovingMode.NORMAL;
             lastMovingModeChange = now;
         }

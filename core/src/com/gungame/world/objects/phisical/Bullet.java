@@ -2,7 +2,6 @@ package com.gungame.world.objects.phisical;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.gungame.world.GameWorld;
@@ -12,12 +11,11 @@ import com.gungame.world.objects.meta.VisibleGameObject;
 import lombok.Getter;
 import lombok.Setter;
 
-import static com.gungame.world.GameWorldConfig.BULLET_SPEED;
-
 public class Bullet extends VisibleGameObject {
 
     private short groupIndex = 0;
     public @Setter int damage;
+    public @Getter boolean hasHit = false;
 
     public Bullet(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -42,6 +40,7 @@ public class Bullet extends VisibleGameObject {
         filter.categoryBits = CollisionCategory.ALL.getBitMask();
         filter.categoryBits &= (short) ~CollisionCategory.ILLUMINABLE.getBitMask();
         filter.maskBits = CollisionCategory.ALL.getBitMask();
+        filter.maskBits &= (short) ~CollisionCategory.ILLUMINABLE.getBitMask();
     }
 
     @Override
@@ -55,13 +54,7 @@ public class Bullet extends VisibleGameObject {
 
     @Override
     public void postConstruct() {
-        float angle = getAngle();
-        float impulseX = MathUtils.cos(angle), impulseY = MathUtils.sin(angle);
-        applyImpulse(impulseX * BULLET_SPEED, impulseY * BULLET_SPEED);
-
         sprite.setColor(Color.RED);
-        body.setBullet(true);
-
         super.postConstruct();
     }
 
@@ -73,6 +66,4 @@ public class Bullet extends VisibleGameObject {
     @Override
     public void dispose() {
     }
-
-
 }

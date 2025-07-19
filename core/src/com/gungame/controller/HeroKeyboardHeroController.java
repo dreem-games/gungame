@@ -12,6 +12,7 @@ public class HeroKeyboardHeroController extends HeroController {
 
     private float lastMouseX, lastMouseY;
     private boolean lmbWasPressed;
+    private boolean rmbWasPressed;
 
     public HeroKeyboardHeroController(Hero hero, Camera camera) {
         super(hero, camera);
@@ -72,18 +73,26 @@ public class HeroKeyboardHeroController extends HeroController {
         }
         lmbWasPressed = lmbPressed;
 
+        var rmbPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT)
+                || Gdx.input.isKeyPressed(Input.Keys.G);
+        if (rmbPressed && !rmbWasPressed) {
+            hero.throwGrenadeStart();
+            used = true;
+        }
+        if (!rmbPressed && rmbWasPressed) {
+            hero.throwGrenadeEnd();
+        }
+        rmbWasPressed = rmbPressed;
+
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
             hero.setWeapon(0);
         }
-
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
             hero.setWeapon(1);
         }
-
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
             hero.setWeapon(2);
         }
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
