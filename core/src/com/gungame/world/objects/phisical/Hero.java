@@ -6,6 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -21,6 +22,7 @@ import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.weapon.Gun;
 import com.gungame.world.objects.weapon.GunData;
+import com.gungame.world.objects.weapon.Laser;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -31,7 +33,7 @@ import static com.badlogic.gdx.math.MathUtils.random;
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
     public static final float FIRE_POSITION_DX = 0.7f;
-    public static final float FIRE_POSITION_DY = 0.15f;
+    public static final float FIRE_POSITION_DY = 0.22f;
 
     private static final Filter RAY_CONTACT_FILTER = new Filter();
     static {
@@ -55,6 +57,7 @@ public class Hero extends DynamicVisibleGameObject {
     private float yScale;
     private final PointLight playerLight;
     private ConeLight fireLight;
+    private final Laser laser;
     private @NonNull MovingMode movingMode = MovingMode.STANDING;
     private @Getter float stamina = MAX_STAMINA;
     private long lastStaminaUsage = System.currentTimeMillis();
@@ -67,6 +70,7 @@ public class Hero extends DynamicVisibleGameObject {
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
+
         // Свет от персонажа
         playerLight = new PointLight(getWorld().getRayHandler(), 512);
         playerLight.attachToBody(getBody(), 1.5f, 2f);
@@ -76,6 +80,9 @@ public class Hero extends DynamicVisibleGameObject {
         playerLight.setIgnoreAttachedBody(true);
         playerLight.setContactFilter(RAY_CONTACT_FILTER);
         playerLight.setColor(new Color(0f, 0f, 0f, 1f));
+
+        // лазер
+        laser = new Laser(gameWorld, getFirePosition(), getAngle(), body);
     }
 
     public void takeDamage(int damage) {
@@ -120,7 +127,7 @@ public class Hero extends DynamicVisibleGameObject {
         }
 
         fireLight = new ConeLight(world.getRayHandler(), 64, Color.RED, 5,
-                firePosition.x, firePosition.y, bodyAngle + 30f, 30);
+                firePosition.x, firePosition.y, bodyAngle  * MathUtils.radiansToDegrees, 30);
         fireLight.setContactFilter(RAY_CONTACT_FILTER);
     }
 
@@ -212,6 +219,8 @@ public class Hero extends DynamicVisibleGameObject {
         if (movingMode.getStaminaCost() != 0) {
             lastStaminaRegen = now;
         }
+
+        laser.update(getFirePosition(), getAngle(), getBody());
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
@@ -320,8 +329,15 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     @Override
+    public void draw(SpriteBatch batch) {
+        super.draw(batch);
+        laser.render(batch);
+    }
+
+    @Override
     public void dispose() {
         Stream.concat(Stream.of(dashSounds), Stream.of(deathSound)).forEach(Sound::dispose);
         playerLight.dispose();
+        laser.dispose();
     }
 }
