@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.controller.ControllersManager;
+import com.gungame.world.explosion.ExplosionAnimation;
+import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
 import com.gungame.world.objects.meta.GameObject;
@@ -53,10 +55,10 @@ public class GameWorld implements Disposable {
         var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(10, 10, 20);
+        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(5, 5, 20);
         uiEngine = new UiEngine(hero, true);
 
-        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(80, 40, 200);
+        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(40, 20, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
@@ -64,6 +66,8 @@ public class GameWorld implements Disposable {
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW * 2, HORIZONTAL_SIZE - wallH * 2);
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
         WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
+        WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
+        ExplosionAnimation.init();
     }
 
     /**
@@ -96,8 +100,8 @@ public class GameWorld implements Disposable {
 
         // шаг физического мира
         GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
-        physicalObjectFactoryManager.executeUpdates();
         controllersManager.control();
+        physicalObjectFactoryManager.executeUpdates();
         phisicsWorld.step(frameTime, 6, 2);
 
         // отрисовка графического
@@ -108,7 +112,14 @@ public class GameWorld implements Disposable {
         }
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
-
+        var explosions = ExplosionUtils.getEXPLOSIONS();
+        for (int i = 0; i < explosions.size; i++) {
+            var explosion = explosions.get(i);
+            batch.draw(explosion.play(), explosion.x - 2, explosion.y - 2, 4, 4);
+            if (explosion.isFinished()) {
+                explosions.removeIndex(i);
+            }
+        }
         checkWorldForRestart(currentTime);
     }
 }

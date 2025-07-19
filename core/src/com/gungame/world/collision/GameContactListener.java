@@ -6,7 +6,9 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Bullet;
+import com.gungame.world.objects.phisical.Grenade;
 import com.gungame.world.objects.phisical.Hero;
 
 public class GameContactListener implements ContactListener {
@@ -16,21 +18,41 @@ public class GameContactListener implements ContactListener {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
+        //Если один из объектов мы уже пометили под уничтожение,
+        //Но движок его не убрал, коллизию не просчитываем.
+        if (objectB.isToDestroy() || objectA.isToDestroy()) {
+            return;
+        }
+        // приведём к нормальному виду - пусть
+        // если есть взаимодействие с пулей, то она будет в objectA
         if (objectB.getType() == GameObjectType.BULLET) {
-            objectB.markForDestroy();
             if (objectA.getType() == GameObjectType.BULLET) {
+                objectB.markForDestroy();
                 objectA.markForDestroy();
-                return;
+                return;  // ну две пули столкнулись, гг им
             }
             var tmp = objectA;
             objectA = objectB;
             objectB = tmp;
-        } else if (objectA.getType() == GameObjectType.BULLET) {
-            objectA.markForDestroy();
         }
 
-        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.HERO) {
-            ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
+        if (objectA.getType() == GameObjectType.BULLET) {
+            objectA.markForDestroy();
+
+            // теперь проверяем с чем же взаимодействует пуля
+            if (objectB.getType() == GameObjectType.HERO) {
+                ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
+            }
+            if (objectB.getType() == GameObjectType.BARREL) {
+                ((Barrel) objectB).explode(objectB.getWorld().getPhisicsWorld());
+            }
+            if (objectB.getType() == GameObjectType.GRENADE) {
+                ((Grenade) objectB).grenadeLifeCycle(Long.MAX_VALUE);
+            }
+        }
+
+        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.GRENADE) {
+            ((Grenade) objectB).explode();
         }
     }
 

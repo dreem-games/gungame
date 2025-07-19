@@ -70,9 +70,12 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = objectMetadata.getType().getBodyType();
         bodyDef.position.set(x, y);
-        bodyDef.linearDamping = objectMetadata.getLinearDamping();
-        bodyDef.angularDamping = objectMetadata.getAngularDamping();
+        if (!objectMetadata.isBullet()) {
+            bodyDef.linearDamping = objectMetadata.getLinearDamping();
+            bodyDef.angularDamping = objectMetadata.getAngularDamping();
+        }
         bodyDef.angle = rotation * MathUtils.degreesToRadians;
+        bodyDef.bullet = objectMetadata.isBullet();
 
         var body = world.getPhisicsWorld().createBody(bodyDef);
         Sprite sprite = new Sprite(texture);
@@ -87,6 +90,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         var fixtureDef = new FixtureDef();
         fixtureDef.friction = objectMetadata.getFriction();
         fixtureDef.density = objectMetadata.getDensity();
+        fixtureDef.restitution = objectMetadata.getRestitution();
         gameObject.setupCollisionFilter(fixtureDef.filter);
         if (customObjectInitializationConfig != null) {
             customObjectInitializationConfig.postprocessCollisionFilter(fixtureDef.filter);
