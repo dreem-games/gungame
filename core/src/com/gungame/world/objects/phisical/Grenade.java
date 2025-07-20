@@ -14,20 +14,12 @@ import com.gungame.world.objects.meta.VisibleGameObject;
 import static com.gungame.world.collision.CollisionFilters.initGrenadeFilter;
 
 public class Grenade extends VisibleGameObject {
-    private short groupIndex = 0;
+    private static final Sound explosionSpund = Gdx.audio.newSound(Gdx.files.internal("sound/barrelExplosion.wav"));
+
     private final long createdTime = System.currentTimeMillis();
-    private final Sound explosionSpund = Gdx.audio.newSound(Gdx.files.internal("sound/barrelExplosion.wav"));
 
     public Grenade(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
-    }
-
-    public void setGroupIndex(short groupIndex) {
-        this.groupIndex = groupIndex;
-    }
-
-    public short getGroupIndex() {
-        return groupIndex;
     }
 
     public void grenadeLifeCycle(long timeOfLife) {
@@ -44,7 +36,7 @@ public class Grenade extends VisibleGameObject {
 
     public void explode() {
         Vector2 center = body.getWorldCenter();
-        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 7f, 1500f);
+        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 5f, 100f);
         explosionSpund.play();
         markForDestroy();
     }

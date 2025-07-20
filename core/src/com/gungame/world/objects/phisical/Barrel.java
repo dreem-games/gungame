@@ -36,7 +36,7 @@ public class Barrel extends DynamicVisibleGameObject implements FirePoint {
         // Координаты центра бочки
         Vector2 center = body.getWorldCenter();
         // Параметры взрыва (например, радиус 5, мощность 200)
-        ExplosionUtils.createExplosion(world, center.x, center.y, 15f, 1500f);
+        ExplosionUtils.createExplosion(world, center.x, center.y, 7f, 100f);
         // Здесь же можно запустить анимацию, частицы, удалить бочку из мира и т.д.
         explosionSpund.play();
         markForDestroy();

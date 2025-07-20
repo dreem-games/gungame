@@ -13,16 +13,17 @@ public class ExplosionUtils {
 
     public static void createExplosion(GameWorld gameWorld, float x, float y, float radius, float power) {
         final Vector2 explosionCenter = new Vector2(x, y);
+        float radius2 = radius * radius;
 
         final Array<Body> affectedBodies = new Array<>();
 
-        EXPLOSIONS.add(new Explosion(gameWorld, x, y));
+        EXPLOSIONS.add(new Explosion(gameWorld, x, y, radius2));
         // 1. Поиск тел в области через QueryAABB
         gameWorld.getPhisicsWorld().QueryAABB(fixture -> {
             Body body = fixture.getBody();
             Vector2 bodyPos = body.getWorldCenter();
             // Проверяем, что тело в круге (реальный радиус)
-            if (bodyPos.dst(explosionCenter) <= radius) {
+            if (bodyPos.dst2(explosionCenter) <= radius2) {
                 if (!affectedBodies.contains(body, true)) { // избегаем дублирования
                     affectedBodies.add(body);
                 }
@@ -38,17 +39,17 @@ public class ExplosionUtils {
             Object gameObject = body.getUserData();
             Vector2 bodyPos = body.getWorldCenter();
             Vector2 forceDir = bodyPos.cpy().sub(explosionCenter).nor(); // направление от центра
-            float distance = bodyPos.dst(explosionCenter);
+            float distance2 = bodyPos.dst2(explosionCenter);
             body.setLinearDamping(0);
 
             // Мягкое затухание импульса по расстоянию
-            float forceMag = power * (float)Math.pow(1 - distance/radius, 3);
+            float forceMag = power * (float)Math.pow(1 - distance2/radius2, 2);
             if (forceMag < 0) forceMag = 0;
             Vector2 impulse = forceDir.scl(forceMag);
             body.applyLinearImpulse(impulse, body.getWorldCenter(), true);
 
             if (body.getUserData() instanceof Hero) {
-                ((Hero) gameObject).takeDamage((int)forceMag / 5);
+                ((Hero) gameObject).takeDamage((int) forceMag);
             }
 
             if (body.getUserData() instanceof Barrel) {

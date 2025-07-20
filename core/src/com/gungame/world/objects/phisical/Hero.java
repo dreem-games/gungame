@@ -39,7 +39,7 @@ public class Hero extends DynamicVisibleGameObject {
     public static final float FIRE_POSITION_DY = 0.22f;
 
     private static final float MAX_STAMINA_REGEN_SPEED = 0.025f;
-    private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .15f;
+    private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .07f;
     private static final int DEFAULT_DAMPING = 5;
     private static final int DAMPING_RESTORE_TIME = 100;
     private final Sound[] damageSounds = {
@@ -70,18 +70,17 @@ public class Hero extends DynamicVisibleGameObject {
     private long timeWhenDampingTimeChanged = 0;
     private long throwTimer = 0;
 
-
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
         body.setUserData(this);
 
         // Свет от персонажа
         playerLight = new PointLight(getWorld().getRayHandler(), 512);
-        playerLight.attachToBody(getBody(), 1.5f, 2f);
-        playerLight.setDistance(25f);
+        playerLight.attachToBody(getBody(), 0.25f, 0.5f);
+        playerLight.setIgnoreAttachedBody(true);
+        playerLight.setDistance(12f);
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
-        playerLight.setIgnoreAttachedBody(true);
         playerLight.setContactFilter(CollisionFilters.HIEGH_LIGHT_CONTACT_FILTER);
         playerLight.setColor(new Color(0f, 0f, 0f, 1f));
 
@@ -121,9 +120,9 @@ public class Hero extends DynamicVisibleGameObject {
 
     public void throwGrenadeEnd() {
         float throwPower;
-        throwPower = (System.currentTimeMillis() - throwTimer) / 10f;
-        if (throwPower > 100) {
-            throwPower = 100;
+        throwPower = (System.currentTimeMillis() - throwTimer) >> 5;
+        if (throwPower > 30) {
+            throwPower = 30;
         }
         throwGrenade(throwPower);
         throwTimer = 0;
@@ -151,7 +150,7 @@ public class Hero extends DynamicVisibleGameObject {
             float angle = bodyAngle + bulletData.deviation();
             bulletFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
                     bullet -> {
-                bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed() , MathUtils.sin(angle) * bulletData.speed());
+                bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed(), MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
             });
         }

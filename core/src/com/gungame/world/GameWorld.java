@@ -13,7 +13,6 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.controller.ControllersManager;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
-import com.gungame.controller.ControllersManager;
 import com.gungame.world.explosion.ExplosionAnimation;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.imaginary.GroundContainer;
@@ -66,10 +65,10 @@ public class GameWorld implements Disposable {
         var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(5, 5, 20);
+        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(2, 2, 20);
         uiEngine = new UiEngine(hero, true);
 
-        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(40, 20, 200);
+        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(20, 10, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
@@ -104,7 +103,7 @@ public class GameWorld implements Disposable {
         phisicsWorld.dispose();
     }
 
-    public void render(SpriteBatch batch, OrthographicCamera camera) {
+    public void renderWorld(SpriteBatch batch, OrthographicCamera camera) {
         float currentTime = TimeUtils.nanoTime() / 1000000f;
         float frameTime = Math.min(currentTime - lastWorldStepTime, 0.25f);
         lastWorldStepTime = currentTime;
@@ -126,7 +125,10 @@ public class GameWorld implements Disposable {
         rayHandler.render();  // рендорить лучи надо вне рисования спрайтов!
         batch.begin();
 
-        // рисуем UI
+        checkWorldForRestart(currentTime);
+    }
+
+    public void renderUi(SpriteBatch batch, OrthographicCamera camera) {
         if (debugRenderer != null) {
             debugRenderer.render(phisicsWorld, camera.combined);
         }
@@ -141,6 +143,5 @@ public class GameWorld implements Disposable {
                 explosions.removeIndex(i);
             }
         }
-        checkWorldForRestart(currentTime);
     }
 }

@@ -13,6 +13,7 @@ public class GunGame extends ApplicationAdapter {
 	private BitmapFont font;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
+	private OrthographicCamera uiCamera;
 	private GameWorld gameWorld;
 	private int heroScore = 0;
 	private int hero2Score = 0;
@@ -21,16 +22,20 @@ public class GunGame extends ApplicationAdapter {
 	public void create () {
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, GameWorldConfig.VERTICAL_SIZE, GameWorldConfig.HORIZONTAL_SIZE);
+
+		uiCamera = new OrthographicCamera();
+		uiCamera.setToOrtho(false, GameWorldConfig.DISPLAY_VERTICAL_SIZE, GameWorldConfig.DISPLAY_HORIZONTAL_SIZE);
+
 		batch = new SpriteBatch();
 		font = new BitmapFont();
+		font.getData().setScale(5f);
 
 		gameWorld = new GameWorld();
 		gameWorld.init(camera);
 	}
 
-	public void drawScore() {       //Счет игроков
-		font.getData().setScale(.35f);
-		font.draw(batch, String.format((" %d  /  %d " ), heroScore, hero2Score), camera.position.x - 10, camera.position.y - 21);
+	public void drawScore() {
+		font.draw(batch, String.format((" %d  /  %d " ), heroScore, hero2Score), uiCamera.position.x - uiCamera.viewportWidth * 0.07f, uiCamera.position.y - uiCamera.viewportHeight * 0.44f);
 	}
 
 	@Override
@@ -39,9 +44,16 @@ public class GunGame extends ApplicationAdapter {
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		gameWorld.render(batch, camera);
+		gameWorld.renderWorld(batch, camera);
+		batch.end();
+
+		uiCamera.update();
+		batch.setProjectionMatrix(uiCamera.combined);
+		batch.begin();
+		gameWorld.renderUi(batch, uiCamera);
 		drawScore();
 		batch.end();
+
 		if (gameWorld.isWorldToRestart) {
 			if (gameWorld.getHero().isToDestroy()) {
 				hero2Score++;

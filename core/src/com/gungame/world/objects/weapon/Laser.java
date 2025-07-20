@@ -25,9 +25,9 @@ public final class Laser {
     private static final int   RAYS      = 4;
     private static final Color COLOR     = Color.WHITE;
     private static final float CONE_DEG  = 0.2f;
-    private static final float SOFTNESS  = 1.5f;
-    private static final float MAX_LEN   = 40f;
-    private static final float CORE_W    = 0.08f; // толщина сердцевины (world units)
+    private static final float SOFTNESS  = 0.5f;
+    private static final float MAX_LEN   = 10f;
+    private static final float CORE_W    = 0.02f; // толщина сердцевины (world units)
 
     // ───── ссылки и состояние ─────
     private final World         world;
@@ -80,7 +80,7 @@ public final class Laser {
             void main() {
                 v_color = a_color;
                 v_texCoords = a_texCoord0;
-                v_worldPos = a_position.xy; // 💥 МИРОВЫЕ координаты напрямую!
+                v_worldPos = a_position.xy; // МИРОВЫЕ координаты напрямую!
                 gl_Position = u_projTrans * a_position;
             }
         """;
@@ -102,7 +102,7 @@ public final class Laser {
     
                 vec2 delta = v_worldPos - u_start;
                 float dist2 = dot(delta, delta);         // расстояние²
-                float fade = 1.0 - dist2 / (40.0 * 40.0); // 40 = макс. длина лазера
+                float fade = 1.0 - dist2 / 100.0; // 100 = квадрат макс. длины лазера
                 fade = clamp(fade, 0.0, 1.0);
                 fade = pow(fade, 1.5);                   // настраиваемое затухание
     
@@ -112,11 +112,9 @@ public final class Laser {
 
         ShaderProgram.pedantic = false;
         ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
-
         if (!shader.isCompiled()) {
             throw new GdxRuntimeException("Laser shader compile error:\n" + shader.getLog());
         }
-
         return shader;
     }
 
