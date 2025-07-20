@@ -30,8 +30,8 @@ public abstract class GameObject implements Disposable {
      */
     public void setupCollisionFilter(Filter filter) {
         filter.groupIndex = 0;
-        filter.categoryBits = CollisionCategory.ALL.getBitMask();
-        filter.maskBits = CollisionCategory.ALL.getBitMask();
+        filter.categoryBits = CollisionCategory.ALL.getBits();
+        filter.maskBits = CollisionCategory.ALL.getBits();
     }
 
     public void postConstruct() {

@@ -5,14 +5,14 @@ import box2dLight.PointLight;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.gungame.world.GameWorld;
+import com.gungame.world.collision.CollisionFilters;
 import lombok.Getter;
 
-import static com.gungame.world.light.Lights.RAY_CONTACT_FILTER;
 
 public class Explosion {
     public @Getter float x, y, drawX, drawY;
     private float stateTime = 0;
-    private Light light;
+    private final Light light;
 
     public Explosion(GameWorld gameWorld, float x, float y) {
         this.x = x;
@@ -22,15 +22,15 @@ public class Explosion {
 
         light = new PointLight(gameWorld.getRayHandler(), 512);
         light.setPosition(x, y);
-        light.setDistance(15f);
+        light.setDistance(30f);
         light.setSoft(true);
         light.setSoftnessLength(7.5f);
-        light.setContactFilter(RAY_CONTACT_FILTER);
+        light.setContactFilter(CollisionFilters.LOW_LIGHT_CONTACT_FILTER);
         light.setColor(Color.RED);
     }
 
     public TextureRegion play() {
-        light.setDistance(15f - stateTime / 2);
+        light.setDistance(30f - stateTime);
         return ExplosionAnimation.explosionAnimation.getKeyFrame(stateTime++, false);
     }
 

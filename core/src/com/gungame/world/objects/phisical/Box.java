@@ -13,11 +13,11 @@ import lombok.Setter;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.gungame.world.collision.CollisionFilters.initBoxFilter;
+
 @Getter
-public class Box extends DynamicVisibleGameObject {
+public class Box extends DynamicVisibleGameObject implements FirePoint {
     private static final int DEFAULT_DAMPING = 10;
-    private static short minGroupIndex = 0;// заготовочка для пуль
-    private static long now = System.currentTimeMillis();
     private static final int DAMPING_RESTORE_TIME = 100; //Время в миллисекундах, после которого начинается восстановление сопротивления.
     private long timeWhenDampingTimeChanged = 0;
 
@@ -30,18 +30,15 @@ public class Box extends DynamicVisibleGameObject {
 
     @Override
     public void update() {
-
         super.update();
-        now = System.currentTimeMillis();
-        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping
-                (body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
+        long now = System.currentTimeMillis();
+        timeWhenDampingTimeChanged = ExplosionUtils.checkDamping(
+                body, now, DEFAULT_DAMPING, timeWhenDampingTimeChanged, DAMPING_RESTORE_TIME);
     }
 
     @Override
     public void setupCollisionFilter(Filter filter) {
-        filter.groupIndex = groupIndex;
-        filter.categoryBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
-        filter.maskBits = CollisionCategory.SMALL_OBJECTS.getBitMask();
+        initBoxFilter(filter, groupIndex);
     }
 
     @Override

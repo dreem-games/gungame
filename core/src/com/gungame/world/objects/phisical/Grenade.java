@@ -3,15 +3,15 @@ package com.gungame.world.objects.phisical;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.gungame.world.GameWorld;
-import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
+
+import static com.gungame.world.collision.CollisionFilters.initGrenadeFilter;
 
 public class Grenade extends VisibleGameObject {
     private short groupIndex = 0;
@@ -49,12 +49,9 @@ public class Grenade extends VisibleGameObject {
         markForDestroy();
     }
 
-
     @Override
     public void setupCollisionFilter(Filter filter) {
-        filter.groupIndex = groupIndex;
-        filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
-        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
+        initGrenadeFilter(filter);
     }
 
     @Override

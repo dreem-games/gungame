@@ -17,9 +17,11 @@ import com.badlogic.gdx.utils.Array;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
+import com.gungame.world.collision.CollisionFilters;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
+import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.weapon.Gun;
 import com.gungame.world.objects.weapon.GunData;
@@ -30,7 +32,6 @@ import lombok.NonNull;
 import java.util.stream.Stream;
 
 import static com.badlogic.gdx.math.MathUtils.random;
-import static com.gungame.world.light.Lights.RAY_CONTACT_FILTER;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
@@ -81,7 +82,7 @@ public class Hero extends DynamicVisibleGameObject {
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
         playerLight.setIgnoreAttachedBody(true);
-        playerLight.setContactFilter(RAY_CONTACT_FILTER);
+        playerLight.setContactFilter(CollisionFilters.HIEGH_LIGHT_CONTACT_FILTER);
         playerLight.setColor(new Color(0f, 0f, 0f, 1f));
 
         // лазер
@@ -155,9 +156,9 @@ public class Hero extends DynamicVisibleGameObject {
             });
         }
 
-        fireLight = new ConeLight(world.getRayHandler(), 64, Color.RED, 5,
-                firePosition.x, firePosition.y, bodyAngle  * MathUtils.radiansToDegrees, 30);
-        fireLight.setContactFilter(RAY_CONTACT_FILTER);
+        fireLight = new ConeLight(world.getRayHandler(), 64, Color.RED, 10,
+                firePosition.x, firePosition.y, bodyAngle  * MathUtils.radiansToDegrees, 20);
+        fireLight.setContactFilter(CollisionFilters.LOW_LIGHT_CONTACT_FILTER);
     }
 
     /**
@@ -194,27 +195,27 @@ public class Hero extends DynamicVisibleGameObject {
         }
     }
 
-    private Box hidesBox(Vector2 pos) {
+    private FirePoint hidesBox(Vector2 pos) {
         var arr = new Array<Body>();
-        getWorld().getPhisicsWorld().getBodies(arr);
+        getWorld().getPhisicsWorld().getBodies(arr);  // TODO: мб надо будет оптимизировать
 
-        Box nearestBox = null;
+        FirePoint nearestFirePoint = null;
         float nearestDistance = Float.MAX_VALUE;
         final float minDistance = Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
         // поворот не учитывается, так что пока для небольшого количества объектов норм
 
         for (var body : arr) {
-            var userData = body.getUserData();
-            if (userData instanceof Box box) {
-                var distance = box.getPosition().dst(pos);
+            var gameObject = (GameObject) body.getUserData();
+            if (gameObject instanceof FirePoint firePoint) {
+                var distance = firePoint.getPosition().dst(pos);
                 if (distance < minDistance && distance < nearestDistance) {
                     nearestDistance = distance;
-                    nearestBox = box;
+                    nearestFirePoint = firePoint;
                 }
             }
         }
 
-        return nearestBox;
+        return nearestFirePoint;
     }
 
     public boolean tryUseStamina(float staminaToUse) {
@@ -325,8 +326,8 @@ public class Hero extends DynamicVisibleGameObject {
 
     @Override
     public void setupCollisionFilter(Filter filter) {
-        filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
-        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBitMask();
+        filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBits();
+        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBits();
     }
 
     @Override
@@ -344,8 +345,8 @@ public class Hero extends DynamicVisibleGameObject {
         var fixtureDef = new FixtureDef();
         fixtureDef.density = 100f;
         fixtureDef.friction = 1f;
-        fixtureDef.filter.categoryBits = CollisionCategory.ALL.getBitMask();
-        fixtureDef.filter.maskBits = CollisionCategory.ALL.getBitMask();
+        fixtureDef.filter.categoryBits = CollisionCategory.ALL.getBits();
+        fixtureDef.filter.maskBits = CollisionCategory.ALL.getBits();
 
         var circleShape = new CircleShape();
         circleShape.setPosition(body.getLocalCenter());

@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.gungame.world.GameWorld;
-import com.gungame.world.light.Lights;
+import com.gungame.world.collision.CollisionFilters;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
 
@@ -51,7 +51,7 @@ public final class Laser {
         light.setSoft(true);
         light.setSoftnessLength(SOFTNESS);
         light.setStaticLight(false);
-        light.setContactFilter(Lights.RAY_CONTACT_FILTER);
+        light.setContactFilter(CollisionFilters.LOW_LIGHT_CONTACT_FILTER);
 
         castInternal(ignoreBody);
     }
