@@ -327,7 +327,7 @@ public class Hero extends DynamicVisibleGameObject {
     @Override
     public void setupCollisionFilter(Filter filter) {
         filter.categoryBits = CollisionCategory.HEIGHT_OBJECTS.getBits();
-        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBits();
+        filter.maskBits = CollisionCategory.MICRO_OBJECTS.getBits();
     }
 
     @Override
@@ -345,8 +345,8 @@ public class Hero extends DynamicVisibleGameObject {
         var fixtureDef = new FixtureDef();
         fixtureDef.density = 100f;
         fixtureDef.friction = 1f;
-        fixtureDef.filter.categoryBits = CollisionCategory.ALL.getBits();
-        fixtureDef.filter.maskBits = CollisionCategory.ALL.getBits();
+        fixtureDef.filter.categoryBits = CollisionCategory.ALL_PHYSICAL.getBits();
+        fixtureDef.filter.maskBits = CollisionCategory.ALL_PHYSICAL.getBits();
 
         var circleShape = new CircleShape();
         circleShape.setPosition(body.getLocalCenter());
