@@ -38,7 +38,7 @@ public abstract class VisibleGameObject extends GameObject {
     }
 
     /*
-    Синхронизирует физическое и графическое представления, удаляет если требуется
+     * Синхронизирует физическое и графическое представления, удаляет если требуется
      */
     private void syncSprite() {
         var center = body.getWorldCenter();

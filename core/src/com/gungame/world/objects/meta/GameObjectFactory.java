@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Disposable;
 import com.gungame.world.GameWorld;
@@ -95,8 +96,19 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         if (customObjectInitializationConfig != null) {
             customObjectInitializationConfig.postprocessCollisionFilter(fixtureDef.filter);
         }
-        bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef,
-                objectMetadata.getSize(), texture, objectMetadata.getMassData());
+        if (objectMetadata.getBodyName() != null) {
+            bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef,
+                    objectMetadata.getSize(), texture, objectMetadata.getMassData());
+        } else {
+            // сейчас только круглые объекты как альтернатива
+            var circleShape = new CircleShape();
+            float radius = objectMetadata.getDiameter() / 2f;
+            circleShape.setRadius(radius);
+            circleShape.setPosition(new Vector2(radius, radius));
+            fixtureDef.shape = circleShape;
+            body.createFixture(fixtureDef); 
+            circleShape.dispose();
+        }
         body.resetMassData();
         body.setUserData(gameObject);
 

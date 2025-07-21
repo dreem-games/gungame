@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.badlogic.gdx.math.MathUtils.random;
+import static com.gungame.world.GameWorldConfig.ENABLE_AUTO_RELOADING;
 
 public class Gun {
     private final GunData gunData;
@@ -28,7 +29,7 @@ public class Gun {
             return null;
         }
         if (magazine == 0) {
-            if (ammo > 0) {
+            if (ammo > 0 && ENABLE_AUTO_RELOADING) {
                 reloadStart();
             }
             return null;
@@ -91,5 +92,9 @@ public class Gun {
 
     public Texture getTexture() {
         return gunData.getWeaponIcon();
+    }
+
+    public boolean hasHeavyBullets() {
+        return gunData.hasHeavyBullets();
     }
 }

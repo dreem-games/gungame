@@ -10,15 +10,15 @@ import lombok.NonNull;
 @Getter
 public class GameObjectMetadata {
         @NonNull private final GameObjectType type;
-        @NonNull private final String texturePath;
-        @NonNull private final String bodyName;
-        @NonNull private final Vector2 size;
         @NonNull private final MassData massData;
+        @NonNull private final String texturePath;
+        @NonNull private final Vector2 size;
+        private final String bodyName;
+        private final Float diameter;
         private final float linearDamping;
         private final float angularDamping;
         private final float friction;
         private final float density;
         private final float restitution;
         private final boolean isBullet;
-
 }

@@ -51,9 +51,9 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var barrelMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BARREL)
-                .setBodyName("barrel", "png")
-                .setSize(1.5f, 1.5f)
-                .setMassData(10, .5f, .5f)
+                .setTextureName("barrel", "png")
+                .setBodyCircleDiameter(.8f)
+                .setMassData(12, .5f, .5f)
                 .setLinearDamping(10)
                 .setAngularDamping(100)
                 .createGameObjectMetadata();

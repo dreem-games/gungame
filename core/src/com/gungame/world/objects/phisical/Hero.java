@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
@@ -152,6 +149,13 @@ public class Hero extends DynamicVisibleGameObject {
                     bullet -> {
                 bullet.setVelocity(MathUtils.cos(angle) * bulletData.speed(), MathUtils.sin(angle) * bulletData.speed());
                 bullet.setDamage(bulletData.damage());
+
+                if (getCurrentGun().hasHeavyBullets()) {
+                    // увеличиваем плотность в 100 раз
+                    Fixture fixture = bullet.getBody().getFixtureList().first();
+                    fixture.setDensity(fixture.getDensity() * 100);
+                    bullet.getBody().resetMassData();
+                }
             });
         }
 
@@ -352,6 +356,7 @@ public class Hero extends DynamicVisibleGameObject {
         circleShape.setRadius(Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS);
         fixtureDef.shape = circleShape;
         body.createFixture(fixtureDef);
+        circleShape.dispose();
     }
 
     @Override

@@ -22,6 +22,7 @@ public class Ammo implements Ui {
         font = generator.generateFont(params);
         generator.dispose();
     }
+    private float lastDisplayPixels = 2073600f;
 
     public Ammo(boolean isMainHero) {
         this.isMainHero = isMainHero;
@@ -31,6 +32,12 @@ public class Ammo implements Ui {
 
     @Override
     public void draw(SpriteBatch batch, Camera camera, Hero hero) {
+        float pixels = camera.viewportHeight * camera.viewportWidth;
+        if (pixels != lastDisplayPixels) {
+            font.getData().scale(pixels / lastDisplayPixels / 10f);
+            lastDisplayPixels = pixels;
+        }
+
         float x;
         float y;
         float xIcon;

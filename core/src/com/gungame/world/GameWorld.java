@@ -83,7 +83,7 @@ public class GameWorld implements Disposable {
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, horizontalSize - wallW * 2, verticalSize - wallH * 2);
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
         WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .8f);
-        WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .4f);
+        WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .2f);
         ExplosionAnimation.init();
     }
 

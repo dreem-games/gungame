@@ -19,6 +19,7 @@ public enum GunData implements Disposable {
             99,
             1,
             false,
+            true,
             new Texture("ui/rifle.png"),
             Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))
@@ -31,6 +32,7 @@ public enum GunData implements Disposable {
             1,
             10,
             32,
+            false,
             false,
             new Texture("ui/shotgun.png"),
             Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
@@ -45,6 +47,7 @@ public enum GunData implements Disposable {
             60,
             1,
             true,
+            false,
             new Texture("ui/SMG.png"),
             Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
             Gdx.audio.newSound(Gdx.files.internal("sound/smgshootsound.wav"))
@@ -59,6 +62,7 @@ public enum GunData implements Disposable {
     private final int maxAmmo;
     private final int bulletCountInOneShot;
     private final boolean isAutomatic;
+    private final boolean hasHeavyBullets;
 
     private final Texture weaponIcon;
     private final Sound reloadingSound;
@@ -70,5 +74,9 @@ public enum GunData implements Disposable {
         weaponIcon.dispose();
         reloadingSound.dispose();
         shootSound.dispose();
+    }
+
+    public boolean hasHeavyBullets() {
+        return hasHeavyBullets;
     }
 }
