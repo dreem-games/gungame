@@ -1,47 +1,75 @@
 package com.gungame.ui;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 
+/** Добавляет камере дрожание, позволяя нескольким всплескам накладываться. */
 public class CameraShaker {
-    private float time = -1f;
-    private float duration;
-    private float intensity;
 
-    private float lastOffsetX;
-    private float lastOffsetY;
+    /** Один отдельный «толчок». */
+    private static class Shake {
+        final float duration;
+        float timeLeft;
+        final float intensity;
 
-    public void shake(float duration, float intensity) {
-        if (intensity < getcurrentIntensity()) {
-            return;
+        Shake(float duration, float intensity) {
+            this.duration = duration;
+            this.timeLeft = duration;
+            this.intensity = intensity;
         }
 
-        this.intensity = intensity;
-        this.duration = duration;
-        this.time = duration;
+        /** затухание */
+        float currentIntensity() {
+            float alpha = timeLeft / duration;
+            alpha = Interpolation.pow2Out.apply(alpha);
+            return intensity * alpha;
+        }
     }
 
-    private float getcurrentIntensity() {
-        return intensity * (time / duration); // затухание со временем
+    private final Array<Shake> active = new Array<>();
+    private float lastOffsetX, lastOffsetY;
+
+    /** Добавляет новый толчок (можно вызывать сколько угодно раз подряд). */
+    public void shake(float duration, float intensity) {
+        active.add(new Shake(duration, intensity));
     }
 
-    public void update(Camera camera, float delta) {
+    /** Вызывать каждый кадр. */
+    public void update(Camera cam, float delta) {
+        boolean needUpdate = false;
+
+        // Сначала убираем смещение, добавленное на прошлом кадре
         if (lastOffsetX != 0 || lastOffsetY != 0) {
-            camera.position.add(-lastOffsetX, -lastOffsetY, 0);
+            cam.position.add(-lastOffsetX, -lastOffsetY, 0);
+            needUpdate = true;
             lastOffsetX = lastOffsetY = 0;
         }
 
-        if (time <= 0) {
-            return;
+        // Суммарное смещение от всех активных толчков
+        for (int i = active.size - 1; i >= 0; i--) {
+            Shake s = active.get(i);
+            s.timeLeft -= delta;
+
+            if (s.timeLeft <= 0) {                // закончился — удалить
+                active.removeIndex(i);
+                continue;
+            }
+
+            float cur = s.currentIntensity();
+            lastOffsetX += (MathUtils.random() - 0.5f) * cur;
+            lastOffsetY += (MathUtils.random() - 0.5f) * cur;
         }
 
-        time -= delta;
+        // Применяем итоговое смещение
+        if (lastOffsetX != 0 || lastOffsetY != 0) {
+            cam.position.add(lastOffsetX, lastOffsetY, 0);
+            needUpdate = true;
+        }
 
-        float currentIntensity = getcurrentIntensity();
-        float offsetX = (MathUtils.random() - 0.5f) * currentIntensity;
-        float offsetY = (MathUtils.random() - 0.5f) * currentIntensity;
-
-        camera.position.add(lastOffsetX = offsetX, lastOffsetY = offsetY, 0);
-        camera.update();
+        if (needUpdate) {
+            cam.update();
+        }
     }
 }
