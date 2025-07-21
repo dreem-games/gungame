@@ -155,6 +155,10 @@ public class Hero extends DynamicVisibleGameObject {
                     Fixture fixture = bullet.getBody().getFixtureList().first();
                     fixture.setDensity(fixture.getDensity() * 100);
                     bullet.getBody().resetMassData();
+
+                    world.getCameraShaker().shake(3f, .5f);
+                } else {
+                    world.getCameraShaker().shake(1f, .2f);
                 }
             });
         }

@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.controller.ControllersManager;
+import com.gungame.ui.CameraShaker;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.world.explosion.ExplosionAnimation;
@@ -30,6 +31,7 @@ public class GameWorld implements Disposable {
     private @Getter World phisicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private @Getter RayHandler rayHandler;
+    private @Getter CameraShaker cameraShaker;
     private final float verticalSize;
     private final float horizontalSize;
 
@@ -58,6 +60,8 @@ public class GameWorld implements Disposable {
 
         phisicsWorld = new World(new Vector2(0, 0), true);
         phisicsWorld.setContactListener(new GameContactListener());
+
+        cameraShaker = new CameraShaker();
 
         rayHandler = new RayHandler(phisicsWorld);
         rayHandler.setAmbientLight(0f); // Тьма вне источников света
@@ -120,6 +124,7 @@ public class GameWorld implements Disposable {
         controllersManager.control();
         physicalObjectFactoryManager.executeUpdates();
         phisicsWorld.step(frameTime, 6, 2);
+        cameraShaker.update(camera, frameTime);
 
         // отрисовка графического мира
         groundContainer.drawBatch(batch);

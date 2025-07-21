@@ -18,6 +18,7 @@ public class ExplosionUtils {
         final Array<Body> affectedBodies = new Array<>();
 
         EXPLOSIONS.add(new Explosion(gameWorld, x, y, radius2));
+        gameWorld.getCameraShaker().shake(10f, 1);
         // 1. Поиск тел в области через QueryAABB
         gameWorld.getPhisicsWorld().QueryAABB(fixture -> {
             Body body = fixture.getBody();
