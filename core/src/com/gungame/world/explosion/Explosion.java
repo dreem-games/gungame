@@ -10,15 +10,17 @@ import lombok.Getter;
 
 
 public class Explosion {
-    public @Getter float x, y, drawX, drawY;
+    private static final long STATE_CHANGE_TIME = 16;
+
+    public @Getter float x, y;
     private float stateTime = 0;
     private final Light light;
+    private long lastStateChange;
 
     public Explosion(GameWorld gameWorld, float x, float y, float radius) {
         this.x = x;
         this.y = y;
-        drawX = x - ExplosionAnimation.explosionAnimation.getKeyFrame(0).getRegionHeight() / 2f;
-        drawY = y - ExplosionAnimation.explosionAnimation.getKeyFrame(0).getRegionWidth() / 2f;
+        lastStateChange = System.currentTimeMillis();
 
         light = new PointLight(gameWorld.getRayHandler(), 512);
         light.setPosition(x, y);
@@ -30,8 +32,14 @@ public class Explosion {
     }
 
     public TextureRegion play() {
-        light.setDistance(25f - stateTime);
-        return ExplosionAnimation.explosionAnimation.getKeyFrame(stateTime++, false);
+        long now = System.currentTimeMillis();
+        if (now - lastStateChange > STATE_CHANGE_TIME) {
+            stateTime++;
+            light.setDistance(25f - stateTime);
+            lastStateChange = now;
+        }
+
+        return ExplosionAnimation.explosionAnimation.getKeyFrame(stateTime, false);
     }
 
     public boolean isFinished() {

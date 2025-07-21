@@ -125,6 +125,16 @@ public class GameWorld implements Disposable {
         groundContainer.drawBatch(batch);
         GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
 
+        var explosions = ExplosionUtils.getEXPLOSIONS();
+        for (int i = 0; i < explosions.size; i++) {
+            var explosion = explosions.get(i);
+            batch.draw(explosion.play(), explosion.x - 2, explosion.y - 2, 4, 4);
+            if (explosion.isFinished()) {
+                explosion.destroy();
+                explosions.removeIndex(i);
+            }
+        }
+
         // теперь лучи!
         rayHandler.setCombinedMatrix(camera);
         rayHandler.update();
@@ -142,14 +152,5 @@ public class GameWorld implements Disposable {
     public void renderUi(SpriteBatch batch, OrthographicCamera camera) {
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
-        var explosions = ExplosionUtils.getEXPLOSIONS();
-        for (int i = 0; i < explosions.size; i++) {
-            var explosion = explosions.get(i);
-            batch.draw(explosion.play(), explosion.x - 2, explosion.y - 2, 4, 4);
-            if (explosion.isFinished()) {
-                explosion.destroy();
-                explosions.removeIndex(i);
-            }
-        }
     }
 }
