@@ -1,6 +1,7 @@
 package com.gungame;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -20,17 +21,21 @@ public class GunGame extends ApplicationAdapter {
 	
 	@Override
 	public void create () {
+		float width = Gdx.graphics.getWidth();
+		float height = Gdx.graphics.getHeight();
+		float verticalSize = GameWorldConfig.HORIZONTAL_SIZE / width * height;
+
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, GameWorldConfig.VERTICAL_SIZE, GameWorldConfig.HORIZONTAL_SIZE);
+		camera.setToOrtho(false, GameWorldConfig.HORIZONTAL_SIZE, verticalSize);
 
 		uiCamera = new OrthographicCamera();
-		uiCamera.setToOrtho(false, GameWorldConfig.DISPLAY_VERTICAL_SIZE, GameWorldConfig.DISPLAY_HORIZONTAL_SIZE);
+		uiCamera.setToOrtho(false, width, height);
 
 		batch = new SpriteBatch();
 		font = new BitmapFont();
 		font.getData().setScale(5f);
 
-		gameWorld = new GameWorld();
+		gameWorld = new GameWorld(verticalSize, GameWorldConfig.HORIZONTAL_SIZE);
 		gameWorld.init(camera);
 	}
 
@@ -66,7 +71,11 @@ public class GunGame extends ApplicationAdapter {
 
 	public void restart() {
 		gameWorld.dispose();
-		gameWorld = new GameWorld();
+
+		float width = Gdx.graphics.getWidth();
+		float height = Gdx.graphics.getHeight();
+		float verticalSize = GameWorldConfig.HORIZONTAL_SIZE / width * height;
+		gameWorld = new GameWorld(verticalSize, GameWorldConfig.HORIZONTAL_SIZE);
 		gameWorld.init(camera);
 	}
 	

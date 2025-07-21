@@ -30,6 +30,8 @@ public class GameWorld implements Disposable {
     private @Getter World phisicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private @Getter RayHandler rayHandler;
+    private final float verticalSize;
+    private final float horizontalSize;
 
     private ControllersManager controllersManager;
     private UiEngine uiEngine;
@@ -42,6 +44,11 @@ public class GameWorld implements Disposable {
     private float lastWorldStepTime;
     public boolean isWorldToRestart = false;
     private float deathTime = 0;
+
+    public GameWorld(float verticalSize, float horizontalSize) {
+        this.verticalSize = verticalSize;
+        this.horizontalSize = horizontalSize;
+    }
 
     public void init(Camera camera) {
         Box2D.init();
@@ -61,22 +68,22 @@ public class GameWorld implements Disposable {
         physicalObjectFactoryManager = new GameObjectFactoryManager(this);
         groundContainer = new GroundContainer();
 
-        WallsGenerationUtils.generateWalls(physicalObjectFactoryManager.getWallFactory(), 0, 0, VERTICAL_SIZE, HORIZONTAL_SIZE);
+        WallsGenerationUtils.generateWalls(physicalObjectFactoryManager.getWallFactory(), 0, 0, horizontalSize, verticalSize);
         var wallsSize = physicalObjectFactoryManager.getWallFactory().getObjectMetadata().getSize();
         float wallW = wallsSize.x, wallH = wallsSize.y;
 
-        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(2, 2, 20);
+        hero = physicalObjectFactoryManager.getHeroFactory().createImmediately(horizontalSize * 0.1f, verticalSize * 0.1f, 20);
         uiEngine = new UiEngine(hero, true);
 
-        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(20, 10, 200);
+        hero2 = physicalObjectFactoryManager.getHeroFactory().createImmediately(horizontalSize * 0.9f, verticalSize * 0.9f, 200);
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
 
-        GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, VERTICAL_SIZE - wallW * 2, HORIZONTAL_SIZE - wallH * 2);
+        GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, horizontalSize - wallW * 2, verticalSize - wallH * 2);
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
-        WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .8f);
-        WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, VERTICAL_SIZE - wallW17 * 2, HORIZONTAL_SIZE - wallH17 * 2, .4f);
+        WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .8f);
+        WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .4f);
         ExplosionAnimation.init();
     }
 
@@ -125,13 +132,14 @@ public class GameWorld implements Disposable {
         rayHandler.render();  // рендорить лучи надо вне рисования спрайтов!
         batch.begin();
 
+        if (debugRenderer != null) {
+            debugRenderer.render(phisicsWorld, camera.combined);
+        }
+
         checkWorldForRestart(currentTime);
     }
 
     public void renderUi(SpriteBatch batch, OrthographicCamera camera) {
-        if (debugRenderer != null) {
-            debugRenderer.render(phisicsWorld, camera.combined);
-        }
         uiEngine.draw(batch, camera);
         uiEngine2.draw(batch, camera);
         var explosions = ExplosionUtils.getEXPLOSIONS();
