@@ -1,18 +1,12 @@
 package com.gungame.controller;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Null;
 import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.MovingMode;
 import lombok.Getter;
-
-import java.util.Objects;
 
 public class HeroJoystickController extends HeroController {
 
@@ -22,25 +16,9 @@ public class HeroJoystickController extends HeroController {
 
     private final @Getter Controller controller;
 
-    public HeroJoystickController(Hero hero, Camera camera, @Null HeroJoystickController other) {
+    public HeroJoystickController(Hero hero, Camera camera, boolean isFirst) {
         super(hero, camera);
-        if (other == null) {
-            controller = Objects.requireNonNull(Controllers.getCurrent());
-        } else {
-            Controller found = null;
-            Array<Controller> controllers = Controllers.getControllers();
-            for (int i = 0; i < controllers.size; i++) {
-                Controller it = controllers.get(i);
-                if (it != other.controller) {
-                    found = it;
-                    break;
-                }
-            }
-            if (found == null) {
-                throw new RuntimeException("Gay pad not found");
-            }
-            controller = found;
-        }
+        this.controller = Controllers.getControllers().get(isFirst ? 0 : 1);
     }
 
     public static int connectedControllersCount() {
