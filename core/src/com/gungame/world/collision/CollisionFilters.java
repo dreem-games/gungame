@@ -20,7 +20,7 @@ public class CollisionFilters {
 
     public static void initGrenadeFilter(Filter filter) {
         filter.categoryBits = CollisionCategory.MICRO_OBJECTS.getBits();
-        filter.maskBits = CollisionCategory.HEIGHT_OBJECTS.getBits();
+        filter.maskBits = (short) (CollisionCategory.HEIGHT_OBJECTS.getBits() | CollisionCategory.MICRO_OBJECTS.getBits());
     }
 
     public static Filter createFilter(CollisionCategory category, CollisionCategory mask, short groupId) {
