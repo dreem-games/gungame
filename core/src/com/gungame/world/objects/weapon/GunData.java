@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum GunData implements Disposable {
     RIFLE(0.01f,
-            35,
+            55,
             4,
             3000,
             1000,
@@ -25,7 +25,7 @@ public enum GunData implements Disposable {
             Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))
     ),
     SHOTGUN(0.1f,
-            4,
+            5,
             1.5f,
             3000,  // TODO: вероятно, надо ускорить перезарядку
             300,
@@ -39,7 +39,7 @@ public enum GunData implements Disposable {
             Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"))
     ),
     SMG(0.035f,
-            8,
+            10,
             2,
             3000,
             100,
