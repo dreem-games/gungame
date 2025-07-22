@@ -37,23 +37,24 @@ public class HeroJoystickController extends HeroController {
         float length = rightVec.x * rightVec.x + rightVec.y * rightVec.y;
         if (length < .1f) {
             rightVec = lastRightVec;
-        } else if (length > .15f) {
+        } else {
             lastRightVec = rightVec = rightVec.nor();
             used = true;
         }
 
-        MovingMode movingMode = MovingMode.NORMAL;
-        if (controller.getButton(mapping.buttonB)) {
-            movingMode = MovingMode.JUMPING;
-        } else if (controller.getButton(mapping.buttonA)) {
-            movingMode = MovingMode.RUNNING;
-        } else if (!used) {
-            movingMode = MovingMode.STANDING;
+        boolean moving = hero.move(controller.getAxis(mapping.axisLeftX), -controller.getAxis(mapping.axisLeftY));
+        used |= moving;
+        if (used) {
+            MovingMode movingMode = MovingMode.NORMAL;
+            if (controller.getButton(mapping.buttonB)) {
+                movingMode = MovingMode.JUMPING;
+            } else if (controller.getButton(mapping.buttonA)) {
+                movingMode = MovingMode.RUNNING;
+            }
+            hero.tryChangeMovingMode(movingMode);
+        } else {
+            hero.tryChangeMovingMode(MovingMode.STANDING);
         }
-        hero.tryChangeMovingMode(movingMode);
-
-        used |= hero.move(controller.getAxis(mapping.axisLeftX),
-                -controller.getAxis(mapping.axisLeftY));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
         if (r1Pressed && (!r1WasPressed || hero.getCurrentGun().isAutomatic())) {
