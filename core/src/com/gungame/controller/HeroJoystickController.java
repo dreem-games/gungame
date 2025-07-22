@@ -1,5 +1,7 @@
 package com.gungame.controller;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
@@ -82,6 +84,10 @@ public class HeroJoystickController extends HeroController {
 
         if (used) {
             rotate(rightVec.x, rightVec.y);
+        }
+
+        if (controller.getButton(controller.getMapping().buttonBack)) {
+            Gdx.app.exit();
         }
 
         return used;

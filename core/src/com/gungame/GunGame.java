@@ -75,6 +75,12 @@ public class GunGame extends ApplicationAdapter {
 		float width = Gdx.graphics.getWidth();
 		float height = Gdx.graphics.getHeight();
 		float verticalSize = GameWorldConfig.HORIZONTAL_SIZE / width * height;
+
+		camera = new OrthographicCamera();
+		camera.setToOrtho(false, GameWorldConfig.HORIZONTAL_SIZE, verticalSize);
+
+		uiCamera = new OrthographicCamera();
+		uiCamera.setToOrtho(false, width, height);
 		gameWorld = new GameWorld(verticalSize, GameWorldConfig.HORIZONTAL_SIZE);
 		gameWorld.init(camera);
 	}

@@ -86,6 +86,9 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void takeDamage(int damage) {
+        if (isToDestroy()) {
+            return;
+        }
         damageSounds[random.nextInt(damageSounds.length)].play();
         health -= damage;
         if (health <= 0) {
@@ -126,6 +129,10 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void fire() {
+        if (isToDestroy()) {
+            return;
+        }
+
         var bullets = getCurrentGun().fire();
         if (bullets == null) {
             return;
@@ -187,16 +194,25 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void reloadStart() {
+        if (isToDestroy()) {
+            return;
+        }
         getCurrentGun().reloadStart();
     }
 
     public void switchWeapon() {
+        if (isToDestroy()) {
+            return;
+        }
         if(!getCurrentGun().isReloading()) {
             currentWeapon = (currentWeapon + 1) % gun.length;
         }
     }
 
     public void setWeapon(int id) {
+        if (isToDestroy()) {
+            return;
+        }
         if(!getCurrentGun().isReloading()) {
             currentWeapon = id;
         }
@@ -238,6 +254,10 @@ public class Hero extends DynamicVisibleGameObject {
     public void update() {
         super.update();
 
+        if (isToDestroy()) {
+            return;
+        }
+
         long now = System.currentTimeMillis();
         if (stamina < MAX_STAMINA && movingMode.getStaminaCost() == 0) {
             long delta = now - lastStaminaRegen;
@@ -263,6 +283,9 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
+        if (isToDestroy()) {
+            return;
+        }
         if (stamina > 20) {
             isAbleToRun = true;
         }
@@ -314,6 +337,9 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     private float getImpulse(float acceleration, MovingMode movingMode) {
+        if (isToDestroy()) {
+            return 0f;
+        }
         float potentialResult = GameWorldConfig.HERO_ACCELERATION * acceleration;
         if (movingMode == MovingMode.RUNNING) {
             potentialResult *= GameWorldConfig.HERO_RUNNING_ACCELERATION_SCALE;
