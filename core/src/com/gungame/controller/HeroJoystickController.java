@@ -32,8 +32,8 @@ public class HeroJoystickController extends HeroController {
         boolean used = false;
         var mapping = controller.getMapping();
 
-        var rightVec = new Vector2(normalized(controller.getAxis(mapping.axisRightX)),
-                -normalized(controller.getAxis(mapping.axisRightY)));
+        var rightVec = new Vector2(controller.getAxis(mapping.axisRightX),
+                -controller.getAxis(mapping.axisRightY));
         float length = rightVec.x * rightVec.x + rightVec.y * rightVec.y;
         if (length < .1f) {
             rightVec = lastRightVec;
@@ -52,8 +52,8 @@ public class HeroJoystickController extends HeroController {
         }
         hero.tryChangeMovingMode(movingMode);
 
-        used |= hero.move(normalized(controller.getAxis(mapping.axisLeftX)),
-                -normalized(controller.getAxis(mapping.axisLeftY)));
+        used |= hero.move(controller.getAxis(mapping.axisLeftX),
+                -controller.getAxis(mapping.axisLeftY));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
         if (r1Pressed && (!r1WasPressed || hero.getCurrentGun().isAutomatic())) {
@@ -91,9 +91,5 @@ public class HeroJoystickController extends HeroController {
         }
 
         return used;
-    }
-
-    private float normalized(float joystickValue) {
-        return joystickValue - joystickValue % 0.1f;
     }
 }
