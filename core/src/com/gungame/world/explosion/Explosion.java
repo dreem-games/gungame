@@ -39,7 +39,7 @@ public class Explosion {
             lastStateChange = now;
         }
 
-        return ExplosionAnimation.explosionAnimation.getKeyFrame(stateTime, false);
+        return AssetManager.explosionAnimation.getKeyFrame(stateTime, false);
     }
 
     public boolean isFinished() {

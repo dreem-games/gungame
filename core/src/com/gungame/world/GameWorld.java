@@ -14,7 +14,7 @@ import com.gungame.controller.ControllersManager;
 import com.gungame.ui.CameraShaker;
 import com.gungame.ui.UiEngine;
 import com.gungame.world.collision.GameContactListener;
-import com.gungame.world.explosion.ExplosionAnimation;
+import com.gungame.world.explosion.AssetManager;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.imaginary.GroundContainer;
 import com.gungame.world.objects.imaginary.GroundGenerationUtils;
@@ -88,7 +88,7 @@ public class GameWorld implements Disposable {
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
         WallsGenerationUtils.generateBoxes(physicalObjectFactoryManager.getBoxFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .8f);
         WallsGenerationUtils.generateBarrels(physicalObjectFactoryManager.getBarrelFactory(), wallW17, wallH17, horizontalSize - wallW17 * 2, verticalSize - wallH17 * 2, .2f);
-        ExplosionAnimation.init();
+        AssetManager.init();
     }
 
     /**

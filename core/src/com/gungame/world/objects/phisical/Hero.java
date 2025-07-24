@@ -15,7 +15,6 @@ import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.collision.CollisionFilters;
-import com.gungame.world.explosion.ExplosionAnimation;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;

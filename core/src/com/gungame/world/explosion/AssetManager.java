@@ -5,9 +5,10 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import lombok.Getter;
 
-public class ExplosionAnimation {
+public class AssetManager {
     public static Animation<TextureRegion> explosionAnimation;
     public @Getter static TextureRegion[] targetTextures = new TextureRegion[3];
+    public static @Getter Texture grenadeTexture = new Texture("texture/grenade.png");
 
     public static void init() {
         Texture sheet = new Texture("texture/explosion.png");
@@ -27,5 +28,9 @@ public class ExplosionAnimation {
         for (int i = 0; i < 3; i++) {
             targetTextures[i] = new TextureRegion(sheet, i * w, 0, w, h);
         }
+    }
+
+    public void dispose() {
+        grenadeTexture.dispose();
     }
 }
