@@ -23,13 +23,13 @@ public class Grenade extends VisibleGameObject {
     }
 
     public void grenadeLifeCycle(long timeOfLife) {
-        if (timeOfLife < 1500) {
+        if (timeOfLife < 1000) {
             return;
         }
-        if (timeOfLife < 1600 && timeOfLife > 1500) {
+        if (timeOfLife < 1100 && timeOfLife > 1000) {
             setVelocity(0,0);
         }
-        if (timeOfLife > 3000) {
+        if (timeOfLife > 2000) {
             explode();
         }
     }

@@ -76,11 +76,11 @@ public class HeroKeyboardHeroController extends HeroController {
         var rmbPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT)
                 || Gdx.input.isKeyPressed(Input.Keys.G);
         if (rmbPressed && !rmbWasPressed) {
-            hero.throwGrenadeStart();
+            hero.getGrenadeThrower().throwGrenadeStart();
             used = true;
         }
         if (!rmbPressed && rmbWasPressed) {
-            hero.throwGrenadeEnd();
+            hero.getGrenadeThrower().throwGrenadeEnd();
         }
         rmbWasPressed = rmbPressed;
 

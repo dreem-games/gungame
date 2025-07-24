@@ -15,11 +15,13 @@ import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.collision.CollisionFilters;
+import com.gungame.world.explosion.ExplosionAnimation;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
 import com.gungame.world.objects.meta.GameObject;
 import com.gungame.world.objects.meta.GameObjectType;
+import com.gungame.world.objects.weapon.GrenadeThrower;
 import com.gungame.world.objects.weapon.Gun;
 import com.gungame.world.objects.weapon.GunData;
 import com.gungame.world.objects.weapon.Laser;
@@ -48,6 +50,7 @@ public class Hero extends DynamicVisibleGameObject {
             Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
     };
     private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
+    private @Getter final GrenadeThrower grenadeThrower = new GrenadeThrower(this);
 
 
     private float xScale;
@@ -66,6 +69,7 @@ public class Hero extends DynamicVisibleGameObject {
     private int currentWeapon = 0;
     private long timeWhenDampingTimeChanged = 0;
     private long throwTimer = 0;
+    private int rotate = 0;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -110,8 +114,8 @@ public class Hero extends DynamicVisibleGameObject {
         CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
         grenadeFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
                 grenade -> grenade.setVelocity(
-                        MathUtils.cos(angle) * (throwPower / 40) ,
-                        MathUtils.sin(angle) * (throwPower / 40)));
+                        MathUtils.cos(angle) * (throwPower / 100) ,
+                        MathUtils.sin(angle) * (throwPower / 100)));
     }
 
     public void throwGrenadeStart() {
@@ -398,6 +402,7 @@ public class Hero extends DynamicVisibleGameObject {
     public void draw(SpriteBatch batch) {
         super.draw(batch);
         laser.render(batch);
+        grenadeThrower.render(batch, getFirePosition(),getAngle());
     }
 
     @Override
