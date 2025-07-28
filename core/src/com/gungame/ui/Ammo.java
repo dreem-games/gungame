@@ -45,25 +45,29 @@ public class Ammo implements Ui {
         float yIcon;
         float width;
         float xGrenade;
+        float yGrenade;
 
         if (isMainHero) {
             x = camera.position.x - camera.viewportWidth * 0.37f;
             xIcon = x - camera.viewportWidth * 0.1f;
             width = camera.viewportWidth * 0.1f;
-            xGrenade = 0;
+            xGrenade = camera.viewportWidth * 0.06f;
+
         } else {
             x = camera.position.x + camera.viewportWidth * 0.42f;
             xIcon = x - camera.viewportWidth * 0.1f;
             width = camera.viewportWidth * 0.1f;
-            xGrenade = 300;
+            xGrenade = camera.viewportWidth * 0.93f;
         }
         y = camera.position.y + camera.viewportHeight * 0.45f;
         yIcon = y - camera.viewportHeight * 0.05f;
+        yGrenade = y - camera.viewportHeight * 0.07f;
         font.draw(batch, String.format(("%d /  %d"),
                 hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
         batch.draw(hero.getCurrentGun().getTexture(), xIcon, yIcon, width, camera.viewportHeight * 0.1f);
-        font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().ammo), x - 290 + xGrenade,y - 100);
-        batch.draw(AssetManager.grenadeTexture, x - 370 + xGrenade, y - 160, width / 4, width / 4);
+
+        font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().ammo), xGrenade, yGrenade + camera.viewportHeight * 0.03f);
+        batch.draw(AssetManager.grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, width / 4, width / 4);
     }
 
     @Override

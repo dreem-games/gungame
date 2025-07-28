@@ -15,6 +15,7 @@ public class HeroJoystickController extends HeroController {
     private Vector2 lastRightVec = new Vector2();
     private boolean r1WasPressed;
     private boolean yWasPressed;
+    private boolean l1WasPressed;
 
     private final @Getter Controller controller;
 
@@ -82,6 +83,16 @@ public class HeroJoystickController extends HeroController {
         if (controller.getButton(mapping.buttonX)) {
             hero.reloadStart();
         }
+
+        var l1Pressed = controller.getButton(controller.getMapping().buttonL1);
+        if (l1Pressed && !l1WasPressed) {
+            hero.getGrenadeThrower().throwGrenadeStart();
+            used = true;
+        }
+        if (!l1Pressed && l1WasPressed) {
+            hero.getGrenadeThrower().throwGrenadeEnd();
+        }
+        l1WasPressed = l1Pressed;
 
         if (used) {
             rotate(rightVec.x, rightVec.y);
