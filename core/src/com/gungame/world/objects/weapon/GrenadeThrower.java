@@ -1,21 +1,20 @@
 package com.gungame.world.objects.weapon;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.gungame.world.explosion.AssetManager;
+import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.phisical.Hero;
 import lombok.Getter;
 
 public class GrenadeThrower {
-
-    public @Getter int ammo = 4;
+    private @Getter int ammo = 2;
     private @Getter long throwTimer;
-    public Hero hero;
-    public int cooldown = 1000;
-    public long cooldownTimer = 0;
-    public float stateTime = 0f;
-    public Texture throwIndicator = new Texture("ui/rifle.png");
+    private final Hero hero;
+    private final int cooldown = 1000;
+    private long cooldownTimer = 0;
+    private float stateTime = 0f;
 
     public GrenadeThrower(Hero hero) {
         this.hero = hero;
@@ -49,18 +48,31 @@ public class GrenadeThrower {
         if (throwPower > 100) {
             throwPower = 100;
         }
-        return  throwPower;
-
+        return throwPower;
     }
 
     public void throwGrenadeEnd() {
         if (ammo <= 0 || (System.currentTimeMillis() - cooldownTimer < cooldown && cooldownTimer != 0)) {
             return;
         }
-        hero.throwGrenade(throwPower());
+        throwGrenade(throwPower());
         ammo--;
         throwTimer = 0;
         cooldownTimer = System.currentTimeMillis();
     }
 
+    public void throwGrenade(float throwPower) {
+        var grenadeFactory = hero.getWorld().getPhysicalObjectFactoryManager().getGrenadeFactory();
+        float angle = hero.getAngle();
+        Vector2 firePosition = hero.getFirePosition();
+        CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
+        grenadeFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
+                grenade -> {
+                    float powerPrecent = throwPower / 100;
+                    grenade.setVelocity(
+                            MathUtils.cos(angle) * powerPrecent,
+                            MathUtils.sin(angle) * powerPrecent);
+                    grenade.setAngularVelocity(powerPrecent);
+                });
+    }
 }

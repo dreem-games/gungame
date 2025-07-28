@@ -28,6 +28,7 @@ public class Grenade extends VisibleGameObject {
         }
         if (timeOfLife < 1100 && timeOfLife > 1000) {
             setVelocity(0,0);
+            setAngularVelocity(0);
         }
         if (timeOfLife > 2000) {
             explode();

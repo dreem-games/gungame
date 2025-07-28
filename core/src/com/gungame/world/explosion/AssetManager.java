@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import lombok.Getter;
 
 public class AssetManager {
+    // TODO: перейти на полностью на него, не загружать текстуры и звуки вручную!
+
     public static Animation<TextureRegion> explosionAnimation;
     public @Getter static TextureRegion[] targetTextures = new TextureRegion[3];
     public static @Getter Texture grenadeTexture = new Texture("texture/grenade.png");

@@ -51,7 +51,6 @@ public class Hero extends DynamicVisibleGameObject {
     private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
     private @Getter final GrenadeThrower grenadeThrower = new GrenadeThrower(this);
 
-
     private float xScale;
     private float yScale;
     private final PointLight playerLight;
@@ -67,8 +66,6 @@ public class Hero extends DynamicVisibleGameObject {
     private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
     private int currentWeapon = 0;
     private long timeWhenDampingTimeChanged = 0;
-    private long throwTimer = 0;
-    private int rotate = 0;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -104,31 +101,6 @@ public class Hero extends DynamicVisibleGameObject {
         laser.turnOff();
         deathSound.play();
         markForDestroy();
-    }
-
-    public void throwGrenade(float throwPower) {
-        var grenadeFactory = getWorld().getPhysicalObjectFactoryManager().getGrenadeFactory();
-        float angle = getAngle();
-        Vector2 firePosition = getFirePosition();
-        CustomObjectInitializationConfig customInitConfig = new CustomObjectInitializationConfig();
-        grenadeFactory.create(firePosition, angle * MathUtils.radiansToDegrees, customInitConfig,
-                grenade -> grenade.setVelocity(
-                        MathUtils.cos(angle) * (throwPower / 100) ,
-                        MathUtils.sin(angle) * (throwPower / 100)));
-    }
-
-    public void throwGrenadeStart() {
-        throwTimer = System.currentTimeMillis();
-    }
-
-    public void throwGrenadeEnd() {
-        float throwPower;
-        throwPower = (System.currentTimeMillis() - throwTimer) >> 5;
-        if (throwPower > 30) {
-            throwPower = 30;
-        }
-        throwGrenade(throwPower);
-        throwTimer = 0;
     }
 
     public void fire() {

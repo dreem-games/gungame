@@ -62,7 +62,8 @@ public class GunGame extends ApplicationAdapter {
 		if (gameWorld.isWorldToRestart) {
 			if (gameWorld.getHero().isToDestroy()) {
 				hero2Score++;
-			} else if (gameWorld.getHero2().isToDestroy()) {
+			}
+			if (gameWorld.getHero2().isToDestroy()) {
 				heroScore++;
 			}
 			restart();

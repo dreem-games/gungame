@@ -63,7 +63,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .setSize(0.5f, 0.5f)
                 .setMassData(.0f, .8f, .11f)
                 .setLinearDamping(0)
-                .setAngularDamping(10)
+                .setAngularDamping(0)
                 .setRestitution(0.7f)
                 .setFriction(0f)
                 .createGameObjectMetadata();

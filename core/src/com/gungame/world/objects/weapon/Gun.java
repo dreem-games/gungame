@@ -13,9 +13,9 @@ public class Gun {
     private final GunData gunData;
 
     private @Getter int magazine;
-    private int ammo;
+    private @Getter int ammo;
     private @Getter long reloadingTimer;
-    private boolean reloading = false;
+    private @Getter boolean reloading = false;
 
     public Gun(GunData gunData) {
         this.gunData = gunData;
@@ -70,20 +70,8 @@ public class Gun {
         }
     }
 
-    public int getMagazineSize() {
-        return magazine;
-    }
-
     public boolean isAutomatic() {
         return gunData.isAutomatic();
-    }
-
-    public int getAmmo() {
-        return ammo;
-    }
-
-    public boolean isReloading() {
-        return reloading;
     }
 
     public void dispose() {

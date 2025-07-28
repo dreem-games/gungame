@@ -66,7 +66,7 @@ public class Ammo implements Ui {
                 hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
         batch.draw(hero.getCurrentGun().getTexture(), xIcon, yIcon, width, camera.viewportHeight * 0.1f);
 
-        font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().ammo), xGrenade, yGrenade + camera.viewportHeight * 0.03f);
+        font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().getAmmo()), xGrenade, yGrenade + camera.viewportHeight * 0.03f);
         batch.draw(AssetManager.grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, width / 4, width / 4);
     }
 
