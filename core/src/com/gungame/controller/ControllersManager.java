@@ -11,14 +11,13 @@ public class ControllersManager {
     public ControllersManager(Hero hero, @Null Hero additionalHero, Camera camera) {
         int controllersCount = HeroJoystickController.connectedControllersCount();
         if (controllersCount > 1) {
-            heroController = new HeroJoystickController(hero, camera, null);
+            heroController = new HeroJoystickController(hero, camera, false);
         } else {
             heroController = new HeroKeyboardHeroController(hero, camera);
         }
 
         if (additionalHero != null && controllersCount > 0) {
-            HeroJoystickController heroJoystickController = controllersCount > 1 ? (HeroJoystickController) heroController : null;
-            additionalJoystickController = new HeroJoystickController(additionalHero, camera, heroJoystickController);
+            additionalJoystickController = new HeroJoystickController(additionalHero, camera, true);
         } else {
             additionalJoystickController = null;
         }

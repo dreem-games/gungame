@@ -1,46 +1,26 @@
 package com.gungame.controller;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Null;
 import com.gungame.world.objects.phisical.Hero;
 import com.gungame.world.objects.phisical.MovingMode;
 import lombok.Getter;
-
-import java.util.Objects;
 
 public class HeroJoystickController extends HeroController {
 
     private Vector2 lastRightVec = new Vector2();
     private boolean r1WasPressed;
     private boolean yWasPressed;
+    private boolean l1WasPressed;
 
     private final @Getter Controller controller;
 
-    public HeroJoystickController(Hero hero, Camera camera, @Null HeroJoystickController other) {
+    public HeroJoystickController(Hero hero, Camera camera, boolean isFirst) {
         super(hero, camera);
-        if (other == null) {
-            controller = Objects.requireNonNull(Controllers.getCurrent());
-        } else {
-            Controller found = null;
-            Array<Controller> controllers = Controllers.getControllers();
-            for (int i = 0; i < controllers.size; i++) {
-                Controller it = controllers.get(i);
-                if (it != other.controller) {
-                    found = it;
-                    break;
-                }
-            }
-            if (found == null) {
-                throw new RuntimeException("Gay pad not found");
-            }
-            controller = found;
-        }
+        this.controller = Controllers.getControllers().get(isFirst ? 0 : 1);
     }
 
     public static int connectedControllersCount() {
@@ -52,28 +32,29 @@ public class HeroJoystickController extends HeroController {
         boolean used = false;
         var mapping = controller.getMapping();
 
-        var rightVec = new Vector2(normalized(controller.getAxis(mapping.axisRightX)),
-                -normalized(controller.getAxis(mapping.axisRightY)));
+        var rightVec = new Vector2(controller.getAxis(mapping.axisRightX),
+                -controller.getAxis(mapping.axisRightY));
         float length = rightVec.x * rightVec.x + rightVec.y * rightVec.y;
         if (length < .1f) {
             rightVec = lastRightVec;
-        } else if (length > .15f) {
+        } else {
             lastRightVec = rightVec = rightVec.nor();
             used = true;
         }
 
-        MovingMode movingMode = MovingMode.NORMAL;
-        if (controller.getButton(mapping.buttonB)) {
-            movingMode = MovingMode.JUMPING;
-        } else if (controller.getButton(mapping.buttonA)) {
-            movingMode = MovingMode.RUNNING;
-        } else if (!used) {
-            movingMode = MovingMode.STANDING;
+        boolean moving = hero.move(controller.getAxis(mapping.axisLeftX), -controller.getAxis(mapping.axisLeftY));
+        used |= moving;
+        if (used) {
+            MovingMode movingMode = MovingMode.NORMAL;
+            if (controller.getButton(mapping.buttonB)) {
+                movingMode = MovingMode.JUMPING;
+            } else if (controller.getButton(mapping.buttonA)) {
+                movingMode = MovingMode.RUNNING;
+            }
+            hero.tryChangeMovingMode(movingMode);
+        } else {
+            hero.tryChangeMovingMode(MovingMode.STANDING);
         }
-        hero.tryChangeMovingMode(movingMode);
-
-        used |= hero.move(normalized(controller.getAxis(mapping.axisLeftX)),
-                -normalized(controller.getAxis(mapping.axisLeftY)));
 
         var r1Pressed = controller.getButton(controller.getMapping().buttonR1);
         if (r1Pressed && (!r1WasPressed || hero.getCurrentGun().isAutomatic())) {
@@ -102,14 +83,24 @@ public class HeroJoystickController extends HeroController {
             hero.reloadStart();
         }
 
+        var l1Pressed = controller.getButton(controller.getMapping().buttonL1);
+        if (l1Pressed && !l1WasPressed) {
+            hero.getGrenadeThrower().throwGrenadeStart();
+            used = true;
+        }
+        if (!l1Pressed && l1WasPressed) {
+            hero.getGrenadeThrower().throwGrenadeEnd();
+        }
+        l1WasPressed = l1Pressed;
+
         if (used) {
             rotate(rightVec.x, rightVec.y);
         }
 
-        return used;
-    }
+        if (controller.getButton(controller.getMapping().buttonBack)) {
+            Gdx.app.exit();
+        }
 
-    private float normalized(float joystickValue) {
-        return joystickValue - joystickValue % 0.1f;
+        return used;
     }
 }

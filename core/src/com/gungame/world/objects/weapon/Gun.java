@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.badlogic.gdx.math.MathUtils.random;
+import static com.gungame.world.GameWorldConfig.ENABLE_AUTO_RELOADING;
 
 public class Gun {
     private final GunData gunData;
 
     private @Getter int magazine;
-    private int ammo;
+    private @Getter int ammo;
     private @Getter long reloadingTimer;
-    private boolean reloading = false;
+    private @Getter boolean reloading = false;
 
     public Gun(GunData gunData) {
         this.gunData = gunData;
@@ -28,7 +29,7 @@ public class Gun {
             return null;
         }
         if (magazine == 0) {
-            if (ammo > 0) {
+            if (ammo > 0 && ENABLE_AUTO_RELOADING) {
                 reloadStart();
             }
             return null;
@@ -63,26 +64,14 @@ public class Gun {
         reloading = false;
     }
 
-    public void isReloadingComplete(long now) {
+    public void checkReloadingComplete(long now) {
         if (reloading && now - reloadingTimer > gunData.getReloadingTime()) {
             reloadEnd();
         }
     }
 
-    public int getMagazineSize() {
-        return magazine;
-    }
-
     public boolean isAutomatic() {
         return gunData.isAutomatic();
-    }
-
-    public int getAmmo() {
-        return ammo;
-    }
-
-    public boolean isReloading() {
-        return reloading;
     }
 
     public void dispose() {
@@ -91,5 +80,9 @@ public class Gun {
 
     public Texture getTexture() {
         return gunData.getWeaponIcon();
+    }
+
+    public boolean hasHeavyBullets() {
+        return gunData.hasHeavyBullets();
     }
 }

@@ -18,11 +18,6 @@ public class GameContactListener implements ContactListener {
         var objectA = (GameObject) contact.getFixtureA().getBody().getUserData();
         var objectB = (GameObject) contact.getFixtureB().getBody().getUserData();
 
-        //Если один из объектов мы уже пометили под уничтожение,
-        //Но движок его не убрал, коллизию не просчитываем.
-        if (objectB.isToDestroy() || objectA.isToDestroy()) {
-            return;
-        }
         // приведём к нормальному виду - пусть
         // если есть взаимодействие с пулей, то она будет в objectA
         if (objectB.getType() == GameObjectType.BULLET) {
@@ -37,6 +32,9 @@ public class GameContactListener implements ContactListener {
         }
 
         if (objectA.getType() == GameObjectType.BULLET) {
+            if (objectA.isToDestroy()) {
+                return;
+            }
             objectA.markForDestroy();
 
             // теперь проверяем с чем же взаимодействует пуля
@@ -44,15 +42,11 @@ public class GameContactListener implements ContactListener {
                 ((Hero) objectB).takeDamage(((Bullet) objectA).damage);
             }
             if (objectB.getType() == GameObjectType.BARREL) {
-                ((Barrel) objectB).explode(objectB.getWorld().getPhisicsWorld());
+                ((Barrel) objectB).explode(objectB.getWorld());
             }
             if (objectB.getType() == GameObjectType.GRENADE) {
-                ((Grenade) objectB).grenadeLifeCycle(Long.MAX_VALUE);
+                ((Grenade) objectB).explode();
             }
-        }
-
-        if (objectA.getType() == GameObjectType.BULLET && objectB.getType() == GameObjectType.GRENADE) {
-            ((Grenade) objectB).explode();
         }
     }
 

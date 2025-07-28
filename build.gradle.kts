@@ -15,6 +15,7 @@ extra.apply {
     set("appName", "gungame")
     set("gdxVersion", "1.13.5")
     set("gdxControllersVersion", "2.2.4")
+    set("box2dlightsVersion", "1.5")
 }
 
 repositories {
@@ -44,12 +45,14 @@ project(":core") {
 
     val gdxVersion: String by rootProject.extra
     val gdxControllersVersion: String by rootProject.extra
+    val box2dlightsVersion: String by rootProject.extra
 
     dependencies {
         // libGDX core + freetype + box2d (pure Java)
         add("api", "com.badlogicgames.gdx:gdx:$gdxVersion")
         add("api", "com.badlogicgames.gdx:gdx-freetype:$gdxVersion")
         add("api", "com.badlogicgames.gdx:gdx-box2d:$gdxVersion")
+        add("api", "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion")
 
         // Game‑pad abstraction layer (Java‑only)
         add("implementation", "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion")

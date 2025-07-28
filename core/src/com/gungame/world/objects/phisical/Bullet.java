@@ -5,11 +5,12 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.gungame.world.GameWorld;
-import com.gungame.world.collision.CollisionCategory;
 import com.gungame.world.objects.meta.GameObjectType;
 import com.gungame.world.objects.meta.VisibleGameObject;
 import lombok.Getter;
 import lombok.Setter;
+
+import static com.gungame.world.collision.CollisionFilters.initBulletFilter;
 
 public class Bullet extends VisibleGameObject {
 
@@ -36,9 +37,7 @@ public class Bullet extends VisibleGameObject {
 
     @Override
     public void setupCollisionFilter(Filter filter) {
-        filter.groupIndex = groupIndex;
-        filter.categoryBits = CollisionCategory.ALL.getBitMask();
-        filter.maskBits = CollisionCategory.ALL.getBitMask();
+        initBulletFilter(filter, groupIndex);
     }
 
     @Override

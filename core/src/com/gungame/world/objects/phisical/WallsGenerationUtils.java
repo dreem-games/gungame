@@ -28,7 +28,7 @@ public class WallsGenerationUtils {
         }
     }
 
-    public static void  generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
+    public static void generateBoxes(GameObjectFactory<Box> boxFactory, float x, float y, float width, float height, float filling) {
         Vector2 boxSize = boxFactory.getObjectMetadata().getSize();
         int totalFits = (int) Math.min((width - x) / boxSize.x, (height - y) / boxSize.y);
         int totalToGenerate = (int) (totalFits * filling);
