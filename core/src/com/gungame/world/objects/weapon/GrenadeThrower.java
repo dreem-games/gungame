@@ -24,7 +24,6 @@ public class GrenadeThrower {
         if (ammo <= 0 || (System.currentTimeMillis() - cooldownTimer < cooldown && cooldownTimer != 0)) {
             return;
         }
-        System.out.println(System.currentTimeMillis() - cooldownTimer > cooldown);
         cooldownTimer = 0;
         throwTimer = System.currentTimeMillis();
     }
