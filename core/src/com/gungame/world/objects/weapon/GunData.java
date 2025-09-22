@@ -67,6 +67,8 @@ public enum GunData implements Disposable {
     private final Texture weaponIcon;
     private final Sound reloadingSound;
     private final Sound shootSound;
+    // TODO: Мб в будущем сделаем разные щелчки для разных пушек?
+    private final Sound emptyShotSound = Gdx.audio.newSound(Gdx.files.internal("sound/emptyGunShot.wav"));
 
 
     @Override
@@ -74,6 +76,7 @@ public enum GunData implements Disposable {
         weaponIcon.dispose();
         reloadingSound.dispose();
         shootSound.dispose();
+        emptyShotSound.dispose();
     }
 
     public boolean hasHeavyBullets() {

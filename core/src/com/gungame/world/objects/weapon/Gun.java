@@ -32,6 +32,8 @@ public class Gun {
             if (ammo > 0 && ENABLE_AUTO_RELOADING) {
                 reloadStart();
             }
+
+            gunData.getEmptyShotSound().play();
             return null;
         }
         long now = System.currentTimeMillis();
