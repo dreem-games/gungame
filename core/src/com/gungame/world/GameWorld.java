@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.gungame.controller.ControllersManager;
 import com.gungame.ui.CameraShaker;
 import com.gungame.ui.UiEngine;
+import com.gungame.world.ai.AI;
 import com.gungame.world.collision.GameContactListener;
 import com.gungame.world.explosion.AssetManager;
 import com.gungame.world.explosion.ExplosionUtils;
@@ -42,6 +43,7 @@ public class GameWorld implements Disposable {
     private Box2DDebugRenderer debugRenderer;
     private @Getter Hero hero;
     private @Getter Hero hero2;
+    private AI ai;
 
     private float lastWorldStepTime;
     public boolean isWorldToRestart = false;
@@ -83,6 +85,7 @@ public class GameWorld implements Disposable {
         uiEngine2 = new UiEngine(hero2, false);
 
         controllersManager = new ControllersManager(hero, hero2, camera);
+        ai = new AI(this, camera, hero2);
 
         GroundGenerationUtils.generateGrass(groundContainer, wallW, wallH, horizontalSize - wallW * 2, verticalSize - wallH * 2);
         float wallW17 = wallW * 1.7f, wallH17 = wallH * 1.7f;
@@ -139,6 +142,7 @@ public class GameWorld implements Disposable {
                 explosions.removeIndex(i);
             }
         }
+        ai.update(frameTime);
 
         // теперь лучи!
         rayHandler.setCombinedMatrix(camera);
