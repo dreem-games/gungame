@@ -15,6 +15,7 @@ public class Gun {
     private @Getter int magazine;
     private @Getter int ammo;
     private @Getter long reloadingTimer;
+    private @Getter long emptyShotTickTimer;
     private @Getter boolean reloading = false;
 
     public Gun(GunData gunData) {
@@ -28,15 +29,19 @@ public class Gun {
         if (reloading) {
             return null;
         }
+
+        long now = System.currentTimeMillis();
         if (magazine == 0) {
             if (ammo > 0 && ENABLE_AUTO_RELOADING) {
                 reloadStart();
             }
 
-            gunData.getEmptyShotSound().play();
+            if (now - emptyShotTickTimer > gunData.getEmptyShotTickTime()) {
+                gunData.getEmptyShotSound().play();
+                emptyShotTickTimer = now;
+            }
             return null;
         }
-        long now = System.currentTimeMillis();
         if (now - reloadingTimer < gunData.getRateOfFire()) {
             return null;
         }
