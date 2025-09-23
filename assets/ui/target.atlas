@@ -1,0 +1,27 @@
+
+target.png
+size: 1024, 1024
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+target_1
+  rotate: false
+  xy: 1, 355
+  size: 539, 543
+  orig: 539, 543
+  offset: 0, 0
+  index: -1
+target_2
+  rotate: false
+  xy: 1, 1
+  size: 352, 352
+  orig: 539, 543
+  offset: 94, 95
+  index: -1
+target_3
+  rotate: false
+  xy: 542, 770
+  size: 131, 128
+  orig: 539, 543
+  offset: 203, 206
+  index: -1

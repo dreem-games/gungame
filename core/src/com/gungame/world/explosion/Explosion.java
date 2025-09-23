@@ -4,6 +4,7 @@ import box2dLight.Light;
 import box2dLight.PointLight;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionFilters;
 import lombok.Getter;
@@ -39,7 +40,7 @@ public class Explosion {
             lastStateChange = now;
         }
 
-        return AssetManager.explosionAnimation.getKeyFrame(stateTime, false);
+        return TextureManager.explosionAnimation.getKeyFrame(stateTime, false);
     }
 
     public boolean isFinished() {

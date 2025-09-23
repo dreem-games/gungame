@@ -1,7 +1,6 @@
 package com.gungame.world.objects.meta;
 
 import aurelienribon.bodyeditor.BodyEditorLoader;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -9,7 +8,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.assets.TextureManger;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 
 import java.util.LinkedList;
@@ -77,7 +76,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         bodyDef.bullet = objectMetadata.isBullet();
 
         var body = world.getPhisicsWorld().createBody(bodyDef);
-        Sprite sprite = new Sprite(TextureManger.getRegion(objectMetadata.getTextureAtlasPath(), objectMetadata.getTextureRegionName()));
+        Sprite sprite = new Sprite(TextureManager.getRegion(objectMetadata.getTextureAtlasPath(), objectMetadata.getTextureRegionName()));
         T gameObject;
         try {
             gameObject = (T) objectMetadata.getType().createInstance(world, body, sprite);

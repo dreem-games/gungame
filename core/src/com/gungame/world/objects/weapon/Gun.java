@@ -1,6 +1,6 @@
 package com.gungame.world.objects.weapon;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.gungame.assets.SoundManager;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class Gun {
             bullets.add(new BulletData(gunData.getBulletSpeed(), bulletDeviation, gunData.getBulletDamage(), (short) id));
         }
         magazine--;
-        gunData.getShootSound().play();
+        SoundManager.play(gunData.getShootSound());
         reloadingTimer = now;
         return bullets;
     }
@@ -52,7 +52,7 @@ public class Gun {
     public void reloadStart() {
         if (magazine < gunData.getMagazineSize() && ammo > 0 && !reloading) {
             reloading = true;
-            gunData.getReloadingSound().play();
+            SoundManager.play(gunData.getReloadingSound());
             reloadingTimer = System.currentTimeMillis();
         }
     }
@@ -74,12 +74,8 @@ public class Gun {
         return gunData.isAutomatic();
     }
 
-    public void dispose() {
-        gunData.dispose();
-    }
-
-    public Texture getTexture() {
-        return gunData.getWeaponIcon();
+    public String getWeaponName() {
+        return gunData.getWeaponName();
     }
 
     public boolean hasHeavyBullets() {

@@ -1,15 +1,12 @@
 package com.gungame.world.objects.weapon;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.Disposable;
+import com.gungame.assets.SoundManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum GunData implements Disposable {
+public enum GunData {
     RIFLE(0.01f,
             55,
             4,
@@ -20,9 +17,9 @@ public enum GunData implements Disposable {
             1,
             false,
             true,
-            new Texture("ui/rifle.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))
+            "rifle",
+            SoundManager.Sfx.RELOADING,
+            SoundManager.Sfx.RIFLE_SHOT
     ),
     SHOTGUN(0.1f,
             5,
@@ -34,9 +31,9 @@ public enum GunData implements Disposable {
             32,
             false,
             false,
-            new Texture("ui/shotgun.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"))
+            "shotgun",
+            SoundManager.Sfx.RELOADING,
+            SoundManager.Sfx.SHOTGUN_SHOT
     ),
     SMG(0.035f,
             10,
@@ -48,9 +45,9 @@ public enum GunData implements Disposable {
             1,
             true,
             false,
-            new Texture("ui/SMG.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/smgshootsound.wav"))
+            "smg",
+            SoundManager.Sfx.RELOADING,
+            SoundManager.Sfx.SMG_SHOT
     );
 
     private final float bulletSpread;
@@ -64,17 +61,9 @@ public enum GunData implements Disposable {
     private final boolean isAutomatic;
     private final boolean hasHeavyBullets;
 
-    private final Texture weaponIcon;
-    private final Sound reloadingSound;
-    private final Sound shootSound;
-
-
-    @Override
-    public void dispose() {
-        weaponIcon.dispose();
-        reloadingSound.dispose();
-        shootSound.dispose();
-    }
+    private final String weaponName;
+    private final SoundManager.Sfx reloadingSound;
+    private final SoundManager.Sfx shootSound;
 
     public boolean hasHeavyBullets() {
         return hasHeavyBullets;

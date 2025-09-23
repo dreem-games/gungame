@@ -1,10 +1,9 @@
 package com.gungame.world.objects.imaginary;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
-import com.gungame.assets.TextureManger;
+import com.gungame.assets.TextureManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,7 @@ public class GroundContainer implements Disposable {
     }
 
     private void drawAt(SpriteBatch batch, Vector2 pos) {
-        batch.draw(TextureManger.getRegion("assets/texture/level1.atlas","grass"), pos.x, pos.y, pieceSize.x, pieceSize.y);
+        batch.draw(TextureManager.getRegion("assets/texture/level1.atlas","grass"), pos.x, pos.y, pieceSize.x, pieceSize.y);
     }
 
     @Override
