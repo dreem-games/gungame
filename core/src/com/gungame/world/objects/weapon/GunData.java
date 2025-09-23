@@ -13,7 +13,6 @@ public enum GunData implements Disposable {
     RIFLE(0.01f,
             55,
             4,
-            3000,
             1000,
             5,
             99,
@@ -21,13 +20,10 @@ public enum GunData implements Disposable {
             false,
             true,
             new Texture("ui/rifle.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))
-    ),
+            Gdx.audio.newSound(Gdx.files.internal("sound/rifleshotsound.wav"))),
     SHOTGUN(0.1f,
             5,
             1.5f,
-            3000,  // TODO: вероятно, надо ускорить перезарядку
             300,
             1,
             10,
@@ -35,13 +31,10 @@ public enum GunData implements Disposable {
             false,
             false,
             new Texture("ui/shotgun.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"))
-    ),
+            Gdx.audio.newSound(Gdx.files.internal("sound/shotgunshootsound.wav"))),
     SMG(0.035f,
             10,
             2,
-            3000,
             100,
             24,
             60,
@@ -49,14 +42,11 @@ public enum GunData implements Disposable {
             true,
             false,
             new Texture("ui/SMG.png"),
-            Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/smgshootsound.wav"))
-    );
+            Gdx.audio.newSound(Gdx.files.internal("sound/smgshootsound.wav")));
 
     private final float bulletSpread;
     private final int bulletDamage;
     private final float bulletSpeed;
-    private final int reloadingTime;
     private final int rateOfFire;
     private final int magazineSize;
     private final int maxAmmo;
@@ -65,15 +55,20 @@ public enum GunData implements Disposable {
     private final boolean hasHeavyBullets;
 
     private final Texture weaponIcon;
-    private final Sound reloadingSound;
     private final Sound shootSound;
 
+    private final float reloadingTime = 2700;
+    private final Sound reloadingSound = Gdx.audio.newSound(Gdx.files.internal("sound/reload.wav"));
+
+    private final float emptyShotTickTime = 500;
+    private final Sound emptyShotSound = Gdx.audio.newSound(Gdx.files.internal("sound/emptyGunShot.wav"));
 
     @Override
     public void dispose() {
         weaponIcon.dispose();
         reloadingSound.dispose();
         shootSound.dispose();
+        emptyShotSound.dispose();
     }
 
     public boolean hasHeavyBullets() {

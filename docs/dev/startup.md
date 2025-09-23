@@ -10,3 +10,4 @@
 2) Настройка jdk gradle
     2.1) ctrl+alt+S File -> Settings -> Build, Execution, Deployment -> Build Tools -> Gradle -> Gradle JVM 
     2.2) В пункте Gradle JVM Выбрать имеющуюся jdk 21
+3) Установите плагин Lombok для IntelliJ Idea, если не установлен, для корректной работы аннотаций.
