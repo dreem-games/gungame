@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.Disposable;
+import com.gungame.assets.TextureManger;
 import com.gungame.world.GameWorld;
 
 import java.util.LinkedList;
@@ -17,7 +18,6 @@ import java.util.function.Consumer;
 
 public class GameObjectFactory <T extends GameObject> implements Disposable {
     protected final GameWorld world;
-    private final Texture texture;
     private final BodyEditorLoader bodyLoader;
     private final GameObjectMetadata objectMetadata;
 
@@ -26,7 +26,6 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
     public GameObjectFactory(GameWorld world, BodyEditorLoader bodyLoader, GameObjectMetadata metadata) {
         this.world = world;
-        this.texture = new Texture(metadata.getTexturePath());
         this.bodyLoader = bodyLoader;
         this.objectMetadata = metadata;
     }
@@ -43,7 +42,6 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
 
     @Override
     public void dispose() {
-        texture.dispose();
     }
 
     public void create(float x, float y, float rotation) {
@@ -79,7 +77,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         bodyDef.bullet = objectMetadata.isBullet();
 
         var body = world.getPhisicsWorld().createBody(bodyDef);
-        Sprite sprite = new Sprite(texture);
+        Sprite sprite = new Sprite(TextureManger.getRegion(objectMetadata.getTextureAtlasPath(), objectMetadata.getTextureRegionName()));
         T gameObject;
         try {
             gameObject = (T) objectMetadata.getType().createInstance(world, body, sprite);
@@ -98,7 +96,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         }
         if (objectMetadata.getBodyName() != null) {
             bodyLoader.attachFixture(body, objectMetadata.getBodyName(), fixtureDef,
-                    objectMetadata.getSize(), texture, objectMetadata.getMassData());
+                    objectMetadata.getSize(), sprite, objectMetadata.getMassData());
         } else {
             // сейчас только круглые объекты как альтернатива
             var circleShape = new CircleShape();

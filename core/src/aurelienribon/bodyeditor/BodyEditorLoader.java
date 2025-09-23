@@ -1,7 +1,7 @@
 package aurelienribon.bodyeditor;
 
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonReader;
@@ -110,8 +110,8 @@ public class BodyEditorLoader {
         }
     }
 
-    public void attachFixture(Body body, String name, FixtureDef fd, Vector2 scale, Texture texture, MassData templateMassData) {
-        float yScale = (float) texture.getWidth() / (float) texture.getHeight();
+    public void attachFixture(Body body, String name, FixtureDef fd, Vector2 scale, Sprite sprite, MassData templateMassData) {
+        float yScale = (float) sprite.getWidth() / (float) sprite.getHeight();
         float xScale;
         if (yScale >= 1.f) {
             xScale = 1.f;

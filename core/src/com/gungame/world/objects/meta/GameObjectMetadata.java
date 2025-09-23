@@ -11,7 +11,8 @@ import lombok.NonNull;
 public class GameObjectMetadata {
         @NonNull private final GameObjectType type;
         @NonNull private final MassData massData;
-        @NonNull private final String texturePath;
+        @NonNull private final String textureAtlasPath;
+        @NonNull private final String textureRegionName;
         @NonNull private final Vector2 size;
         private final String bodyName;
         private final Float diameter;

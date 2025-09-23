@@ -10,6 +10,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.gungame.assets.TextureManger;
 import com.gungame.controller.ControllersManager;
 import com.gungame.ui.CameraShaker;
 import com.gungame.ui.UiEngine;

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.gungame.assets.TextureManger;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 
@@ -35,6 +36,9 @@ public class GunGame extends ApplicationAdapter {
 		font = new BitmapFont();
 		font.getData().setScale(5f);
 
+		TextureManger.initHeroAndProjectiles();
+		TextureManger.initLvlOne();
+		TextureManger.finishAll();
 		gameWorld = new GameWorld(verticalSize, GameWorldConfig.HORIZONTAL_SIZE);
 		gameWorld.init(camera);
 	}

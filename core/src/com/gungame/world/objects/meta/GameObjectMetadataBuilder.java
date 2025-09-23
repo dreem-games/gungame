@@ -8,7 +8,8 @@ public class GameObjectMetadataBuilder {
     private static final MassData DEFAULT_MASS_DATA = new MassData();
 
     private GameObjectType type;
-    private String textureFilename;
+    private String textureRegionName;
+    private String textureAtlas;
     private String bodyName;
     private Float diameter;
     private Vector2 size;
@@ -29,14 +30,10 @@ public class GameObjectMetadataBuilder {
         return this;
     }
 
-    public GameObjectMetadataBuilder setTextureName(@NonNull String textureName, @NonNull String textureExtension) {
-        this.textureFilename = textureName + "." + textureExtension;
-        return this;
-    }
-
-    public GameObjectMetadataBuilder setBodyName(@NonNull String bodyName, @NonNull String textureExtension) {
-        this.bodyName = bodyName;
-        this.textureFilename = bodyName + "." + textureExtension;
+    public GameObjectMetadataBuilder setBodyName(@NonNull String atlasPath, @NonNull String regionName) {
+        this.bodyName = regionName;
+        this.textureAtlas = atlasPath;
+        this.textureRegionName = regionName;
         return this;
     }
 
@@ -83,6 +80,6 @@ public class GameObjectMetadataBuilder {
             massData = DEFAULT_MASS_DATA;
         }
         assert diameter == null || bodyName == null;
-        return new GameObjectMetadata(type, massData, "texture/" + textureFilename, size, bodyName, diameter, linearDamping, angularDamping, friction, 50, restitution,  isBullet);
+        return new GameObjectMetadata(type, massData, textureAtlas, textureRegionName, size, bodyName, diameter, linearDamping, angularDamping, friction, 50, restitution,  isBullet);
     }
 }

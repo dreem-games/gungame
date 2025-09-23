@@ -19,7 +19,7 @@ public class GameObjectFactoryManager implements Disposable {
     public GameObjectFactoryManager(GameWorld world) {
         var wallMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.WALL)
-                .setBodyName("wall", "png")
+                .setBodyName("assets/texture/level1.atlas", "wall")
                 .setSize(1, 1)
                 .setLinearDamping(0)
                 .setAngularDamping(10)
@@ -27,7 +27,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var boxMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BOX)
-                .setBodyName("box", "jpg")
+                .setBodyName("assets/texture/level1.atlas", "box")
                 .setSize(1, 1)
                 .setMassData(10, .5f, .5f)
                 .setLinearDamping(10)
@@ -36,7 +36,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var heroMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.HERO)
-                .setBodyName("hero", "png")
+                .setBodyName("assets/texture/hero.atlas", "hero")
                 .setSize(1.25f, 1)
                 .setMassData(100, .3f, .4f)
                 .setLinearDamping(5)
@@ -44,14 +44,14 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var bulletMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BULLET)
-                .setBodyName("bullet", "png")
+                .setBodyName("assets/texture/projectiles.atlas", "bullet")
                 .setSize(.25f, .05f)
                 .setMassData(.001f, .8f, .11f)
                 .setBullet()
                 .createGameObjectMetadata();
         var barrelMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BARREL)
-                .setTextureName("barrel", "png")
+                .setBodyName("assets/texture/level1.atlas", "barrel")
                 .setBodyCircleDiameter(.8f)
                 .setMassData(12, .5f, .5f)
                 .setLinearDamping(10)
@@ -59,7 +59,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var grenadeMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.GRENADE)
-                .setBodyName("grenade", "png")
+                .setBodyName("assets/texture/projectiles.atlas", "grenade")
                 .setSize(0.5f, 0.5f)
                 .setMassData(.0f, .8f, .11f)
                 .setLinearDamping(0)

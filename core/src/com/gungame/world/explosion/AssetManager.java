@@ -10,7 +10,6 @@ public class AssetManager {
 
     public static Animation<TextureRegion> explosionAnimation;
     public @Getter static TextureRegion[] targetTextures = new TextureRegion[3];
-    public static @Getter Texture grenadeTexture = new Texture("texture/grenade.png");
 
     public static void init() {
         Texture sheet = new Texture("texture/explosion.png");
@@ -33,6 +32,5 @@ public class AssetManager {
     }
 
     public void dispose() {
-        grenadeTexture.dispose();
     }
 }

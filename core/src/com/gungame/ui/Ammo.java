@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.gungame.assets.TextureManger;
 import com.gungame.world.explosion.AssetManager;
 import com.gungame.world.objects.phisical.Hero;
 
@@ -67,7 +68,7 @@ public class Ammo implements Ui {
         batch.draw(hero.getCurrentGun().getTexture(), xIcon, yIcon, width, camera.viewportHeight * 0.1f);
 
         font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().getAmmo()), xGrenade, yGrenade + camera.viewportHeight * 0.03f);
-        batch.draw(AssetManager.grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, width / 4, width / 4);
+        batch.draw(TextureManger.getRegion("assets/texture/projectiles.atlas", "grenade"), xGrenade - camera.viewportWidth * 0.02f, yGrenade, width / 4, width / 4);
     }
 
     @Override
