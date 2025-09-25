@@ -37,7 +37,7 @@ public class Gun {
             }
 
             if (now - emptyShotTickTimer > gunData.getEmptyShotTickTime()) {
-                gunData.getEmptyShotSound().play();
+                SoundManager.play(SoundManager.Sfx.EMPTY_GUN_SHOT);
                 emptyShotTickTimer = now;
             }
             return null;

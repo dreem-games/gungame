@@ -20,7 +20,8 @@ public class SoundManager {
         DEATH,
         DASH,
         EXPLOSION,
-        RELOADING
+        RELOADING,
+        EMPTY_GUN_SHOT,
     }
 
     private static final AssetManager am = new AssetManager();
@@ -33,6 +34,7 @@ public class SoundManager {
         paths.put(Sfx.EXPLOSION, Collections.singletonList("assets/sound/barrelExplosion.wav"));
         paths.put(Sfx.RELOADING, Collections.singletonList("assets/sound/reload.wav"));
         paths.put(Sfx.DEATH, Collections.singletonList("assets/sound/death.wav"));
+        paths.put(Sfx.EMPTY_GUN_SHOT, Collections.singletonList("assets/sound/emptyGunShot.wav"));
         paths.put(Sfx.DAMAGE, Arrays.asList(
                 "assets/sound/dash1.wav",
                 "assets/sound/dash2.wav"

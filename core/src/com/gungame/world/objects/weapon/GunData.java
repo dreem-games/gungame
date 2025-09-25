@@ -19,7 +19,8 @@ public enum GunData {
             true,
             "rifle",
             SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.RIFLE_SHOT
+            SoundManager.Sfx.RIFLE_SHOT,
+            SoundManager.Sfx.EMPTY_GUN_SHOT
     ),
     SHOTGUN(0.1f,
             5,
@@ -33,7 +34,8 @@ public enum GunData {
             false,
             "shotgun",
             SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.SHOTGUN_SHOT
+            SoundManager.Sfx.SHOTGUN_SHOT,
+            SoundManager.Sfx.EMPTY_GUN_SHOT
     ),
     SMG(0.035f,
             10,
@@ -47,7 +49,8 @@ public enum GunData {
             false,
             "smg",
             SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.SMG_SHOT
+            SoundManager.Sfx.SMG_SHOT,
+            SoundManager.Sfx.EMPTY_GUN_SHOT
     );
 
     private final float bulletSpread;
@@ -64,6 +67,8 @@ public enum GunData {
     private final String weaponName;
     private final SoundManager.Sfx reloadingSound;
     private final SoundManager.Sfx shootSound;
+    private final SoundManager.Sfx emptyShotSound;
+    private final float emptyShotTickTime = 500;
 
     public boolean hasHeavyBullets() {
         return hasHeavyBullets;
