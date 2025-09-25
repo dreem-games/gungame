@@ -57,7 +57,9 @@ public class SoundManager {
 
     public static long play(Sfx sfx) {
         List<String> list = paths.get(sfx);
-        if (list == null || list.isEmpty()) return -1;
+        if (list == null || list.isEmpty()) {
+            return -1;
+        }
 
         int idx = list.size() == 1 ? 0 : MathUtils.random(list.size() - 1);
         String path = list.get(idx);
