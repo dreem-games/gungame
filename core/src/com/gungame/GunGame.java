@@ -97,5 +97,7 @@ public class GunGame extends ApplicationAdapter {
 	public void dispose () {
 		batch.dispose();
 		gameWorld.dispose();
+		SoundManager.dispose();
+		TextureManager.dispose();
 	}
 }

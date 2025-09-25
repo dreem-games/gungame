@@ -27,18 +27,17 @@ public class SoundManager {
     private static final EnumMap<Sfx, List<String>> paths = new EnumMap<>(Sfx.class);
 
     static {
-        // укажи пути без "assets/"
         paths.put(Sfx.SHOTGUN_SHOT, Collections.singletonList("assets/sound/shotgunshootsound.wav"));
         paths.put(Sfx.RIFLE_SHOT, Collections.singletonList("assets/sound/rifleshotsound.wav"));
         paths.put(Sfx.SMG_SHOT, Collections.singletonList("assets/sound/smgshotsound.wav"));
-        paths.put(Sfx.EXPLOSION,   Collections.singletonList("assets/sound/barrelExplosion.wav"));
-        paths.put(Sfx.RELOADING,    Collections.singletonList("assets/sound/reload.wav"));
-        paths.put(Sfx.DEATH,        Collections.singletonList("assets/sound/death.wav"));
-        paths.put(Sfx.DAMAGE,        Arrays.asList(
+        paths.put(Sfx.EXPLOSION, Collections.singletonList("assets/sound/barrelExplosion.wav"));
+        paths.put(Sfx.RELOADING, Collections.singletonList("assets/sound/reload.wav"));
+        paths.put(Sfx.DEATH, Collections.singletonList("assets/sound/death.wav"));
+        paths.put(Sfx.DAMAGE, Arrays.asList(
                 "assets/sound/dash1.wav",
                 "assets/sound/dash2.wav"
         ));
-        paths.put(Sfx.DASH,        Arrays.asList(
+        paths.put(Sfx.DASH, Arrays.asList(
                 "assets/sound/damage1.wav",
                 "assets/sound/damage2.wav"
         ));
@@ -48,6 +47,7 @@ public class SoundManager {
         for (List<String> list : paths.values()) {
             for (String p : list) am.load(p, Sound.class);
         }
+
         finishLoading();
     }
 
@@ -63,6 +63,7 @@ public class SoundManager {
         String path = list.get(idx);
 
         Sound sound = am.get(path, Sound.class);
+
         return sound.play(1f);
     }
 

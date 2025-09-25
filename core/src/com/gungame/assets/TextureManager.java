@@ -61,13 +61,17 @@ public class TextureManager {
         return region;
     }
 
-    public static boolean update() { return am.update(); }  // зови каждый кадр на экране загрузки
+    public static boolean update() { return am.update(); }
     public static float progress() { return am.getProgress(); }
-    public static void finishAll() { am.finishLoading(); }  // блокирующая — вся очередь
+    public static void finishAll() { am.finishLoading(); }
 
     public static void unload(String file) {
-        if (am.isLoaded(file)) am.unload(file);
+        if (am.isLoaded(file)) {
+            am.unload(file);
+        }
     }
 
-    public static void dispose() { am.dispose(); }
+    public static void dispose() {
+        am.dispose();
+    }
 }
