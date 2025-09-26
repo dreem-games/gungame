@@ -41,36 +41,34 @@ public class Ammo implements Ui {
         }
 
         float x;
-        float y;
         float xIcon;
-        float yIcon;
         float xGrenade;
-        float yGrenade;
-
         if (isMainHero) {
             x = camera.position.x - camera.viewportWidth * 0.37f;
             xIcon = x - camera.viewportWidth * 0.06f;
             xGrenade = camera.viewportWidth * 0.04f;
-
         } else {
             x = camera.position.x + camera.viewportWidth * 0.42f;
             xIcon = x - camera.viewportWidth * 0.06f;
             xGrenade = camera.viewportWidth * 0.935f;
         }
-        y = camera.position.y + camera.viewportHeight * 0.45f;
-        yIcon = y - camera.viewportHeight * 0.015f;
-        yGrenade = y - camera.viewportHeight * 0.09f;
+
+        float y = camera.position.y + camera.viewportHeight * 0.45f;
+        float yIcon = y - camera.viewportHeight * 0.015f;
+        float yGrenade = y - camera.viewportHeight * 0.09f;
 
         final TextureRegion gun = TextureManager.getRegion(TextureManager.AtlasType.GUNS, hero.getCurrentGun().getWeaponName());
-        float h = camera.viewportHeight * 0.05f; // как у тебя
+        float h = camera.viewportHeight * 0.05f;
         float aspect = (float) gun.getRegionWidth() / gun.getRegionHeight();
         float w = h * aspect;
 
-        font.draw(batch, String.format(("%d /  %d"),
-                hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
+        String ammoText = String.format("%d /  %d", hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo());
+        font.draw(batch, ammoText, x, y);
         batch.draw(gun, xIcon - w/2f, yIcon - h/2f, w, h);
-        font.draw(batch, String.valueOf(hero.getGrenadeThrower().getAmmo()), xGrenade + w * 0.09f , yGrenade + camera.viewportHeight * 0.03f);
-        batch.draw(TextureManager.getRegion(TextureManager.AtlasType.PROJECTILES, "grenade"), xGrenade - camera.viewportWidth * 0.02f, yGrenade, w / 4, w / 4);
+        font.draw(batch, String.valueOf(hero.getGrenadeThrower().getAmmo()),
+                xGrenade + w * 0.09f , yGrenade + camera.viewportHeight * 0.03f);
+        TextureRegion grenadeTexture = TextureManager.getRegion(TextureManager.AtlasType.PROJECTILES, "grenade");
+        batch.draw(grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, w / 4, w / 4);
     }
 
     @Override

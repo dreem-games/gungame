@@ -76,18 +76,23 @@ public class TextureManager {
     }
 
     public static void finishAll() {
-        am.finishLoading(); }
+        am.finishLoading();
+    }
 
-    public static boolean update() { //методы для экрана загрузки
-        return am.update(); }
+    /**
+     * Выполнение следующего действия фоновой загрузки
+     *
+     * @return true если загрузка завершена
+     */
+    public static boolean update() {
+        return am.update();
+    }
 
+    /**
+     * @return процент выполнения фоновой загрузки звуков
+     */
     public static float progress() {
-        return am.getProgress(); }
-
-    public static void unload(String file) {
-        if (am.isLoaded(file)) {
-            am.unload(file);
-        }
+        return am.getProgress();
     }
 
     public static void dispose() {
