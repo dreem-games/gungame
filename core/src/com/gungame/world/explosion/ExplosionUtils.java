@@ -3,6 +3,7 @@ package com.gungame.world.explosion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.assets.SoundManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.objects.phisical.Barrel;
 import com.gungame.world.objects.phisical.Hero;
@@ -11,13 +12,13 @@ import lombok.Getter;
 public class ExplosionUtils {
     private @Getter static final Array<Explosion> EXPLOSIONS = new Array<>();
 
-    public static void createExplosion(GameWorld gameWorld, float x, float y, float radius, float power) {
+    public static void createExplosion(GameWorld gameWorld, float x, float y, float radius, float power, SoundManager.Sfx explosionSound) {
         final Vector2 explosionCenter = new Vector2(x, y);
         float radius2 = radius * radius;
 
         final Array<Body> affectedBodies = new Array<>();
 
-        EXPLOSIONS.add(new Explosion(gameWorld, x, y, radius2));
+        EXPLOSIONS.add(new Explosion(gameWorld, x, y, radius2, explosionSound));
         gameWorld.getCameraShaker().shake(10f, 1);
         // 1. Поиск тел в области через QueryAABB
         gameWorld.getPhisicsWorld().QueryAABB(fixture -> {

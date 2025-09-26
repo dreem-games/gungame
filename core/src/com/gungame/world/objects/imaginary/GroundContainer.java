@@ -25,7 +25,7 @@ public class GroundContainer implements Disposable {
     }
 
     private void drawAt(SpriteBatch batch, Vector2 pos) {
-        batch.draw(TextureManager.getRegion("assets/texture/level1.atlas","grass"), pos.x, pos.y, pieceSize.x, pieceSize.y);
+        batch.draw(TextureManager.getRegion(TextureManager.AtlasType.LEVEL_1,"grass"), pos.x, pos.y, pieceSize.x, pieceSize.y);
     }
 
     @Override

@@ -4,6 +4,7 @@ import box2dLight.Light;
 import box2dLight.PointLight;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.gungame.assets.SoundManager;
 import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.collision.CollisionFilters;
@@ -18,11 +19,11 @@ public class Explosion {
     private final Light light;
     private long lastStateChange;
 
-    public Explosion(GameWorld gameWorld, float x, float y, float radius) {
+    public Explosion(GameWorld gameWorld, float x, float y, float radius, SoundManager.Sfx sound) {
         this.x = x;
         this.y = y;
+        SoundManager.play(sound);
         lastStateChange = System.currentTimeMillis();
-
         light = new PointLight(gameWorld.getRayHandler(), 512);
         light.setPosition(x, y);
         light.setDistance(radius);

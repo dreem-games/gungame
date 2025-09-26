@@ -2,6 +2,7 @@ package com.gungame.world.objects.meta;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.MassData;
+import com.gungame.assets.TextureManager;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,7 +12,7 @@ import lombok.NonNull;
 public class GameObjectMetadata {
         @NonNull private final GameObjectType type;
         @NonNull private final MassData massData;
-        @NonNull private final String textureAtlasPath;
+        @NonNull private final TextureManager.AtlasType atlasType;
         @NonNull private final String textureRegionName;
         @NonNull private final Vector2 size;
         private final String bodyName;

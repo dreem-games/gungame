@@ -6,9 +6,23 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 public class TextureManager {
     private TextureManager() {}
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum AtlasType {
+        HERO("assets/texture/hero.atlas"),
+        PROJECTILES("assets/texture/projectiles.atlas"),
+        EXPLOSION("assets/texture/explosion.atlas"),
+        TARGET("assets/ui/target.atlas"),
+        GUNS("assets/ui/guns.atlas"),
+        LEVEL_1("assets/texture/level1.atlas");
+        private final String path;
+    }
 
     public static final AssetManager am = new AssetManager();
 
@@ -24,21 +38,21 @@ public class TextureManager {
     }
 
     public static void initHeroAndProjectiles() {
-        am.load("assets/texture/projectiles.atlas", TextureAtlas.class);
-        am.load("assets/texture/hero.atlas", TextureAtlas.class);
+        am.load(AtlasType.PROJECTILES.path, TextureAtlas.class);
+        am.load(AtlasType.HERO.path, TextureAtlas.class);
         finishAll();
     }
 
     public static void initLvlOne() {
-        am.load("assets/texture/level1.atlas", TextureAtlas.class);
-        am.load("assets/texture/explosion.atlas", TextureAtlas.class);
+        am.load(AtlasType.LEVEL_1.path, TextureAtlas.class);
+        am.load(AtlasType.EXPLOSION.path, TextureAtlas.class);
         finishAll();
         initExplosionAnimation();
     }
 
     public static void initUi() {
-        am.load("assets/ui/guns.atlas", TextureAtlas.class);
-        am.load("assets/ui/target.atlas", TextureAtlas.class);
+        am.load(AtlasType.GUNS.path, TextureAtlas.class);
+        am.load(AtlasType.TARGET.path, TextureAtlas.class);
         finishAll();
     }
 
@@ -49,21 +63,26 @@ public class TextureManager {
     }
 
 
-    public static TextureRegion getRegion(String atlasPath, String regionName) {
-        if (!am.isLoaded(atlasPath)) {
-            throw new IllegalStateException("Atlas is not loaded " + atlasPath);
+    public static TextureRegion getRegion(AtlasType atlasType, String regionName) {
+        if (!am.isLoaded(atlasType.path)) {
+            throw new IllegalStateException("Atlas is not loaded " + atlasType.path);
         }
-        TextureAtlas atlas = am.get(atlasPath, TextureAtlas.class);
+        TextureAtlas atlas = am.get(atlasType.path, TextureAtlas.class);
         TextureRegion region = atlas.findRegion(regionName);
         if (region == null) {
-            throw new IllegalArgumentException("Region '" + regionName + "' not found in region:  " + atlasPath);
+            throw new IllegalArgumentException("Region '" + regionName + "' not found in region:  " + atlasType.path);
         }
         return region;
     }
 
-    public static boolean update() { return am.update(); }
-    public static float progress() { return am.getProgress(); }
-    public static void finishAll() { am.finishLoading(); }
+    public static void finishAll() {
+        am.finishLoading(); }
+
+    public static boolean update() { //методы для экрана загрузки
+        return am.update(); }
+
+    public static float progress() {
+        return am.getProgress(); }
 
     public static void unload(String file) {
         if (am.isLoaded(file)) {

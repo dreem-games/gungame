@@ -76,7 +76,7 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         bodyDef.bullet = objectMetadata.isBullet();
 
         var body = world.getPhisicsWorld().createBody(bodyDef);
-        Sprite sprite = new Sprite(TextureManager.getRegion(objectMetadata.getTextureAtlasPath(), objectMetadata.getTextureRegionName()));
+        Sprite sprite = new Sprite(TextureManager.getRegion(objectMetadata.getAtlasType(), objectMetadata.getTextureRegionName()));
         T gameObject;
         try {
             gameObject = (T) objectMetadata.getType().createInstance(world, body, sprite);

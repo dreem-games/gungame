@@ -3,62 +3,54 @@ package com.gungame.assets;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.MathUtils;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 
 public class SoundManager {
     private SoundManager() {}
 
+    @Getter
+    @RequiredArgsConstructor
     public enum Sfx {
-        SHOTGUN_SHOT,
-        SMG_SHOT,
-        RIFLE_SHOT,
-        DAMAGE,
-        DEATH,
-        DASH,
-        EXPLOSION,
-        RELOADING,
-        EMPTY_GUN_SHOT,
+        SHOTGUN_SHOT(Collections.singletonList("assets/sound/shotgun_shot_sound.wav")),
+        SMG_SHOT(Collections.singletonList("assets/sound/smg_shot_sound.wav")),
+        RIFLE_SHOT(Collections.singletonList("assets/sound/rifle_shot_sound.wav")),
+        DAMAGE(Arrays.asList("assets/sound/dash_1.wav", "assets/sound/dash_2.wav")),
+        DEATH(Collections.singletonList("assets/sound/death.wav")),
+        DASH(Arrays.asList("assets/sound/damage_1.wav", "assets/sound/damage_2.wav")),
+        EXPLOSION(Collections.singletonList("assets/sound/barrel_explosion.wav")),
+        RELOADING(Collections.singletonList("assets/sound/reload.wav")),
+        EMPTY_GUN_SHOT(Collections.singletonList("assets/sound/empty_gun_shot.wav"));
+        private final List<String> path;
     }
 
     private static final AssetManager am = new AssetManager();
-    private static final EnumMap<Sfx, List<String>> paths = new EnumMap<>(Sfx.class);
-
-    static {
-        paths.put(Sfx.SHOTGUN_SHOT, Collections.singletonList("assets/sound/shotgunshootsound.wav"));
-        paths.put(Sfx.RIFLE_SHOT, Collections.singletonList("assets/sound/rifleshotsound.wav"));
-        paths.put(Sfx.SMG_SHOT, Collections.singletonList("assets/sound/smgshotsound.wav"));
-        paths.put(Sfx.EXPLOSION, Collections.singletonList("assets/sound/barrelExplosion.wav"));
-        paths.put(Sfx.RELOADING, Collections.singletonList("assets/sound/reload.wav"));
-        paths.put(Sfx.DEATH, Collections.singletonList("assets/sound/death.wav"));
-        paths.put(Sfx.EMPTY_GUN_SHOT, Collections.singletonList("assets/sound/emptyGunShot.wav"));
-        paths.put(Sfx.DAMAGE, Arrays.asList(
-                "assets/sound/dash1.wav",
-                "assets/sound/dash2.wav"
-        ));
-        paths.put(Sfx.DASH, Arrays.asList(
-                "assets/sound/damage1.wav",
-                "assets/sound/damage2.wav"
-        ));
-    }
 
     public static void loadAll() {
-        for (List<String> list : paths.values()) {
-            for (String p : list) am.load(p, Sound.class);
+        for (List<String> list : Arrays.stream(Sfx.values()).map(Sfx::getPath).toList()) {
+            for (String p : list){
+                am.load(p, Sound.class);
+            }
         }
-
-        finishLoading();
+        finisAll();
     }
 
-    public static void finishLoading() {
+    public static void finisAll() {
         am.finishLoading();
     }
 
+    public static boolean update() { //методы для экрана загрузки
+        return am.update(); }
+
+    public static float progress() {
+        return am.getProgress(); }
+
     public static long play(Sfx sfx) {
-        List<String> list = paths.get(sfx);
+        List<String> list = sfx.getPath();
         if (list == null || list.isEmpty()) {
             return -1;
         }

@@ -10,7 +10,6 @@ public enum GunData {
     RIFLE(0.01f,
             55,
             4,
-            3000,
             1000,
             5,
             99,
@@ -18,14 +17,11 @@ public enum GunData {
             false,
             true,
             "rifle",
-            SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.RIFLE_SHOT,
-            SoundManager.Sfx.EMPTY_GUN_SHOT
+            SoundManager.Sfx.RIFLE_SHOT
     ),
     SHOTGUN(0.1f,
             5,
             1.5f,
-            3000,  // TODO: вероятно, надо ускорить перезарядку
             300,
             1,
             10,
@@ -33,14 +29,11 @@ public enum GunData {
             false,
             false,
             "shotgun",
-            SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.SHOTGUN_SHOT,
-            SoundManager.Sfx.EMPTY_GUN_SHOT
+            SoundManager.Sfx.SHOTGUN_SHOT
     ),
     SMG(0.035f,
             10,
             2,
-            3000,
             100,
             24,
             60,
@@ -48,27 +41,26 @@ public enum GunData {
             true,
             false,
             "smg",
-            SoundManager.Sfx.RELOADING,
-            SoundManager.Sfx.SMG_SHOT,
-            SoundManager.Sfx.EMPTY_GUN_SHOT
+            SoundManager.Sfx.SMG_SHOT
     );
 
     private final float bulletSpread;
     private final int bulletDamage;
     private final float bulletSpeed;
-    private final int reloadingTime;
     private final int rateOfFire;
     private final int magazineSize;
     private final int maxAmmo;
     private final int bulletCountInOneShot;
     private final boolean isAutomatic;
     private final boolean hasHeavyBullets;
+    private final float reloadingTime = 3000;
 
     private final String weaponName;
-    private final SoundManager.Sfx reloadingSound;
     private final SoundManager.Sfx shootSound;
-    private final SoundManager.Sfx emptyShotSound;
+    private final SoundManager.Sfx reloadingSound =  SoundManager.Sfx.RELOADING;
+    private final SoundManager.Sfx emptyShotSound = SoundManager.Sfx.EMPTY_GUN_SHOT;
     private final float emptyShotTickTime = 500;
+
 
     public boolean hasHeavyBullets() {
         return hasHeavyBullets;

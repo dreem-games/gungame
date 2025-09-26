@@ -61,8 +61,7 @@ public class Ammo implements Ui {
         yIcon = y - camera.viewportHeight * 0.015f;
         yGrenade = y - camera.viewportHeight * 0.09f;
 
-        final String ATLAS_UI = "assets/ui/guns.atlas";
-        final TextureRegion gun = TextureManager.getRegion(ATLAS_UI, hero.getCurrentGun().getWeaponName());
+        final TextureRegion gun = TextureManager.getRegion(TextureManager.AtlasType.GUNS, hero.getCurrentGun().getWeaponName());
         float h = camera.viewportHeight * 0.05f; // как у тебя
         float aspect = (float) gun.getRegionWidth() / gun.getRegionHeight();
         float w = h * aspect;
@@ -71,7 +70,7 @@ public class Ammo implements Ui {
                 hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
         batch.draw(gun, xIcon - w/2f, yIcon - h/2f, w, h);
         font.draw(batch, String.valueOf(hero.getGrenadeThrower().getAmmo()), xGrenade + w * 0.09f , yGrenade + camera.viewportHeight * 0.03f);
-        batch.draw(TextureManager.getRegion("assets/texture/projectiles.atlas", "grenade"), xGrenade - camera.viewportWidth * 0.02f, yGrenade, w / 4, w / 4);
+        batch.draw(TextureManager.getRegion(TextureManager.AtlasType.PROJECTILES, "grenade"), xGrenade - camera.viewportWidth * 0.02f, yGrenade, w / 4, w / 4);
     }
 
     @Override

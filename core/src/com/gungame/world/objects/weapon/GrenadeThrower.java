@@ -30,17 +30,18 @@ public class GrenadeThrower {
     }
 
     public void render(SpriteBatch batch, Vector2 firePosition, float angle) {
-        String atlasPath = "assets/ui/target.atlas";
         if (throwTimer == 0) return;
-        TextureRegion r1 = TextureManager.getRegion(atlasPath, "target_1");
-        TextureRegion r2 = TextureManager.getRegion(atlasPath, "target_2");
-        TextureRegion r3 = TextureManager.getRegion(atlasPath, "target_3");
-        final float PPM = 1f / 512f; // пример
-        float w1 = r1.getRegionWidth()  * PPM, h1 = r1.getRegionHeight() * PPM;
-        float w2 = r2.getRegionWidth()  * PPM, h2 = r2.getRegionHeight() * PPM;
-        float w3 = r3.getRegionWidth()  * PPM, h3 = r3.getRegionHeight() * PPM;
+        TextureManager.AtlasType atlasType = TextureManager.AtlasType.TARGET;
+        TextureRegion r1 = TextureManager.getRegion(atlasType, "target_1");
+        TextureRegion r2 = TextureManager.getRegion(atlasType, "target_2");
+        TextureRegion r3 = TextureManager.getRegion(atlasType, "target_3");
 
-        float scale = 1f + 0.05f * (float)Math.sin(stateTime++ / 10f);
+        final float size = 1 / 750f; //изначальный размер мишени
+        float w1 = r1.getRegionWidth() * size, h1 = r1.getRegionHeight() * size;
+        float w2 = r2.getRegionWidth() * size, h2 = r2.getRegionHeight() * size;
+        float w3 = r3.getRegionWidth() * size, h3 = r3.getRegionHeight() * size;
+
+        float scale = 1f + 0.05f * (float)Math.sin(stateTime++ / 10f); //скейл для пульсации
         float reverseScale = 1f / scale;
 
         float cx = firePosition.x + throwPower() * .15f * (float)Math.cos(angle);
@@ -48,7 +49,6 @@ public class GrenadeThrower {
 
         batch.draw(r1, cx - w1/2f, cy - h1/2f, w1/2f, h1/2f, w1, h1, scale,        scale,        stateTime);
         batch.draw(r2, cx - w2/2f, cy - h2/2f, w2/2f, h2/2f, w2, h2, reverseScale, reverseScale, -stateTime);
-
         batch.draw(r3, cx - w3/2f, cy - h3/2f, w3, h3);
     }
 

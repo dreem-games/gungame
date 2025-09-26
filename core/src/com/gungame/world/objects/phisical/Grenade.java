@@ -35,8 +35,7 @@ public class Grenade extends VisibleGameObject {
 
     public void explode() {
         Vector2 center = body.getWorldCenter();
-        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 5f, 100f);
-        SoundManager.play(SoundManager.Sfx.EXPLOSION);
+        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 5f, 100f, SoundManager.Sfx.EXPLOSION);
         markForDestroy();
     }
 
