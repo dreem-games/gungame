@@ -1,9 +1,10 @@
 package com.gungame.world.objects.weapon;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.gungame.world.explosion.AssetManager;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.objects.meta.CustomObjectInitializationConfig;
 import com.gungame.world.objects.phisical.Hero;
 import lombok.Getter;
@@ -29,16 +30,26 @@ public class GrenadeThrower {
     }
 
     public void render(SpriteBatch batch, Vector2 firePosition, float angle) {
-        if(throwTimer == 0) {
-            return;
-        }
-        float scale = 1f + 0.05f * (float)Math.sin(stateTime++ / 10f);
-        float reverseScale = 1 / scale;
-        var firePositionX = firePosition.x + throwPower() * .15f * (float)Math.cos(angle);
-        var firePositionY = firePosition.y  + throwPower() * .15f * (float)Math.sin(angle);
-        batch.draw(AssetManager.targetTextures[0], firePositionX , firePositionY, 0.25f, 0.25f, .5f, .5f, scale, scale, stateTime);
-        batch.draw(AssetManager.targetTextures[1], firePositionX , firePositionY, 0.25f, 0.25f, .5f,.5f, reverseScale, reverseScale, -stateTime);
-        batch.draw(AssetManager.targetTextures[2], firePositionX , firePositionY, 0.5f, 0.5f);
+        if (throwTimer == 0) return;
+        TextureManager.AtlasType atlasType = TextureManager.AtlasType.TARGET;
+        TextureRegion r1 = TextureManager.getRegion(atlasType, "target_1");
+        TextureRegion r2 = TextureManager.getRegion(atlasType, "target_2");
+        TextureRegion r3 = TextureManager.getRegion(atlasType, "target_3");
+
+        final float size = 1 / 750f; //изначальный размер мишени
+        float w1 = r1.getRegionWidth() * size, h1 = r1.getRegionHeight() * size;
+        float w2 = r2.getRegionWidth() * size, h2 = r2.getRegionHeight() * size;
+        float w3 = r3.getRegionWidth() * size, h3 = r3.getRegionHeight() * size;
+
+        float scale = 1f + 0.05f * (float)Math.sin(stateTime++ / 10f); //скейл для пульсации
+        float reverseScale = 1f / scale;
+
+        float cx = firePosition.x + throwPower() * .15f * (float)Math.cos(angle);
+        float cy = firePosition.y + throwPower() * .15f * (float)Math.sin(angle);
+
+        batch.draw(r1, cx - w1/2f, cy - h1/2f, w1/2f, h1/2f, w1, h1, scale,        scale,        stateTime);
+        batch.draw(r2, cx - w2/2f, cy - h2/2f, w2/2f, h2/2f, w2, h2, reverseScale, reverseScale, -stateTime);
+        batch.draw(r3, cx - w3/2f, cy - h3/2f, w3, h3);
     }
 
     public float throwPower() {

@@ -6,8 +6,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.gungame.world.explosion.AssetManager;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.objects.phisical.Hero;
 
 public class Ammo implements Ui {
@@ -40,34 +41,34 @@ public class Ammo implements Ui {
         }
 
         float x;
-        float y;
         float xIcon;
-        float yIcon;
-        float width;
         float xGrenade;
-        float yGrenade;
-
         if (isMainHero) {
             x = camera.position.x - camera.viewportWidth * 0.37f;
-            xIcon = x - camera.viewportWidth * 0.1f;
-            width = camera.viewportWidth * 0.1f;
-            xGrenade = camera.viewportWidth * 0.06f;
-
+            xIcon = x - camera.viewportWidth * 0.06f;
+            xGrenade = camera.viewportWidth * 0.04f;
         } else {
             x = camera.position.x + camera.viewportWidth * 0.42f;
-            xIcon = x - camera.viewportWidth * 0.1f;
-            width = camera.viewportWidth * 0.1f;
-            xGrenade = camera.viewportWidth * 0.93f;
+            xIcon = x - camera.viewportWidth * 0.06f;
+            xGrenade = camera.viewportWidth * 0.935f;
         }
-        y = camera.position.y + camera.viewportHeight * 0.45f;
-        yIcon = y - camera.viewportHeight * 0.05f;
-        yGrenade = y - camera.viewportHeight * 0.07f;
-        font.draw(batch, String.format(("%d /  %d"),
-                hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo()), x, y);
-        batch.draw(hero.getCurrentGun().getTexture(), xIcon, yIcon, width, camera.viewportHeight * 0.1f);
 
-        font.draw(batch, String.format((" - %d"), hero.getGrenadeThrower().getAmmo()), xGrenade, yGrenade + camera.viewportHeight * 0.03f);
-        batch.draw(AssetManager.grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, width / 4, width / 4);
+        float y = camera.position.y + camera.viewportHeight * 0.45f;
+        float yIcon = y - camera.viewportHeight * 0.015f;
+        float yGrenade = y - camera.viewportHeight * 0.09f;
+
+        final TextureRegion gun = TextureManager.getRegion(TextureManager.AtlasType.GUNS, hero.getCurrentGun().getWeaponName());
+        float h = camera.viewportHeight * 0.05f;
+        float aspect = (float) gun.getRegionWidth() / gun.getRegionHeight();
+        float w = h * aspect;
+
+        String ammoText = String.format("%d /  %d", hero.getCurrentGun().getMagazine(), hero.getCurrentGun().getAmmo());
+        font.draw(batch, ammoText, x, y);
+        batch.draw(gun, xIcon - w/2f, yIcon - h/2f, w, h);
+        font.draw(batch, String.valueOf(hero.getGrenadeThrower().getAmmo()),
+                xGrenade + w * 0.09f , yGrenade + camera.viewportHeight * 0.03f);
+        TextureRegion grenadeTexture = TextureManager.getRegion(TextureManager.AtlasType.PROJECTILES, "grenade");
+        batch.draw(grenadeTexture, xGrenade - camera.viewportWidth * 0.02f, yGrenade, w / 4, w / 4);
     }
 
     @Override

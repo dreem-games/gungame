@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.gungame.assets.SoundManager;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 
@@ -34,6 +36,11 @@ public class GunGame extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		font = new BitmapFont();
 		font.getData().setScale(5f);
+
+		TextureManager.initHeroAndProjectiles();
+		TextureManager.initLvlOne();
+		TextureManager.initUi();
+		SoundManager.loadAll();
 
 		gameWorld = new GameWorld(verticalSize, GameWorldConfig.HORIZONTAL_SIZE);
 		gameWorld.init(camera);
@@ -90,5 +97,7 @@ public class GunGame extends ApplicationAdapter {
 	public void dispose () {
 		batch.dispose();
 		gameWorld.dispose();
+		SoundManager.dispose();
+		TextureManager.dispose();
 	}
 }

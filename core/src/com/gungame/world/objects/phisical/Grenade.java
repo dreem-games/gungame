@@ -1,11 +1,10 @@
 package com.gungame.world.objects.phisical;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Filter;
+import com.gungame.assets.SoundManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.GameObjectType;
@@ -14,8 +13,6 @@ import com.gungame.world.objects.meta.VisibleGameObject;
 import static com.gungame.world.collision.CollisionFilters.initGrenadeFilter;
 
 public class Grenade extends VisibleGameObject {
-    private static final Sound explosionSpund = Gdx.audio.newSound(Gdx.files.internal("sound/barrelExplosion.wav"));
-
     private final long createdTime = System.currentTimeMillis();
 
     public Grenade(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
@@ -37,8 +34,7 @@ public class Grenade extends VisibleGameObject {
 
     public void explode() {
         Vector2 center = body.getWorldCenter();
-        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 5f, 100f);
-        explosionSpund.play();
+        ExplosionUtils.createExplosion(getWorld(), center.x, center.y, 5f, 100f, SoundManager.Sfx.EXPLOSION);
         markForDestroy();
     }
 

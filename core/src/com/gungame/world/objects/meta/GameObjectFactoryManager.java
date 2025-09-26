@@ -2,13 +2,13 @@ package com.gungame.world.objects.meta;
 
 import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.Disposable;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.objects.phisical.*;
 import lombok.Getter;
 
 @Getter
-public class GameObjectFactoryManager implements Disposable {
+public class GameObjectFactoryManager {
     private final GameObjectFactory<StaticGameObject> wallFactory;
     private final GameObjectFactory<Box> boxFactory;
     private final GameObjectFactory<Barrel> barrelFactory;
@@ -19,7 +19,7 @@ public class GameObjectFactoryManager implements Disposable {
     public GameObjectFactoryManager(GameWorld world) {
         var wallMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.WALL)
-                .setBodyName("wall", "png")
+                .setBodyName(TextureManager.AtlasType.LEVEL_1, "wall")
                 .setSize(1, 1)
                 .setLinearDamping(0)
                 .setAngularDamping(10)
@@ -27,7 +27,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var boxMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BOX)
-                .setBodyName("box", "jpg")
+                .setBodyName(TextureManager.AtlasType.LEVEL_1, "box")
                 .setSize(1, 1)
                 .setMassData(10, .5f, .5f)
                 .setLinearDamping(10)
@@ -36,7 +36,7 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var heroMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.HERO)
-                .setBodyName("hero", "png")
+                .setBodyName(TextureManager.AtlasType.HERO, "hero")
                 .setSize(1.25f, 1)
                 .setMassData(100, .3f, .4f)
                 .setLinearDamping(5)
@@ -44,14 +44,14 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var bulletMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BULLET)
-                .setBodyName("bullet", "png")
+                .setBodyName(TextureManager.AtlasType.PROJECTILES, "bullet")
                 .setSize(.25f, .05f)
                 .setMassData(.001f, .8f, .11f)
                 .setBullet()
                 .createGameObjectMetadata();
         var barrelMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.BARREL)
-                .setTextureName("barrel", "png")
+                .setBodyName(TextureManager.AtlasType.LEVEL_1, "barrel")
                 .setBodyCircleDiameter(.8f)
                 .setMassData(12, .5f, .5f)
                 .setLinearDamping(10)
@@ -59,8 +59,8 @@ public class GameObjectFactoryManager implements Disposable {
                 .createGameObjectMetadata();
         var grenadeMetadata = new GameObjectMetadataBuilder()
                 .setType(GameObjectType.GRENADE)
-                .setBodyName("grenade", "png")
-                .setSize(0.5f, 0.5f)
+                .setBodyName(TextureManager.AtlasType.PROJECTILES, "grenade")
+                .setSize(0.25f, 0.4f)
                 .setMassData(.0f, .8f, .11f)
                 .setLinearDamping(0)
                 .setAngularDamping(0)
@@ -83,15 +83,5 @@ public class GameObjectFactoryManager implements Disposable {
         bulletFactory.executeObjectsUpdates();
         barrelFactory.executeObjectsUpdates();
         grenadeFactory.executeObjectsUpdates();
-    }
-
-    @Override
-    public void dispose() {
-        wallFactory.dispose();
-        boxFactory.dispose();
-        heroFactory.dispose();
-        bulletFactory.dispose();
-        barrelFactory.dispose();
-        grenadeFactory.dispose();
     }
 }

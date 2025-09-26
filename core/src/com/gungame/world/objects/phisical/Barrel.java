@@ -1,10 +1,9 @@
 package com.gungame.world.objects.phisical;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.gungame.assets.SoundManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.explosion.ExplosionUtils;
 import com.gungame.world.objects.meta.DynamicVisibleGameObject;
@@ -18,7 +17,6 @@ import static com.gungame.world.collision.CollisionFilters.initBoxFilter;
 
 @Getter
 public class Barrel extends DynamicVisibleGameObject implements FirePoint {
-    private static final Sound explosionSpund = Gdx.audio.newSound(Gdx.files.internal("sound/barrelExplosion.wav"));
 
     public @Getter boolean isExploded = false;
     private @Setter short groupIndex;
@@ -36,9 +34,8 @@ public class Barrel extends DynamicVisibleGameObject implements FirePoint {
         // Координаты центра бочки
         Vector2 center = body.getWorldCenter();
         // Параметры взрыва (например, радиус 5, мощность 200)
-        ExplosionUtils.createExplosion(world, center.x, center.y, 7f, 100f);
+        ExplosionUtils.createExplosion(world, center.x, center.y, 7f, 100f, SoundManager.Sfx.EXPLOSION);
         // Здесь же можно запустить анимацию, частицы, удалить бочку из мира и т.д.
-        explosionSpund.play();
         markForDestroy();
     }
 

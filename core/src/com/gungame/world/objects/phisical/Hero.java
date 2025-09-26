@@ -2,8 +2,6 @@ package com.gungame.world.objects.phisical;
 
 import box2dLight.ConeLight;
 import box2dLight.PointLight;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -11,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import com.gungame.assets.SoundManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
@@ -27,9 +26,6 @@ import com.gungame.world.objects.weapon.Laser;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.stream.Stream;
-
-import static com.badlogic.gdx.math.MathUtils.random;
 
 public class Hero extends DynamicVisibleGameObject {
     public static final float MAX_STAMINA = 100f;
@@ -40,15 +36,6 @@ public class Hero extends DynamicVisibleGameObject {
     private static final float BOX_COLLISION_BODY_CIRCLE_RADIUS = .07f;
     private static final int DEFAULT_DAMPING = 5;
     private static final int DAMPING_RESTORE_TIME = 100;
-    private final Sound[] damageSounds = {
-            Gdx.audio.newSound(Gdx.files.internal("sound/damage1.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/damage2.wav"))
-    };
-    private final Sound[] dashSounds = {
-            Gdx.audio.newSound(Gdx.files.internal("sound/dash1.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sound/dash2.wav"))
-    };
-    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sound/death.wav"));
     private @Getter final GrenadeThrower grenadeThrower = new GrenadeThrower(this);
 
     private float xScale;
@@ -89,7 +76,7 @@ public class Hero extends DynamicVisibleGameObject {
         if (isToDestroy()) {
             return;
         }
-        damageSounds[random.nextInt(damageSounds.length)].play();
+        SoundManager.play(SoundManager.Sfx.DAMAGE);
         health -= damage;
         if (health <= 0) {
             death();
@@ -99,7 +86,7 @@ public class Hero extends DynamicVisibleGameObject {
 
     public void death() {
         laser.turnOff();
-        deathSound.play();
+        SoundManager.play(SoundManager.Sfx.DEATH);
         markForDestroy();
     }
 
@@ -279,7 +266,7 @@ public class Hero extends DynamicVisibleGameObject {
             movingMode = newMovingMode;
             lastMovingModeChange = now;
             if (movingMode == MovingMode.JUMPING) {
-                dashSounds[random.nextInt(dashSounds.length)].play();
+                SoundManager.play(SoundManager.Sfx.DASH);
             }
         }
     }
@@ -378,7 +365,6 @@ public class Hero extends DynamicVisibleGameObject {
 
     @Override
     public void dispose() {
-        Stream.concat(Stream.of(dashSounds), Stream.of(deathSound)).forEach(Sound::dispose);
         playerLight.dispose();
         laser.dispose();
     }
