@@ -2,14 +2,13 @@ package com.gungame.world.objects.meta;
 
 import aurelienribon.bodyeditor.BodyEditorLoader;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.Disposable;
 import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.objects.phisical.*;
 import lombok.Getter;
 
 @Getter
-public class GameObjectFactoryManager implements Disposable {
+public class GameObjectFactoryManager {
     private final GameObjectFactory<StaticGameObject> wallFactory;
     private final GameObjectFactory<Box> boxFactory;
     private final GameObjectFactory<Barrel> barrelFactory;
@@ -84,15 +83,5 @@ public class GameObjectFactoryManager implements Disposable {
         bulletFactory.executeObjectsUpdates();
         barrelFactory.executeObjectsUpdates();
         grenadeFactory.executeObjectsUpdates();
-    }
-
-    @Override
-    public void dispose() {
-        wallFactory.dispose();
-        boxFactory.dispose();
-        heroFactory.dispose();
-        bulletFactory.dispose();
-        barrelFactory.dispose();
-        grenadeFactory.dispose();
     }
 }

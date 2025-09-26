@@ -106,8 +106,6 @@ public class GameWorld implements Disposable {
     @Override
     public void dispose() {
         uiEngine.dispose();
-        physicalObjectFactoryManager.dispose();
-        groundContainer.dispose();
         GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::dispose);
         phisicsWorld.dispose();
     }

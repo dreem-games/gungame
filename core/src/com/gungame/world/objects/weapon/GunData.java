@@ -53,7 +53,7 @@ public enum GunData {
     private final int bulletCountInOneShot;
     private final boolean isAutomatic;
     private final boolean hasHeavyBullets;
-    private final float reloadingTime = 3000;
+    private final float reloadingTime = 2700;
 
     private final String weaponName;
     private final SoundManager.Sfx shootSound;

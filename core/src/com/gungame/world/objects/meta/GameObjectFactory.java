@@ -7,18 +7,18 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.utils.Disposable;
 import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
+import lombok.Getter;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;
 
-public class GameObjectFactory <T extends GameObject> implements Disposable {
+public class GameObjectFactory <T extends GameObject> {
     protected final GameWorld world;
     private final BodyEditorLoader bodyLoader;
-    private final GameObjectMetadata objectMetadata;
+    private final @Getter GameObjectMetadata objectMetadata;
 
     // такие действия как создание объектов можно выполнять только вне симуляции
     private final Queue<Runnable> updates = new LinkedList<>();
@@ -33,14 +33,6 @@ public class GameObjectFactory <T extends GameObject> implements Disposable {
         while (!updates.isEmpty()) {
             updates.poll().run();
         }
-    }
-
-    public GameObjectMetadata getObjectMetadata() {
-        return objectMetadata;
-    }
-
-    @Override
-    public void dispose() {
     }
 
     public void create(float x, float y, float rotation) {

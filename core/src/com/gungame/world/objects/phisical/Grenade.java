@@ -13,7 +13,6 @@ import com.gungame.world.objects.meta.VisibleGameObject;
 import static com.gungame.world.collision.CollisionFilters.initGrenadeFilter;
 
 public class Grenade extends VisibleGameObject {
-
     private final long createdTime = System.currentTimeMillis();
 
     public Grenade(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {

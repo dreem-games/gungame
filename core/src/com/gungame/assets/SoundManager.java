@@ -25,17 +25,16 @@ public class SoundManager {
         EXPLOSION(Collections.singletonList("assets/sound/barrel_explosion.wav")),
         RELOADING(Collections.singletonList("assets/sound/reload.wav")),
         EMPTY_GUN_SHOT(Collections.singletonList("assets/sound/empty_gun_shot.wav"));
+
         private final List<String> path;
     }
 
     private static final AssetManager am = new AssetManager();
 
     public static void loadAll() {
-        for (List<String> list : Arrays.stream(Sfx.values()).map(Sfx::getPath).toList()) {
-            for (String p : list){
-                am.load(p, Sound.class);
-            }
-        }
+        Arrays.stream(Sfx.values())
+                .flatMap(sfx -> sfx.path.stream())
+                .forEach(path -> am.load(path, Sound.class));
         finisAll();
     }
 
@@ -43,24 +42,32 @@ public class SoundManager {
         am.finishLoading();
     }
 
-    public static boolean update() { //методы для экрана загрузки
-        return am.update(); }
+    /**
+     * Выполнение следующего действия фоновой загрузки
+     *
+     * @return true если загрузка завершена
+     */
+    public static boolean update() {
+        return am.update();
+    }
 
+    /**
+     * @return процент выполнения фоновой загрузки звуков
+     */
     public static float progress() {
-        return am.getProgress(); }
+        return am.getProgress();
+    }
 
-    public static long play(Sfx sfx) {
+    /**
+     * Воспроизведение следующего звука указанного типа
+     */
+    public static void play(Sfx sfx) {
         List<String> list = sfx.getPath();
-        if (list == null || list.isEmpty()) {
-            return -1;
-        }
-
         int idx = list.size() == 1 ? 0 : MathUtils.random(list.size() - 1);
         String path = list.get(idx);
 
         Sound sound = am.get(path, Sound.class);
-
-        return sound.play(1f);
+        sound.play(1f);
     }
 
     public static void dispose() {
