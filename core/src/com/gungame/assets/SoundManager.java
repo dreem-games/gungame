@@ -16,15 +16,15 @@ public class SoundManager {
     @Getter
     @RequiredArgsConstructor
     public enum Sfx {
-        SHOTGUN_SHOT(Collections.singletonList("assets/sound/shotgun_shot_sound.wav")),
-        SMG_SHOT(Collections.singletonList("assets/sound/smg_shot_sound.wav")),
-        RIFLE_SHOT(Collections.singletonList("assets/sound/rifle_shot_sound.wav")),
-        DAMAGE(Arrays.asList("assets/sound/dash_1.wav", "assets/sound/dash_2.wav")),
-        DEATH(Collections.singletonList("assets/sound/death.wav")),
-        DASH(Arrays.asList("assets/sound/damage_1.wav", "assets/sound/damage_2.wav")),
-        EXPLOSION(Collections.singletonList("assets/sound/barrel_explosion.wav")),
-        RELOADING(Collections.singletonList("assets/sound/reload.wav")),
-        EMPTY_GUN_SHOT(Collections.singletonList("assets/sound/empty_gun_shot.wav"));
+        SHOTGUN_SHOT(Collections.singletonList("sound/shotgun_shot_sound.wav")),
+        SMG_SHOT(Collections.singletonList("sound/smg_shot_sound.wav")),
+        RIFLE_SHOT(Collections.singletonList("sound/rifle_shot_sound.wav")),
+        DAMAGE(Arrays.asList("sound/dash_1.wav", "sound/dash_2.wav")),
+        DEATH(Collections.singletonList("sound/death.wav")),
+        DASH(Arrays.asList("sound/damage_1.wav", "sound/damage_2.wav")),
+        EXPLOSION(Collections.singletonList("sound/barrel_explosion.wav")),
+        RELOADING(Collections.singletonList("sound/reload.wav")),
+        EMPTY_GUN_SHOT(Collections.singletonList("sound/empty_gun_shot.wav"));
 
         private final List<String> path;
     }

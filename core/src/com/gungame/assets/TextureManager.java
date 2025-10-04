@@ -15,12 +15,12 @@ public class TextureManager {
     @Getter
     @RequiredArgsConstructor
     public enum AtlasType {
-        HERO("assets/texture/hero.atlas"),
-        PROJECTILES("assets/texture/projectiles.atlas"),
-        EXPLOSION("assets/texture/explosion.atlas"),
-        TARGET("assets/ui/target.atlas"),
-        GUNS("assets/ui/guns.atlas"),
-        LEVEL_1("assets/texture/level1.atlas");
+        HERO("texture/hero.atlas"),
+        PROJECTILES("texture/projectiles.atlas"),
+        EXPLOSION("texture/explosion.atlas"),
+        TARGET("ui/target.atlas"),
+        GUNS("ui/guns.atlas"),
+        LEVEL_1("texture/level1.atlas");
         private final String path;
     }
 
@@ -57,7 +57,7 @@ public class TextureManager {
     }
 
     public static void initExplosionAnimation() {
-        TextureAtlas atlas = TextureManager.am.get("assets/texture/explosion.atlas", TextureAtlas.class);
+        TextureAtlas atlas = TextureManager.am.get("texture/explosion.atlas", TextureAtlas.class);
         Array<TextureAtlas.AtlasRegion> frames = atlas.findRegions("explosion");
         explosionAnimation = new Animation<>(0.4f, frames, Animation.PlayMode.NORMAL);
     }
