@@ -13,7 +13,7 @@ plugins {
 // ─────────────────────────────────────────────────────────────────────────────
 extra.apply {
     set("appName", "gungame")
-    set("gdxVersion", "1.13.5")
+    set("gdxVersion", "1.14.0")
     set("gdxControllersVersion", "2.2.4")
     set("box2dlightsVersion", "1.5")
 }
