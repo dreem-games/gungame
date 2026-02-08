@@ -10,4 +10,5 @@ public class GameWorldConfig {
     public static final float HERO_RUNNING_ACCELERATION_SCALE = 2.5f;
     public static final float HERO_JUMPING_ACCELERATION_SCALE = 12;
     public static final float HERO_ROTATION_SPEED = 10f;
+    public static final float HERO_MAX_ROTATION_SPEED = 0.15f;
 }

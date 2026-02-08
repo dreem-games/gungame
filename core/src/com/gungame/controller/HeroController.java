@@ -49,7 +49,12 @@ public abstract class HeroController {
         // Нормализуем угол от -π до +π
         while (delta > MathUtils.PI) delta -= MathUtils.PI2;
         while (delta < -MathUtils.PI) delta += MathUtils.PI2;
-
+        if (delta > GameWorldConfig.HERO_MAX_ROTATION_SPEED) {
+            delta = GameWorldConfig.HERO_MAX_ROTATION_SPEED;
+        }
+        if (delta < -GameWorldConfig.HERO_MAX_ROTATION_SPEED) {
+            delta = -GameWorldConfig.HERO_MAX_ROTATION_SPEED;
+        }
         if (Math.abs(delta) < 0.01f) {
             return;
         }
