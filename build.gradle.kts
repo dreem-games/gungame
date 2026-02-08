@@ -5,7 +5,7 @@ import java.io.File
 plugins {
     // Root‑level plugin declarations; sub‑projects reuse these IDs
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-    id("io.freefair.lombok") version "8.14" apply false
+    id("io.freefair.lombok") version "9.2.0" apply false
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@ plugins {
 // ─────────────────────────────────────────────────────────────────────────────
 extra.apply {
     set("appName", "gungame")
-    set("gdxVersion", "1.13.5")
+    set("gdxVersion", "1.14.0")
     set("gdxControllersVersion", "2.2.4")
     set("box2dlightsVersion", "1.5")
 }
@@ -25,7 +25,7 @@ repositories {
 subprojects {
     plugins.withId("java") {
         extensions.configure<JavaPluginExtension> {
-            toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+            toolchain.languageVersion.set(JavaLanguageVersion.of(25))
         }
     }
 
