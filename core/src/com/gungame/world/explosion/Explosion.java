@@ -49,6 +49,7 @@ public class Explosion {
     }
 
     public void destroy() {
+        // remove() внутри box2dLight уже disposes mesh, dispose() сверху — double free.
         light.remove();
     }
 }

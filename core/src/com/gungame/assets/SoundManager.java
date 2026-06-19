@@ -35,10 +35,10 @@ public class SoundManager {
         Arrays.stream(Sfx.values())
                 .flatMap(sfx -> sfx.path.stream())
                 .forEach(path -> am.load(path, Sound.class));
-        finisAll();
+        finishAll();
     }
 
-    public static void finisAll() {
+    public static void finishAll() {
         am.finishLoading();
     }
 

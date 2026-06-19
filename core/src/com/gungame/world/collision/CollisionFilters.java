@@ -4,7 +4,7 @@ import com.badlogic.gdx.physics.box2d.Filter;
 
 public class CollisionFilters {
     public static final Filter LOW_LIGHT_CONTACT_FILTER = createFilter(CollisionCategory.LOW_LIGHT, CollisionCategory.NORMAL_OBJECTS);
-    public static final Filter HIEGH_LIGHT_CONTACT_FILTER = createFilter(CollisionCategory.HIGH_LIGHT, CollisionCategory.HEIGHT_OBJECTS);
+    public static final Filter HIGH_LIGHT_CONTACT_FILTER = createFilter(CollisionCategory.HIGH_LIGHT, CollisionCategory.HEIGHT_OBJECTS);
 
     public static void initBulletFilter(Filter filter, short groupId) {
         filter.categoryBits = CollisionCategory.MICRO_OBJECTS.getBits();

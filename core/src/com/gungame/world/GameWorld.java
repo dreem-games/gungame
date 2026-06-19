@@ -27,7 +27,7 @@ import lombok.Getter;
 import static com.gungame.world.GameWorldConfig.*;
 
 public class GameWorld implements Disposable {
-    private @Getter World phisicsWorld;
+    private @Getter World physicsWorld;
     private @Getter GameObjectFactoryManager physicalObjectFactoryManager;
     private @Getter RayHandler rayHandler;
     private @Getter CameraShaker cameraShaker;
@@ -57,12 +57,12 @@ public class GameWorld implements Disposable {
             debugRenderer = new Box2DDebugRenderer(true, true, true, true, true, true);
         }
 
-        phisicsWorld = new World(new Vector2(0, 0), true);
-        phisicsWorld.setContactListener(new GameContactListener());
+        physicsWorld = new World(new Vector2(0, 0), true);
+        physicsWorld.setContactListener(new GameContactListener());
 
         cameraShaker = new CameraShaker();
 
-        rayHandler = new RayHandler(phisicsWorld);
+        rayHandler = new RayHandler(physicsWorld);
         rayHandler.setAmbientLight(0f); // Тьма вне источников света
         rayHandler.setCulling(true);    // Оптимизация
         rayHandler.setBlur(true); // необязательно
@@ -106,8 +106,15 @@ public class GameWorld implements Disposable {
     @Override
     public void dispose() {
         uiEngine.dispose();
-        GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::dispose);
-        phisicsWorld.dispose();
+        uiEngine2.dispose();
+        GameObjectUtils.getGameObjectsStream(physicsWorld).forEach(GameObject::dispose);
+        physicsWorld.dispose();
+        // Все лайты уже remove() + dispose() от владельцами (Hero, Laser, Explosion).
+        // rayHandler.dispose() безопасно пройдётся по пустому списку.
+        rayHandler.dispose();
+        if (debugRenderer != null) {
+            debugRenderer.dispose();
+        }
     }
 
     public void renderWorld(SpriteBatch batch, OrthographicCamera camera) {
@@ -116,15 +123,15 @@ public class GameWorld implements Disposable {
         lastWorldStepTime = currentTime;
 
         // шаг физического мира
-        GameObjectUtils.getGameObjectsStream(phisicsWorld).forEach(GameObject::update);
+        GameObjectUtils.getGameObjectsStream(physicsWorld).forEach(GameObject::update);
         controllersManager.control();
         physicalObjectFactoryManager.executeUpdates();
-        phisicsWorld.step(frameTime, 6, 2);
+        physicsWorld.step(frameTime, 6, 2);
         cameraShaker.update(camera, frameTime);
 
         // отрисовка графического мира
         groundContainer.drawBatch(batch);
-        GameObjectUtils.getVisibleGameObjects(phisicsWorld).forEach(it -> it.draw(batch));
+        GameObjectUtils.getVisibleGameObjects(physicsWorld).forEach(it -> it.draw(batch));
 
         var explosions = ExplosionUtils.getEXPLOSIONS();
         for (int i = 0; i < explosions.size; i++) {
@@ -144,7 +151,7 @@ public class GameWorld implements Disposable {
         batch.begin();
 
         if (debugRenderer != null) {
-            debugRenderer.render(phisicsWorld, camera.combined);
+            debugRenderer.render(physicsWorld, camera.combined);
         }
 
         checkWorldForRestart(currentTime);

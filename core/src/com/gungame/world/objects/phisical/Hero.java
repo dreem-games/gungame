@@ -28,6 +28,7 @@ import lombok.NonNull;
 
 
 public class Hero extends DynamicVisibleGameObject {
+    public static final int MAX_HEALTH = 100;
     public static final float MAX_STAMINA = 100f;
     public static final float FIRE_POSITION_DX = 0.7f;
     public static final float FIRE_POSITION_DY = 0.22f;
@@ -49,10 +50,13 @@ public class Hero extends DynamicVisibleGameObject {
     private long lastStaminaRegen = lastStaminaUsage;
     private long lastMovingModeChange = lastStaminaRegen;
     private boolean isAbleToRun;
-    private @Getter int health = 100;
+    private @Getter int health = MAX_HEALTH;
     private final Gun[] gun = {new Gun(GunData.RIFLE), new Gun(GunData.SMG), new Gun(GunData.SHOTGUN)};
     private int currentWeapon = 0;
     private long timeWhenDampingTimeChanged = 0;
+    // Пул для обхода всех Body при поиске ближайшего FirePoint.
+    // Выделяется один раз, переиспользуется через clear() — avoids GC per call.
+    private final Array<Body> hidesBoxBodyPool = new Array<>();
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -65,7 +69,7 @@ public class Hero extends DynamicVisibleGameObject {
         playerLight.setDistance(12f);
         playerLight.setSoft(true);
         playerLight.setSoftnessLength(7.5f);
-        playerLight.setContactFilter(CollisionFilters.HIEGH_LIGHT_CONTACT_FILTER);
+        playerLight.setContactFilter(CollisionFilters.HIGH_LIGHT_CONTACT_FILTER);
         playerLight.setColor(new Color(0f, 0f, 0f, 1f));
 
         // лазер
@@ -181,15 +185,15 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     private FirePoint hidesBox(Vector2 pos) {
-        var arr = new Array<Body>();
-        getWorld().getPhisicsWorld().getBodies(arr);  // TODO: мб надо будет оптимизировать
+        hidesBoxBodyPool.clear();
+        getWorld().getPhysicsWorld().getBodies(hidesBoxBodyPool);
 
         FirePoint nearestFirePoint = null;
         float nearestDistance = Float.MAX_VALUE;
         final float minDistance = Math.min(xScale, yScale) * BOX_COLLISION_BODY_CIRCLE_RADIUS * 5;
         // поворот не учитывается, так что пока для небольшого количества объектов норм
 
-        for (var body : arr) {
+        for (var body : hidesBoxBodyPool) {
             var gameObject = (GameObject) body.getUserData();
             if (gameObject instanceof FirePoint firePoint) {
                 var distance = firePoint.getPosition().dst(pos);
@@ -365,7 +369,14 @@ public class Hero extends DynamicVisibleGameObject {
 
     @Override
     public void dispose() {
-        playerLight.dispose();
+        // Light.remove() внутри box2dLight уже disposes mesh.
+        // Вызывать dispose() после remove() — double free crash.
+        // Достаточно remove(): лайт открепляется от RayHandler,
+        // а rayHandler.dispose() почистит оставшиеся.
+        playerLight.remove();
+        if (fireLight != null) {
+            fireLight.remove();
+        }
         laser.dispose();
     }
 }

@@ -67,7 +67,7 @@ public class GameObjectFactory <T extends GameObject> {
         bodyDef.angle = rotation * MathUtils.degreesToRadians;
         bodyDef.bullet = objectMetadata.isBullet();
 
-        var body = world.getPhisicsWorld().createBody(bodyDef);
+        var body = world.getPhysicsWorld().createBody(bodyDef);
         Sprite sprite = new Sprite(TextureManager.getRegion(objectMetadata.getAtlasType(), objectMetadata.getTextureRegionName()));
         T gameObject;
         try {

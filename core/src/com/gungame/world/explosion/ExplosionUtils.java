@@ -21,7 +21,7 @@ public class ExplosionUtils {
         EXPLOSIONS.add(new Explosion(gameWorld, x, y, radius2, explosionSound));
         gameWorld.getCameraShaker().shake(10f, 1);
         // 1. Поиск тел в области через QueryAABB
-        gameWorld.getPhisicsWorld().QueryAABB(fixture -> {
+        gameWorld.getPhysicsWorld().QueryAABB(fixture -> {
             Body body = fixture.getBody();
             Vector2 bodyPos = body.getWorldCenter();
             // Проверяем, что тело в круге (реальный радиус)

@@ -41,7 +41,7 @@ public class HeroHealthBar implements Ui {
         }
         y = camera.position.y + camera.viewportHeight * 0.4978f - height * 2;
         batch.draw(healthBackgroundTexture, x, y, width, height);
-        batch.draw(healthTexture, x, y, width * hero.getHealth() / Hero.MAX_STAMINA, height);
+        batch.draw(healthTexture, x, y, width * hero.getHealth() / Hero.MAX_HEALTH, height);
     }
 
     @Override

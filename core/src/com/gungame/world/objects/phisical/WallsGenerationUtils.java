@@ -47,7 +47,7 @@ public class WallsGenerationUtils {
         for (int i = 0; i < totalToGenerate; i++) {
             generateObject(barrelFactory, x, y, width, height);
         }
-        Gdx.app.debug(LOG_TAG, "generated " + totalToGenerate + " boxes");
+        Gdx.app.debug(LOG_TAG, "generated " + totalToGenerate + " barrels");
     }
 
     private static <T extends GameObject> void generateObject(GameObjectFactory<T> factory, float x, float y, float width, float height) {

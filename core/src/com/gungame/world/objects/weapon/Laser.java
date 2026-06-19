@@ -39,7 +39,7 @@ public final class Laser {
     public Laser(GameWorld gw, Vector2 origin, float angleRad,
                  Body ignoreBody) {
 
-        this.world = gw.getPhisicsWorld();
+        this.world = gw.getPhysicsWorld();
 
         from.set(origin);
         calcEnd(origin, angleRad, endFull);
@@ -137,19 +137,23 @@ public final class Laser {
     public void render(SpriteBatch batch) {
         if (!light.isActive()) return;
 
-        batch.end();
-
         float dx = hitPoint.x - from.x;
         float dy = hitPoint.y - from.y;
         float len = (float) Math.hypot(dx, dy);
         float deg = MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees;
 
+        // Сохраняем цвет в примитивах, а не color.cpy(), чтобы не аллоцировать
+        // новый Color каждый кадр — это hot-path рендеринга.
+        float cr = batch.getColor().r;
+        float cg = batch.getColor().g;
+        float cb = batch.getColor().b;
+        float ca = batch.getColor().a;
+
+        // setShader автоматически flush-нет батч при смене шейдера
         laserShader.bind();
         laserShader.setUniformf("u_start", from.x, from.y);
-
         batch.setShader(laserShader);
 
-        batch.begin();
         batch.setColor(1f, 0.2f, 0.2f, 1f);
         batch.draw(whitePixel,
                 from.x, from.y - CORE_W * .5f,
@@ -158,13 +162,15 @@ public final class Laser {
                 1f, 1f,
                 deg);
 
-        batch.setShader(null); // вернуть стандартный шейдер
-        batch.setColor(Color.WHITE); // вернуть цвет по умолчанию
-        batch.end();
-        batch.begin();
+        // Восстанавливаем состояние
+        batch.setShader(null);
+        batch.setColor(cr, cg, cb, ca);
     }
 
-    public void dispose() { light.remove(); }
+    public void dispose() {
+        // remove() внутри box2dLight уже disposes mesh, dispose() сверху — double free.
+        light.remove();
+    }
 
     // ───── helpers ─────
     private void calcEnd(Vector2 o, float angRad, Vector2 out) {

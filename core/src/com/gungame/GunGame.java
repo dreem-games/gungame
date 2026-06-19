@@ -47,7 +47,7 @@ public class GunGame extends ApplicationAdapter {
 	}
 
 	public void drawScore() {
-		font.draw(batch, String.format((" %d  /  %d " ), heroScore, hero2Score), uiCamera.position.x - uiCamera.viewportWidth * 0.07f, uiCamera.position.y - uiCamera.viewportHeight * 0.44f);
+		font.draw(batch, String.format(" %d  /  %d ", heroScore, hero2Score), uiCamera.position.x - uiCamera.viewportWidth * 0.07f, uiCamera.position.y - uiCamera.viewportHeight * 0.44f);
 	}
 
 	@Override
