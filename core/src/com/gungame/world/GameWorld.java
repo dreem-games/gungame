@@ -95,7 +95,7 @@ public class GameWorld implements Disposable {
      * затем сообщает что его нужно перезапустить
      */
     public void checkWorldForRestart(float now) {
-        if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
+        if ((hero.isDead() || hero2.isDead() || hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
             deathTime = now;
         }
         if (now - deathTime > 3000 && now - deathTime < 10000) {
@@ -108,10 +108,9 @@ public class GameWorld implements Disposable {
         uiEngine.dispose();
         uiEngine2.dispose();
         GameObjectUtils.getGameObjectsStream(physicsWorld).forEach(GameObject::dispose);
-        physicsWorld.dispose();
-        // Все лайты уже remove() + dispose() от владельцами (Hero, Laser, Explosion).
-        // rayHandler.dispose() безопасно пройдётся по пустому списку.
         rayHandler.dispose();
+        physicsWorld.dispose();
+
         if (debugRenderer != null) {
             debugRenderer.dispose();
         }

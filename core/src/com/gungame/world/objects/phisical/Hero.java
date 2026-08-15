@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.gungame.assets.SoundManager;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
@@ -57,6 +58,8 @@ public class Hero extends DynamicVisibleGameObject {
     // Пул для обхода всех Body при поиске ближайшего FirePoint.
     // Выделяется один раз, переиспользуется через clear() — avoids GC per call.
     private final Array<Body> hidesBoxBodyPool = new Array<>();
+    private @Getter boolean isDead = false;
+    private boolean physicsDeactivated = false;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -89,13 +92,25 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void death() {
+        if (isDead) {
+            return;
+        }
+        isDead = true;
         laser.turnOff();
         SoundManager.play(SoundManager.Sfx.DEATH);
-        markForDestroy();
+
+        sprite.setRegion(TextureManager.getRegion(TextureManager.AtlasType.HERO, "hero_dead"));
+        sprite.setSize(256f / 212f * sprite.getWidth(), 187f / 152f * sprite.getHeight());
+        sprite.setOriginCenter();
+
+        playerLight.setActive(false);
+        if (fireLight != null) {
+            fireLight.setActive(false);
+        }
     }
 
     public void fire() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
 
@@ -160,14 +175,14 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void reloadStart() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         getCurrentGun().reloadStart();
     }
 
     public void switchWeapon() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if(!getCurrentGun().isReloading()) {
@@ -176,7 +191,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void setWeapon(int id) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if(!getCurrentGun().isReloading()) {
@@ -223,6 +238,43 @@ public class Hero extends DynamicVisibleGameObject {
         if (isToDestroy()) {
             return;
         }
+        if (isDead) {
+            if (!physicsDeactivated) {
+                // Disable physical collision completely and stop movement.
+                // We do this here (outside of the physics step) to avoid Box2D locked world assertions.
+                body.setLinearVelocity(0, 0);
+                body.setAngularVelocity(0);
+                // Since the user image faces down, we rotate it by +90 degrees to align with Box2D zero degree logic
+                body.setTransform(body.getPosition(), body.getAngle() + 90 * MathUtils.degreesToRadians);
+
+                // If we set maskBits to 0, it doesn't collide with anything, so it clips walls.
+                // Bullets mask: ALL_PHYSICAL (0b00111)
+                // Heroes mask: ALL_PHYSICAL (0b00111)
+                // We want the corpse to collide ONLY with walls.
+                // Walls have category: ALL (0b11111) and mask ALL.
+                // If we set corpse category to a bit outside of ALL_PHYSICAL, e.g., HIGH_LIGHT or LOW_LIGHT,
+                // bullets and heroes won't collide with it because they only mask ALL_PHYSICAL.
+                // We will use 0b100000 (32) for the corpse category, and mask it against ALL to only hit walls.
+                // But ALL is only 5 bits (31). So walls won't mask 32.
+                // Let's look at CollisionCategory.ALL. It's 0b11111 (31).
+                // Actually, if we just make the body a Sensor, it will not resolve collisions.
+                // Let's make it a dynamic body with massive damping, and collision filter:
+                // Since wall is ALL (31), and mask ALL (31). Any category <= 31 will hit walls.
+                // Wait! If corpse category = 0b01000 (HIGH_LIGHT), bullets/heroes won't hit it because they mask ALL_PHYSICAL (0b00111).
+                // But walls will hit it because walls mask ALL (0b11111).
+                // So category = HIGH_LIGHT, mask = ALL will collide with walls, but NOT with bullets/heroes!
+                for (Fixture fixture : body.getFixtureList()) {
+                    Filter filter = fixture.getFilterData();
+                    filter.categoryBits = CollisionCategory.HIGH_LIGHT.getBits();
+                    filter.maskBits = CollisionCategory.ALL.getBits();
+                    fixture.setFilterData(filter);
+                }
+                body.setLinearDamping(100f);
+                body.setAngularDamping(100f);
+                physicsDeactivated = true;
+            }
+            return;
+        }
 
         long now = System.currentTimeMillis();
         if (stamina < MAX_STAMINA && movingMode.getStaminaCost() == 0) {
@@ -249,7 +301,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if (stamina > 20) {
@@ -283,6 +335,10 @@ public class Hero extends DynamicVisibleGameObject {
      * @return true если сила применена
      */
     public boolean move(float x, float y) {
+        if (isToDestroy() || isDead) {
+            return false;
+        }
+
         if (x * x + y * y < .1f || body.getLinearDamping() != DEFAULT_DAMPING) {
             return false;  // может быть небольшая погрешность
         }
@@ -303,7 +359,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     private float getImpulse(float acceleration, MovingMode movingMode) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return 0f;
         }
         float potentialResult = GameWorldConfig.HERO_ACCELERATION * acceleration;
@@ -363,8 +419,10 @@ public class Hero extends DynamicVisibleGameObject {
     @Override
     public void draw(SpriteBatch batch) {
         super.draw(batch);
-        laser.render(batch);
-        grenadeThrower.render(batch, getFirePosition(),getAngle());
+        if (!isDead) {
+            laser.render(batch);
+            grenadeThrower.render(batch, getFirePosition(),getAngle());
+        }
     }
 
     @Override
