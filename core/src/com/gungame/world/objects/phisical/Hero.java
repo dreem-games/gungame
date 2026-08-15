@@ -246,7 +246,31 @@ public class Hero extends DynamicVisibleGameObject {
                 body.setAngularVelocity(0);
                 // Since the user image faces down, we rotate it by +90 degrees to align with Box2D zero degree logic
                 body.setTransform(body.getPosition(), body.getAngle() + 90 * MathUtils.degreesToRadians);
-                body.setActive(false);
+
+                // If we set maskBits to 0, it doesn't collide with anything, so it clips walls.
+                // Bullets mask: ALL_PHYSICAL (0b00111)
+                // Heroes mask: ALL_PHYSICAL (0b00111)
+                // We want the corpse to collide ONLY with walls.
+                // Walls have category: ALL (0b11111) and mask ALL.
+                // If we set corpse category to a bit outside of ALL_PHYSICAL, e.g., HIGH_LIGHT or LOW_LIGHT,
+                // bullets and heroes won't collide with it because they only mask ALL_PHYSICAL.
+                // We will use 0b100000 (32) for the corpse category, and mask it against ALL to only hit walls.
+                // But ALL is only 5 bits (31). So walls won't mask 32.
+                // Let's look at CollisionCategory.ALL. It's 0b11111 (31).
+                // Actually, if we just make the body a Sensor, it will not resolve collisions.
+                // Let's make it a dynamic body with massive damping, and collision filter:
+                // Since wall is ALL (31), and mask ALL (31). Any category <= 31 will hit walls.
+                // Wait! If corpse category = 0b01000 (HIGH_LIGHT), bullets/heroes won't hit it because they mask ALL_PHYSICAL (0b00111).
+                // But walls will hit it because walls mask ALL (0b11111).
+                // So category = HIGH_LIGHT, mask = ALL will collide with walls, but NOT with bullets/heroes!
+                for (Fixture fixture : body.getFixtureList()) {
+                    Filter filter = fixture.getFilterData();
+                    filter.categoryBits = CollisionCategory.HIGH_LIGHT.getBits();
+                    filter.maskBits = CollisionCategory.ALL.getBits();
+                    fixture.setFilterData(filter);
+                }
+                body.setLinearDamping(100f);
+                body.setAngularDamping(100f);
                 physicsDeactivated = true;
             }
             return;
