@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.gungame.assets.SoundManager;
+import com.gungame.assets.TextureManager;
 import com.gungame.world.GameWorld;
 import com.gungame.world.GameWorldConfig;
 import com.gungame.world.collision.CollisionCategory;
@@ -57,6 +58,7 @@ public class Hero extends DynamicVisibleGameObject {
     // Пул для обхода всех Body при поиске ближайшего FirePoint.
     // Выделяется один раз, переиспользуется через clear() — avoids GC per call.
     private final Array<Body> hidesBoxBodyPool = new Array<>();
+    private @Getter boolean isDead = false;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -89,13 +91,30 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void death() {
+        if (isDead) {
+            return;
+        }
+        isDead = true;
         laser.turnOff();
         SoundManager.play(SoundManager.Sfx.DEATH);
-        markForDestroy();
+
+        // Disable physical collision completely and stop movement
+        body.setLinearVelocity(0, 0);
+        body.setAngularVelocity(0);
+        body.setActive(false);
+
+        sprite.setRegion(TextureManager.getRegion(TextureManager.AtlasType.HERO, "hero_dead"));
+        sprite.setSize(256f / 212f * sprite.getWidth(), 187f / 152f * sprite.getHeight());
+        sprite.setOriginCenter();
+
+        playerLight.remove();
+        if (fireLight != null) {
+            fireLight.remove();
+        }
     }
 
     public void fire() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
 
@@ -160,14 +179,14 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void reloadStart() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         getCurrentGun().reloadStart();
     }
 
     public void switchWeapon() {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if(!getCurrentGun().isReloading()) {
@@ -176,7 +195,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void setWeapon(int id) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if(!getCurrentGun().isReloading()) {
@@ -220,7 +239,7 @@ public class Hero extends DynamicVisibleGameObject {
     public void update() {
         super.update();
 
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
 
@@ -249,7 +268,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     public void tryChangeMovingMode(MovingMode newMovingMode) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return;
         }
         if (stamina > 20) {
@@ -283,6 +302,10 @@ public class Hero extends DynamicVisibleGameObject {
      * @return true если сила применена
      */
     public boolean move(float x, float y) {
+        if (isToDestroy() || isDead) {
+            return false;
+        }
+
         if (x * x + y * y < .1f || body.getLinearDamping() != DEFAULT_DAMPING) {
             return false;  // может быть небольшая погрешность
         }
@@ -303,7 +326,7 @@ public class Hero extends DynamicVisibleGameObject {
     }
 
     private float getImpulse(float acceleration, MovingMode movingMode) {
-        if (isToDestroy()) {
+        if (isToDestroy() || isDead) {
             return 0f;
         }
         float potentialResult = GameWorldConfig.HERO_ACCELERATION * acceleration;
@@ -363,8 +386,10 @@ public class Hero extends DynamicVisibleGameObject {
     @Override
     public void draw(SpriteBatch batch) {
         super.draw(batch);
-        laser.render(batch);
-        grenadeThrower.render(batch, getFirePosition(),getAngle());
+        if (!isDead) {
+            laser.render(batch);
+            grenadeThrower.render(batch, getFirePosition(),getAngle());
+        }
     }
 
     @Override

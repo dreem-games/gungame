@@ -95,7 +95,7 @@ public class GameWorld implements Disposable {
      * затем сообщает что его нужно перезапустить
      */
     public void checkWorldForRestart(float now) {
-        if ((hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
+        if ((hero.isDead() || hero2.isDead() || hero.isToDestroy() || hero2.isToDestroy()) && deathTime == 0) {
             deathTime = now;
         }
         if (now - deathTime > 3000 && now - deathTime < 10000) {
