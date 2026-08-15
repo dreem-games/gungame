@@ -108,10 +108,9 @@ public class GameWorld implements Disposable {
         uiEngine.dispose();
         uiEngine2.dispose();
         GameObjectUtils.getGameObjectsStream(physicsWorld).forEach(GameObject::dispose);
-        physicsWorld.dispose();
-        // Все лайты уже remove() + dispose() от владельцами (Hero, Laser, Explosion).
-        // rayHandler.dispose() безопасно пройдётся по пустому списку.
         rayHandler.dispose();
+        physicsWorld.dispose();
+
         if (debugRenderer != null) {
             debugRenderer.dispose();
         }

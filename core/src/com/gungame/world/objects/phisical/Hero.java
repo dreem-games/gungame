@@ -102,8 +102,6 @@ public class Hero extends DynamicVisibleGameObject {
         sprite.setRegion(TextureManager.getRegion(TextureManager.AtlasType.HERO, "hero_dead"));
         sprite.setSize(256f / 212f * sprite.getWidth(), 187f / 152f * sprite.getHeight());
         sprite.setOriginCenter();
-        // Since the user image faces down, we rotate it by +90 degrees to align with Box2D zero degree logic
-        body.setTransform(body.getPosition(), body.getAngle() + 90 * MathUtils.degreesToRadians);
 
         playerLight.setActive(false);
         if (fireLight != null) {
@@ -246,6 +244,8 @@ public class Hero extends DynamicVisibleGameObject {
                 // We do this here (outside of the physics step) to avoid Box2D locked world assertions.
                 body.setLinearVelocity(0, 0);
                 body.setAngularVelocity(0);
+                // Since the user image faces down, we rotate it by +90 degrees to align with Box2D zero degree logic
+                body.setTransform(body.getPosition(), body.getAngle() + 90 * MathUtils.degreesToRadians);
                 body.setActive(false);
                 physicsDeactivated = true;
             }
