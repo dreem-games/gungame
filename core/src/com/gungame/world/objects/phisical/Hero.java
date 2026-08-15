@@ -59,6 +59,7 @@ public class Hero extends DynamicVisibleGameObject {
     // Выделяется один раз, переиспользуется через clear() — avoids GC per call.
     private final Array<Body> hidesBoxBodyPool = new Array<>();
     private @Getter boolean isDead = false;
+    private boolean physicsDeactivated = false;
 
     public Hero(GameWorld gameWorld, GameObjectType type, Body body, Sprite sprite) {
         super(gameWorld, type, body, sprite);
@@ -97,11 +98,6 @@ public class Hero extends DynamicVisibleGameObject {
         isDead = true;
         laser.turnOff();
         SoundManager.play(SoundManager.Sfx.DEATH);
-
-        // Disable physical collision completely and stop movement
-        body.setLinearVelocity(0, 0);
-        body.setAngularVelocity(0);
-        body.setActive(false);
 
         sprite.setRegion(TextureManager.getRegion(TextureManager.AtlasType.HERO, "hero_dead"));
         sprite.setSize(256f / 212f * sprite.getWidth(), 187f / 152f * sprite.getHeight());
@@ -239,7 +235,18 @@ public class Hero extends DynamicVisibleGameObject {
     public void update() {
         super.update();
 
-        if (isToDestroy() || isDead) {
+        if (isToDestroy()) {
+            return;
+        }
+        if (isDead) {
+            if (!physicsDeactivated) {
+                // Disable physical collision completely and stop movement.
+                // We do this here (outside of the physics step) to avoid Box2D locked world assertions.
+                body.setLinearVelocity(0, 0);
+                body.setAngularVelocity(0);
+                body.setActive(false);
+                physicsDeactivated = true;
+            }
             return;
         }
 
