@@ -1,0 +1,44 @@
+{
+  "frames": {
+    "grenade": {
+      "frame": {
+        "x": 1,
+        "y": 14,
+        "w": 132,
+        "h": 197
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 61,
+        "y": 33,
+        "w": 132,
+        "h": 197
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      }
+    },
+    "bullet": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 50,
+        "h": 11
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 50,
+        "h": 11
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 11
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+
+guns.png
+size: 1024, 1024
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+smg
+  rotate: false
+  xy: 1, 1
+  size: 633, 293
+  orig: 1024, 1024
+  offset: 207, 364
+  index: -1
+rifle
+  rotate: false
+  xy: 1, 595
+  size: 932, 262
+  orig: 1024, 1024
+  offset: 47, 374
+  index: -1
+shotgun
+  rotate: false
+  xy: 1, 296
+  size: 882, 297
+  orig: 1024, 1024
+  offset: 75, 347
+  index: -1

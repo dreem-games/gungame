@@ -1,0 +1,24 @@
+{
+  "frames": {
+    "hero": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 212,
+        "h": 152
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 212,
+        "h": 152
+      },
+      "sourceSize": {
+        "w": 212,
+        "h": 152
+      }
+    }
+  }
+}

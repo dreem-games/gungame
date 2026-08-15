@@ -1,0 +1,20 @@
+
+projectiles.png
+size: 256, 256
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+grenade
+  rotate: false
+  xy: 1, 14
+  size: 132, 197
+  orig: 256, 256
+  offset: 61, 33
+  index: -1
+bullet
+  rotate: false
+  xy: 1, 1
+  size: 50, 11
+  orig: 50, 11
+  offset: 0, 0
+  index: -1

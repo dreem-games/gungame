@@ -1,0 +1,24 @@
+{
+  "frames": {
+    "explosion": {
+      "frame": {
+        "x": 357,
+        "y": 40,
+        "w": 21,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 15,
+        "w": 21,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      }
+    }
+  }
+}
