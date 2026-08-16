@@ -7,8 +7,25 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public gameObject: Phaser.GameObjects.GameObject;
     public isDestroyed: boolean = false;
 
-    private speed: number = 5;
     private inputManager: InputManager;
+
+    // Movement config
+    private baseSpeed: number = 5;
+    private runSpeed: number = 9;
+    private dashSpeed: number = 25;
+    private dashDuration: number = 150; // ms
+
+    // State
+    private isDashing: boolean = false;
+    private dashTimer: number = 0;
+    private dashCooldown: number = 0;
+
+    // Stamina config
+    public maxStamina: number = 100;
+    public currentStamina: number = 100;
+    private runStaminaCost: number = 20; // per second
+    private dashStaminaCost: number = 30; // flat cost
+    private staminaRegen: number = 15; // per second
 
     constructor(scene: Phaser.Scene, x: number, y: number, inputManager: InputManager) {
         super(scene.matter.world, x, y, 'hero', 'hero');
@@ -26,12 +43,60 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.setMass(100);
     }
 
-    update(_time: number, _delta: number) {
+    update(_time: number, delta: number) {
         if (this.isDestroyed) return;
 
-        // Movement
+        // Decrease cooldowns
+        if (this.dashCooldown > 0) this.dashCooldown -= delta;
+
+        // Handle Stamina Regen
+        if (!this.inputManager.isRunning() && !this.isDashing) {
+            this.currentStamina = Math.min(this.maxStamina, this.currentStamina + this.staminaRegen * (delta / 1000));
+        }
+
         const moveVector = this.inputManager.getMovementVector();
-        this.setVelocity(moveVector.x * this.speed, moveVector.y * this.speed);
+
+        // Handle Dash initialization
+        if (this.inputManager.isDashing() && !this.isDashing && this.dashCooldown <= 0 && this.currentStamina >= this.dashStaminaCost) {
+            this.isDashing = true;
+            this.dashTimer = this.dashDuration;
+            this.currentStamina -= this.dashStaminaCost;
+            this.dashCooldown = 1000; // 1 second cooldown
+
+            // If no movement vector, dash forward (towards cursor)
+            if (moveVector.x === 0 && moveVector.y === 0) {
+                const angle = this.rotation;
+                moveVector.x = Math.cos(angle);
+                moveVector.y = Math.sin(angle);
+            }
+        }
+
+        // Apply movement
+        if (this.isDashing) {
+            this.dashTimer -= delta;
+            if (this.dashTimer <= 0) {
+                this.isDashing = false;
+            } else {
+                // Ignore other inputs while dashing, maintain high velocity
+                // We keep the vector from when dash started, but normalize it
+                if (moveVector.length() === 0) {
+                     moveVector.x = Math.cos(this.rotation);
+                     moveVector.y = Math.sin(this.rotation);
+                }
+                this.setVelocity(moveVector.x * this.dashSpeed, moveVector.y * this.dashSpeed);
+            }
+        }
+
+        if (!this.isDashing) {
+            let currentSpeed = this.baseSpeed;
+
+            if (this.inputManager.isRunning() && this.currentStamina > 0 && moveVector.length() > 0) {
+                currentSpeed = this.runSpeed;
+                this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
+            }
+
+            this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
+        }
 
         // Rotation
         const angle = Phaser.Math.Angle.Between(

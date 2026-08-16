@@ -18,25 +18,28 @@ export class GameScene extends Phaser.Scene {
         this.inputManager = new InputManager(this);
 
         const WORLD_SIZE = 4096;
-        const TILE_SIZE = 256;
+        const TILE_SIZE = 128; // Wall tile size reduced by half
 
         // Set world bounds
         this.matter.world.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
 
-        // Add ground texture
-        const ground = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE, WORLD_SIZE, 'level1', 'grass');
+        // Add ground texture (also visually scale down the grass tile)
+        const ground = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE * 2, WORLD_SIZE * 2, 'level1', 'grass');
         ground.setDepth(-1);
+        ground.setScale(0.5);
 
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
-        // Test objects
+        // Test objects (Scaled down by half)
         const box = this.matter.add.sprite(400, 300, 'level1', 'box');
-        box.setRectangle(256, 256);
+        box.setRectangle(128, 128);
+        box.setScale(0.5);
         box.setStatic(true);
 
         const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        barrel.setCircle(128);
+        barrel.setCircle(64);
+        barrel.setScale(0.5);
         barrel.setFrictionAir(0.1);
         barrel.setMass(50);
 
@@ -68,6 +71,7 @@ export class GameScene extends Phaser.Scene {
     private createWall(x: number, y: number, size: number) {
         const wall = this.matter.add.sprite(x, y, 'level1', 'wall');
         wall.setRectangle(size, size);
+        wall.setScale(0.5); // Visual scale to match body
         wall.setStatic(true);
     }
 

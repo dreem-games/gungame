@@ -6,6 +6,8 @@ export class InputManager {
         A: Phaser.Input.Keyboard.Key;
         S: Phaser.Input.Keyboard.Key;
         D: Phaser.Input.Keyboard.Key;
+        SHIFT: Phaser.Input.Keyboard.Key;
+        SPACE: Phaser.Input.Keyboard.Key;
     };
 
     private scene: Phaser.Scene;
@@ -18,7 +20,7 @@ export class InputManager {
         this.scene = scene;
 
         if (this.scene.input.keyboard) {
-            this.keys = this.scene.input.keyboard.addKeys('W,A,S,D') as any;
+            this.keys = this.scene.input.keyboard.addKeys('W,A,S,D,SHIFT,SPACE') as any;
         }
 
         this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
@@ -46,6 +48,15 @@ export class InputManager {
         }
 
         return vector;
+    }
+
+    public isRunning(): boolean {
+        return this.keys && this.keys.SHIFT.isDown;
+    }
+
+    public isDashing(): boolean {
+        // We use JustDown to only trigger once per press
+        return this.keys && Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
     }
 
     public update() {
