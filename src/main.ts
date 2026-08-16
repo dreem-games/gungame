@@ -11,8 +11,8 @@ const config: Phaser.Types.Core.GameConfig = {
     physics: {
         default: 'matter',
         matter: {
-            gravity: { x: 0, y: 0 }, // Top-down game, so no gravity
-            debug: true // Helpful for development
+            gravity: { x: 0, y: 0 },
+            debug: true
         }
     },
     scene: [BootScene, PreloadScene, GameScene]

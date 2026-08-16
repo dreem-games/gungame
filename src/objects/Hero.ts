@@ -1,52 +1,50 @@
 import Phaser from 'phaser';
+import { IEntity } from '../types/interfaces';
+import { InputManager } from '../core/InputManager';
 
-export class Hero extends Phaser.Physics.Matter.Sprite {
-    private keys: {
-        W: Phaser.Input.Keyboard.Key;
-        A: Phaser.Input.Keyboard.Key;
-        S: Phaser.Input.Keyboard.Key;
-        D: Phaser.Input.Keyboard.Key;
-    };
+export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
+    public id: string;
+    public gameObject: Phaser.GameObjects.GameObject;
+    public isDestroyed: boolean = false;
+
     private speed: number = 5;
+    private inputManager: InputManager;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, inputManager: InputManager) {
         super(scene.matter.world, x, y, 'hero', 'hero');
+
+        this.id = Phaser.Math.RND.uuid();
+        this.gameObject = this;
+        this.inputManager = inputManager;
 
         scene.add.existing(this);
 
         // Setup physics body
-        this.setCircle(70); // approximate radius of the hero based on 212x152 size
+        this.setCircle(70);
         this.setFrictionAir(0.1);
-        this.setFixedRotation(); // Stop rotating on collisions
+        this.setFixedRotation();
         this.setMass(100);
-
-        // Setup input
-        this.keys = scene.input.keyboard!.addKeys('W,A,S,D') as any;
-
-        // Listen for pointer move to rotate hero towards mouse
-        scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            const cursorPoint = scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-            const angle = Phaser.Math.Angle.Between(this.x, this.y, cursorPoint.x, cursorPoint.y);
-            // In libgdx, 0 degrees is right. Phaser's Math.Angle.Between also returns 0 for right.
-            this.setRotation(angle);
-        });
     }
 
-    update() {
-        const force = { x: 0, y: 0 };
+    update(_time: number, _delta: number) {
+        if (this.isDestroyed) return;
 
-        if (this.keys.W.isDown) force.y -= this.speed;
-        if (this.keys.S.isDown) force.y += this.speed;
-        if (this.keys.A.isDown) force.x -= this.speed;
-        if (this.keys.D.isDown) force.x += this.speed;
+        // Movement
+        const moveVector = this.inputManager.getMovementVector();
+        this.setVelocity(moveVector.x * this.speed, moveVector.y * this.speed);
 
-        // Normalize force if moving diagonally
-        if (force.x !== 0 && force.y !== 0) {
-            const length = Math.sqrt(force.x * force.x + force.y * force.y);
-            force.x = (force.x / length) * this.speed;
-            force.y = (force.y / length) * this.speed;
-        }
+        // Rotation
+        const angle = Phaser.Math.Angle.Between(
+            this.x,
+            this.y,
+            this.inputManager.pointerWorldX,
+            this.inputManager.pointerWorldY
+        );
+        this.setRotation(angle);
+    }
 
-        this.setVelocity(force.x, force.y);
+    destroy(fromScene?: boolean) {
+        this.isDestroyed = true;
+        super.destroy(fromScene);
     }
 }

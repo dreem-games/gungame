@@ -1,7 +1,11 @@
 import Phaser from 'phaser';
 import { Hero } from '../objects/Hero';
+import { EntityManager } from '../core/EntityManager';
+import { InputManager } from '../core/InputManager';
 
 export class GameScene extends Phaser.Scene {
+    private entityManager!: EntityManager;
+    private inputManager!: InputManager;
     private hero!: Hero;
 
     constructor() {
@@ -9,14 +13,18 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // Initialize Core Systems
+        this.entityManager = new EntityManager();
+        this.inputManager = new InputManager(this);
+
         // Set world bounds
         this.matter.world.setBounds(0, 0, 2048, 2048);
 
-        // Add some ground texture (tiled)
+        // Add ground texture
         const ground = this.add.tileSprite(1024, 1024, 2048, 2048, 'level1', 'grass');
-        ground.setDepth(-1); // send to back
+        ground.setDepth(-1);
 
-        // Add some test objects from level1 atlas
+        // Test objects
         const box = this.matter.add.sprite(400, 300, 'level1', 'box');
         box.setRectangle(256, 256);
         box.setStatic(true);
@@ -26,15 +34,17 @@ export class GameScene extends Phaser.Scene {
         barrel.setFrictionAir(0.1);
         barrel.setMass(50);
 
-        // Add hero
-        this.hero = new Hero(this, 1024, 1024);
+        // Create Hero
+        this.hero = new Hero(this, 1024, 1024, this.inputManager);
+        this.entityManager.add(this.hero);
 
-        // Make camera follow hero
+        // Camera setup
         this.cameras.main.startFollow(this.hero);
         this.cameras.main.setBounds(0, 0, 2048, 2048);
     }
 
-    update() {
-        this.hero.update();
+    update(time: number, delta: number) {
+        this.inputManager.update();
+        this.entityManager.update(time, delta);
     }
 }
