@@ -32,13 +32,19 @@ export class GameScene extends Phaser.Scene {
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
         // Test objects (Scaled down by half)
+        // We use setBody to set custom physics bounds.
+        // Important: Phaser's setBody automatically scales by the sprite's scale.
+        // A scale of 0.5 makes the sprite visually 128x128 (from 256x256).
+        // So we pass unscaled values to setBody.
         const box = this.matter.add.sprite(400, 300, 'level1', 'box');
-        box.setRectangle(128, 128);
+        // Unscaled Box physics body 160x160 (scaled down it will be 80x80)
+        box.setBody({ type: 'rectangle', width: 160, height: 160 });
         box.setScale(0.5);
         box.setStatic(true);
 
         const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        barrel.setCircle(64);
+        // Unscaled Barrel physics body radius 70 (scaled down it will be 35, ~70x70 bounding box)
+        barrel.setBody({ type: 'circle', radius: 70 });
         barrel.setScale(0.5);
         barrel.setFrictionAir(0.1);
         barrel.setMass(50);
@@ -68,10 +74,12 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    private createWall(x: number, y: number, size: number) {
+    private createWall(x: number, y: number, _size: number) {
         const wall = this.matter.add.sprite(x, y, 'level1', 'wall');
-        wall.setRectangle(size, size);
-        wall.setScale(0.5); // Visual scale to match body
+        // We want the hitbox to match the visible block exactly to prevent gaps.
+        // Since we scale by 0.5, we must pass the unscaled original size (256).
+        wall.setBody({ type: 'rectangle', width: 256, height: 256 });
+        wall.setScale(0.5);
         wall.setStatic(true);
     }
 

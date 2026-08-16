@@ -12,8 +12,8 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     // Movement config
     private baseSpeed: number = 5;
     private runSpeed: number = 9;
-    private dashSpeed: number = 25;
-    private dashDuration: number = 150; // ms
+    private dashSpeed: number = 40; // Increased to make dash ~2x further
+    private dashDuration: number = 180; // ms (slightly increased duration)
 
     // State
     private isDashing: boolean = false;
@@ -37,7 +37,22 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         scene.add.existing(this);
 
         // Setup physics body
-        this.setCircle(70);
+        // Body needs to be smaller and offset towards the head
+        // The original sprite is 212x152. By default the origin is 0.5, 0.5.
+        // We make the physics body a much smaller circle, offset heavily to the left
+        // (because in the sprite, the head is on the left side facing right).
+        const radius = 30;
+        this.setBody({
+            type: 'circle',
+            radius: radius
+        });
+
+        // In Matter.js with Phaser, setting a new body resets origin to center of mass.
+        // We shift the visual sprite relative to the physical body.
+        // The hero's head in the sprite (facing right) is at roughly X=50, Y=76
+        // This means the center of the physics circle should be offset to the left of the sprite center.
+        this.setOrigin(0.2, 0.5);
+
         this.setFrictionAir(0.1);
         this.setFixedRotation();
         this.setMass(100);
