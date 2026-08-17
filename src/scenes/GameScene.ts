@@ -37,14 +37,15 @@ export class GameScene extends Phaser.Scene {
         // A scale of 0.5 makes the sprite visually 128x128 (from 256x256).
         // So we pass unscaled values to setBody.
         const box = this.matter.add.sprite(400, 300, 'level1', 'box');
-        // Unscaled Box physics body 160x160 (scaled down it will be 80x80)
-        box.setBody({ type: 'rectangle', width: 160, height: 160 });
+        // Unscaled Box physics body 256x256 (scaled down it will perfectly match the 128x128 sprite)
+        box.setBody({ type: 'rectangle', width: 256, height: 256 });
         box.setScale(0.5);
-        box.setStatic(true);
+        box.setFrictionAir(0.1);
+        box.setMass(70);
 
         const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        // Unscaled Barrel physics body radius 70 (scaled down it will be 35, ~70x70 bounding box)
-        barrel.setBody({ type: 'circle', radius: 70 });
+        // Unscaled Barrel physics body radius 128 (scaled down it will perfectly match the 128x128 sprite)
+        barrel.setBody({ type: 'circle', radius: 128 });
         barrel.setScale(0.5);
         barrel.setFrictionAir(0.1);
         barrel.setMass(50);

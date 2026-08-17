@@ -12,8 +12,8 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     // Movement config
     private baseSpeed: number = 5;
     private runSpeed: number = 9;
-    private dashSpeed: number = 40; // Increased to make dash ~2x further
-    private dashDuration: number = 180; // ms (slightly increased duration)
+    private dashSpeed: number = 50;
+    private dashDuration: number = 250; // ms
 
     // State
     private isDashing: boolean = false;
