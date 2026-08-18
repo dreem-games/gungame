@@ -6,13 +6,13 @@ export class Rifle extends BaseWeapon {
     constructor(scene: Phaser.Scene) {
         super(scene, {
             name: 'Rifle',
-            iconFrame: 'rifle', // Assuming 'rifle' is the frame in guns.atlas
+            iconFrame: 'rifle',
             maxAmmo: 5,
-            fireRate: 800, // Slow fire rate
-            damage: 80, // 80% damage (e.g. 80 out of 100 HP)
-            spread: 0, // High accuracy (no spread)
+            fireRate: 1000,
+            damage: 55,
+            spread: 0.01,
             pellets: 1,
-            speed: 20,
+            speed: 40, // Base java speed 4 * 10
             texture: 'projectiles',
             frame: 'bullet',
             sound: 'rifle_shot_sound'
@@ -25,7 +25,8 @@ export class Rifle extends BaseWeapon {
         this.currentAmmo--;
         this.lastFiredTime = time;
 
-        new Projectile(this.scene, x, y, angle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
+        const spreadAngle = angle + Phaser.Math.FloatBetween(-this.stats.spread, this.stats.spread);
+        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
 
         this.scene.sound.play(this.stats.sound);
     }

@@ -147,10 +147,20 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Shooting
         if (this.inputManager.isShooting) {
-            // Adjust spawn position slightly forward based on rotation to spawn from the gun tip
-            const spawnDist = 60; // Approximate distance to the end of the gun barrel
-            const spawnX = this.x + Math.cos(angle) * spawnDist;
-            const spawnY = this.y + Math.sin(angle) * spawnDist;
+            // Adjust spawn position based on original Java math:
+            // FIRE_POSITION_DX = 0.7f, FIRE_POSITION_DY = 0.22f
+            // We scale this up by 100 to map meters to pixels for our game scale.
+            const FIRE_POSITION_DX = 0.7 * 100;
+            const FIRE_POSITION_DY = 0.22 * 100;
+
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            const rotatedX = FIRE_POSITION_DX * cos - FIRE_POSITION_DY * sin;
+            const rotatedY = FIRE_POSITION_DX * sin + FIRE_POSITION_DY * cos;
+
+            const spawnX = this.x + rotatedX;
+            const spawnY = this.y + rotatedY;
 
             const fireResult = this.weaponManager.fire(spawnX, spawnY, angle, _time);
 

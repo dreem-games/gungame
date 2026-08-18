@@ -23,6 +23,12 @@ export class WeaponManager {
     }
 
     public switchWeapon(index: number) {
+        const currentWeapon = this.getCurrentWeapon();
+        if (currentWeapon && currentWeapon.isReloading) {
+            // Cannot switch while reloading
+            return;
+        }
+
         if (index >= 0 && index < this.weapons.length && index !== this.currentWeaponIndex) {
             this.currentWeaponIndex = index;
             // Emit event so UI can update
@@ -44,17 +50,24 @@ export class WeaponManager {
 
     public fire(x: number, y: number, angle: number, time: number) {
         const weapon = this.getCurrentWeapon();
+
+        if (weapon.isReloading) {
+            return null; // Ignore firing while reloading
+        }
+
         if (weapon.currentAmmo <= 0) {
-            // Play empty sound if trying to fire empty gun
-            // We use justPressed to not spam the sound on auto weapons
-            // We will let the Hero handle the "just pressed" check before calling fire,
-            // or handle it here if we pass a boolean. Let's just do it in Hero.
+            // Initiate auto-reload on empty if allowed, otherwise just return empty status
             return false; // indicating out of ammo
         }
 
         if (weapon.canFire(time)) {
             weapon.fire(x, y, angle, time);
             this.scene.game.events.emit('ammoChanged', weapon.currentAmmo, weapon.stats.maxAmmo);
+
+            // Auto-reload
+            if (weapon.currentAmmo === 0) {
+                 weapon.reload();
+            }
             return true;
         }
         return null; // indicating on cooldown
@@ -62,9 +75,6 @@ export class WeaponManager {
 
     public reload() {
         const weapon = this.getCurrentWeapon();
-        if (weapon.currentAmmo < weapon.stats.maxAmmo) {
-            weapon.reload();
-            this.scene.game.events.emit('ammoChanged', weapon.currentAmmo, weapon.stats.maxAmmo);
-        }
+        weapon.reload();
     }
 }

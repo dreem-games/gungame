@@ -6,13 +6,13 @@ export class Shotgun extends BaseWeapon {
     constructor(scene: Phaser.Scene) {
         super(scene, {
             name: 'Shotgun',
-            iconFrame: 'shotgun', // Assuming 'shotgun' is the frame in guns.atlas
-            maxAmmo: 1, // 1 round per clip
-            fireRate: 1000,
-            damage: 20, // Damage per pellet
-            spread: Phaser.Math.DegToRad(20), // 20 degrees total spread
-            pellets: 8, // Multiple pellets
-            speed: 15,
+            iconFrame: 'shotgun',
+            maxAmmo: 1,
+            fireRate: 300,
+            damage: 5,
+            spread: 0.1,
+            pellets: 32,
+            speed: 15, // Base java speed 1.5 * 10
             texture: 'projectiles',
             frame: 'bullet',
             sound: 'shotgun_shot_sound'
@@ -25,10 +25,12 @@ export class Shotgun extends BaseWeapon {
         this.currentAmmo--;
         this.lastFiredTime = time;
 
-        const halfSpread = this.stats.spread / 2;
-
         for (let i = 0; i < this.stats.pellets; i++) {
-            const spreadAngle = angle + Phaser.Math.FloatBetween(-halfSpread, halfSpread);
+            // Java used nextGaussian() * spread, so let's approximate
+            // Math.random() + Math.random() - 1 gives a cheap pseudo-gaussian
+            const gaussian = (Math.random() + Math.random() + Math.random() - 1.5) * 2;
+            const spreadAngle = angle + (gaussian * this.stats.spread);
+
             // Add some speed variance to pellets
             const speedVariance = this.stats.speed * Phaser.Math.FloatBetween(0.8, 1.2);
             new Projectile(this.scene, x, y, spreadAngle, speedVariance, this.stats.damage, this.stats.texture, this.stats.frame);
