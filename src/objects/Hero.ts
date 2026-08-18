@@ -152,9 +152,8 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         }
 
         // Calculate Bullet Spawn Position
-        // FIRE_POSITION_DX = 0.7f, FIRE_POSITION_DY = 0.22f scaled by 100
-        const FIRE_POSITION_DX = 0.8 * 100; // Increased X to reach the end of the barrel
-        const FIRE_POSITION_DY = 0.26 * 100; // Increased Y slightly
+        const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel
+        const FIRE_POSITION_DY = 0.36 * 100; // Increased Y slightly
 
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
@@ -164,6 +163,11 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         const spawnX = this.x + rotatedX;
         const spawnY = this.y + rotatedY;
+
+        // Пуля вылетает чуть впереди точки, откуда рисуется лазер
+        const BULLET_SPAWN_OFFSET = 20;
+        const bulletX = spawnX + cos * BULLET_SPAWN_OFFSET;
+        const bulletY = spawnY + sin * BULLET_SPAWN_OFFSET;
 
         // Draw MVP Laser Pointer
         this.laserGraphics.clear();
@@ -178,7 +182,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Shooting
         if (this.inputManager.isShooting) {
-            const fireResult = this.weaponManager.fire(spawnX, spawnY, angle, _time);
+            const fireResult = this.weaponManager.fire(bulletX, bulletY, angle, _time);
 
             if (fireResult === false && this.inputManager.justPressedShoot) {
                 // Out of ammo
