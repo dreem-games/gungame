@@ -17,7 +17,9 @@ export class GameScene extends Phaser.Scene {
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
 
-        // Setup Collision events
+        // Projectiles in our system are set up as sensors (setSensor(true)),
+        // so they don't produce physical pushing/bouncing forces against other objects.
+        // We only need to control whether our custom collision logic runs.
         this.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
             event.pairs.forEach((pair) => {
                 const bodyA = pair.bodyA as MatterJS.BodyType;
@@ -27,6 +29,24 @@ export class GameScene extends Phaser.Scene {
                 const gameObjectB = bodyB.gameObject as Phaser.GameObjects.GameObject;
 
                 if (!gameObjectA || !gameObjectB) return;
+
+                // Check if one is a projectile and the other is ignored
+                const isProjA = gameObjectA.getData('isProjectile');
+                const isProjB = gameObjectB.getData('isProjectile');
+
+                if (isProjA) {
+                    const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectA.getData('ignoredBodies') || [];
+                    if (ignoredBodies.includes(gameObjectB)) {
+                        return; // Ignore this collision completely
+                    }
+                }
+
+                if (isProjB) {
+                    const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectB.getData('ignoredBodies') || [];
+                    if (ignoredBodies.includes(gameObjectA)) {
+                        return; // Ignore this collision completely
+                    }
+                }
 
                 this.handleProjectileCollision(gameObjectA, gameObjectB);
             });

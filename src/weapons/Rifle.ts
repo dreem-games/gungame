@@ -29,5 +29,8 @@ export class Rifle extends BaseWeapon {
         new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
 
         this.scene.sound.play(this.stats.sound);
+
+        // Moderate shake for Rifle
+        this.scene.cameras.main.shake(100, 0.005);
     }
 }

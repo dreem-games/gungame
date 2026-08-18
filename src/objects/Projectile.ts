@@ -30,9 +30,15 @@ export class Projectile {
         this.gameObject.setVelocity(vx, vy);
         this.gameObject.setRotation(angle);
 
+        // Check for any bodies at the spawn location
+        const allBodies = scene.matter.world.getAllBodies();
+        const spawnBodies = allBodies.filter(body => scene.matter.containsPoint(body, x, y));
+        const ignoredBodies = spawnBodies.map(body => (body as any).gameObject).filter(obj => obj !== undefined && obj !== null);
+
         // Custom data for collision handling
         this.gameObject.setData('isProjectile', true);
         this.gameObject.setData('damage', damage);
+        this.gameObject.setData('ignoredBodies', ignoredBodies);
 
         // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
         scene.time.delayedCall(3000, () => {
