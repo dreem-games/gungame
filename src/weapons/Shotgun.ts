@@ -37,5 +37,8 @@ export class Shotgun extends BaseWeapon {
         }
 
         this.scene.sound.play(this.stats.sound);
+
+        // Heavy shake for Shotgun
+        this.scene.cameras.main.shake(150, 0.01);
     }
 }

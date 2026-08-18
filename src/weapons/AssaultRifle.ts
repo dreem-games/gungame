@@ -31,5 +31,8 @@ export class AssaultRifle extends BaseWeapon {
         new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
 
         this.scene.sound.play(this.stats.sound);
+
+        // Light shake for Assault Rifle
+        this.scene.cameras.main.shake(50, 0.002);
     }
 }
