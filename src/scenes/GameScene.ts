@@ -17,6 +17,21 @@ export class GameScene extends Phaser.Scene {
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
 
+        // Setup Collision events
+        this.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
+            event.pairs.forEach((pair) => {
+                const bodyA = pair.bodyA as MatterJS.BodyType;
+                const bodyB = pair.bodyB as MatterJS.BodyType;
+
+                const gameObjectA = bodyA.gameObject as Phaser.GameObjects.GameObject;
+                const gameObjectB = bodyB.gameObject as Phaser.GameObjects.GameObject;
+
+                if (!gameObjectA || !gameObjectB) return;
+
+                this.handleProjectileCollision(gameObjectA, gameObjectB);
+            });
+        });
+
         const WORLD_SIZE = 4096;
         const TILE_SIZE = 128; // Wall tile size reduced by half
 
@@ -59,6 +74,39 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
         // Make everything appear 2 times smaller (see 2x more space)
         this.cameras.main.setZoom(0.5);
+
+        // Start UI scene
+        this.scene.launch('UIScene');
+
+        // Emit initial weapon state so UI can render
+        this.events.once('update', () => {
+             const wm = this.hero.getWeaponManager();
+             const wp = wm.getCurrentWeapon();
+             this.game.events.emit('weaponChanged', wp);
+             this.game.events.emit('ammoChanged', wp.currentAmmo, wp.stats.maxAmmo);
+        });
+    }
+
+    private handleProjectileCollision(gameObjectA: Phaser.GameObjects.GameObject, gameObjectB: Phaser.GameObjects.GameObject) {
+        const isProjA = gameObjectA.getData('isProjectile');
+        const isProjB = gameObjectB.getData('isProjectile');
+
+        if (isProjA && isProjB) return; // Projectiles don't collide with each other
+
+        if (isProjA) {
+            this.processHit(gameObjectA, gameObjectB);
+        } else if (isProjB) {
+            this.processHit(gameObjectB, gameObjectA);
+        }
+    }
+
+    private processHit(projectile: Phaser.GameObjects.GameObject, _target: Phaser.GameObjects.GameObject) {
+        // Destroy the projectile
+        projectile.destroy();
+
+        // Target taking damage logic would go here
+        // const damage = projectile.getData('damage');
+        // if (target instanceof Enemy) target.takeDamage(damage);
     }
 
     private generateBorderWalls(worldSize: number, tileSize: number) {
@@ -85,7 +133,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number) {
-        this.inputManager.update();
         this.entityManager.update(time, delta);
+        this.inputManager.update();
     }
 }

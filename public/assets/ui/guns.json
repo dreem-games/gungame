@@ -1,0 +1,64 @@
+{
+  "frames": {
+    "smg": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 633,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 633,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 633,
+        "h": 293
+      }
+    },
+    "rifle": {
+      "frame": {
+        "x": 1,
+        "y": 595,
+        "w": 932,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 932,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 932,
+        "h": 262
+      }
+    },
+    "shotgun": {
+      "frame": {
+        "x": 1,
+        "y": 296,
+        "w": 882,
+        "h": 297
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 882,
+        "h": 297
+      },
+      "sourceSize": {
+        "w": 882,
+        "h": 297
+      }
+    }
+  }
+}

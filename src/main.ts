@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
+import { UIScene } from './scenes/UIScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -15,7 +16,10 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: true
         }
     },
-    scene: [BootScene, PreloadScene, GameScene]
+    input: {
+        gamepad: true
+    },
+    scene: [BootScene, PreloadScene, GameScene, UIScene]
 };
 
 const game = new Phaser.Game(config);

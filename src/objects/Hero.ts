@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { IEntity } from '../types/interfaces';
 import { InputManager } from '../core/InputManager';
+import { WeaponManager } from '../weapons/WeaponManager';
 
 export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public id: string;
@@ -8,6 +9,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public isDestroyed: boolean = false;
 
     private inputManager: InputManager;
+    private weaponManager: WeaponManager;
 
     // Movement config
     private baseSpeed: number = 5;
@@ -56,6 +58,12 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.setFrictionAir(0.1);
         this.setFixedRotation();
         this.setMass(100);
+
+        this.weaponManager = new WeaponManager(scene);
+    }
+
+    public getWeaponManager(): WeaponManager {
+        return this.weaponManager;
     }
 
     update(_time: number, delta: number) {
@@ -121,6 +129,36 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
             this.inputManager.pointerWorldY
         );
         this.setRotation(angle);
+
+        // Weapon Switching
+        const switchIdx = this.inputManager.getWeaponSwitch();
+        if (switchIdx !== null) {
+            this.weaponManager.switchWeapon(switchIdx);
+        } else if (this.inputManager.wheelDirection > 0) {
+            this.weaponManager.switchNext();
+        } else if (this.inputManager.wheelDirection < 0) {
+            this.weaponManager.switchPrev();
+        }
+
+        // Reloading
+        if (this.inputManager.isReloading()) {
+            this.weaponManager.reload();
+        }
+
+        // Shooting
+        if (this.inputManager.isShooting) {
+            // Adjust spawn position slightly forward based on rotation to spawn from the gun tip
+            const spawnDist = 60; // Approximate distance to the end of the gun barrel
+            const spawnX = this.x + Math.cos(angle) * spawnDist;
+            const spawnY = this.y + Math.sin(angle) * spawnDist;
+
+            const fireResult = this.weaponManager.fire(spawnX, spawnY, angle, _time);
+
+            if (fireResult === false && this.inputManager.justPressedShoot) {
+                // Out of ammo
+                this.scene.sound.play('empty_gun_shot');
+            }
+        }
     }
 
     destroy(fromScene?: boolean) {
