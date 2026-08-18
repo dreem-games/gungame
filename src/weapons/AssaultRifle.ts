@@ -12,7 +12,7 @@ export class AssaultRifle extends BaseWeapon {
             damage: 10,
             spread: 0.035,
             pellets: 1,
-            speed: 20, // Base java speed 2 * 10
+            speed: 30,
             texture: 'projectiles',
             frame: 'bullet',
             sound: 'smg_shot_sound'

@@ -29,8 +29,14 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     private dashStaminaCost: number = 30; // flat cost
     private staminaRegen: number = 15; // per second
 
+    // Laser pointer MVP
+    private laserGraphics: Phaser.GameObjects.Graphics;
+
     constructor(scene: Phaser.Scene, x: number, y: number, inputManager: InputManager) {
         super(scene.matter.world, x, y, 'hero', 'hero');
+
+        this.laserGraphics = scene.add.graphics();
+        this.laserGraphics.setDepth(1);
 
         this.id = Phaser.Math.RND.uuid();
         this.gameObject = this;
@@ -145,23 +151,33 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
             this.weaponManager.reload();
         }
 
+        // Calculate Bullet Spawn Position
+        // FIRE_POSITION_DX = 0.7f, FIRE_POSITION_DY = 0.22f scaled by 100
+        const FIRE_POSITION_DX = 0.8 * 100; // Increased X to reach the end of the barrel
+        const FIRE_POSITION_DY = 0.26 * 100; // Increased Y slightly
+
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        const rotatedX = FIRE_POSITION_DX * cos - FIRE_POSITION_DY * sin;
+        const rotatedY = FIRE_POSITION_DX * sin + FIRE_POSITION_DY * cos;
+
+        const spawnX = this.x + rotatedX;
+        const spawnY = this.y + rotatedY;
+
+        // Draw MVP Laser Pointer
+        this.laserGraphics.clear();
+        this.laserGraphics.lineStyle(2, 0xff0000, 0.5); // 2px red, 50% opacity
+        this.laserGraphics.beginPath();
+        this.laserGraphics.moveTo(spawnX, spawnY);
+        // Draw laser out far along the angle
+        const laserEndX = spawnX + cos * 2000;
+        const laserEndY = spawnY + sin * 2000;
+        this.laserGraphics.lineTo(laserEndX, laserEndY);
+        this.laserGraphics.strokePath();
+
         // Shooting
         if (this.inputManager.isShooting) {
-            // Adjust spawn position based on original Java math:
-            // FIRE_POSITION_DX = 0.7f, FIRE_POSITION_DY = 0.22f
-            // We scale this up by 100 to map meters to pixels for our game scale.
-            const FIRE_POSITION_DX = 0.7 * 100;
-            const FIRE_POSITION_DY = 0.22 * 100;
-
-            const cos = Math.cos(angle);
-            const sin = Math.sin(angle);
-
-            const rotatedX = FIRE_POSITION_DX * cos - FIRE_POSITION_DY * sin;
-            const rotatedY = FIRE_POSITION_DX * sin + FIRE_POSITION_DY * cos;
-
-            const spawnX = this.x + rotatedX;
-            const spawnY = this.y + rotatedY;
-
             const fireResult = this.weaponManager.fire(spawnX, spawnY, angle, _time);
 
             if (fireResult === false && this.inputManager.justPressedShoot) {
@@ -173,6 +189,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     destroy(fromScene?: boolean) {
         this.isDestroyed = true;
+        this.laserGraphics.destroy();
         super.destroy(fromScene);
     }
 }

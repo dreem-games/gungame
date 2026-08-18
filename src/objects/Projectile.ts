@@ -34,8 +34,8 @@ export class Projectile {
         this.gameObject.setData('isProjectile', true);
         this.gameObject.setData('damage', damage);
 
-        // Destroy after a certain time to prevent memory leaks (e.g., 2 seconds)
-        scene.time.delayedCall(2000, () => {
+        // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
+        scene.time.delayedCall(3000, () => {
             if (this.gameObject && this.gameObject.active) {
                 this.gameObject.destroy();
             }

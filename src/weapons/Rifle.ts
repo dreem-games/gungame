@@ -12,7 +12,7 @@ export class Rifle extends BaseWeapon {
             damage: 55,
             spread: 0.01,
             pellets: 1,
-            speed: 40, // Base java speed 4 * 10
+            speed: 50,
             texture: 'projectiles',
             frame: 'bullet',
             sound: 'rifle_shot_sound'
