@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { BaseWeapon } from '../weapons/BaseWeapon';
+import { EventDispatcher } from '../core/EventBus';
 
 export class UIScene extends Phaser.Scene {
     private ammoText!: Phaser.GameObjects.Text;
     private weaponIcon!: Phaser.GameObjects.Sprite;
+    private bloodOverlay!: Phaser.GameObjects.Graphics;
 
     constructor() {
         super({ key: 'UIScene' });
@@ -17,6 +19,10 @@ export class UIScene extends Phaser.Scene {
         this.add.rectangle(padding + 40, padding + 40, 80, 80, 0x000000, 0.8)
             .setStrokeStyle(2, 0xffffff, 0.8)
             .setScrollFactor(0);
+
+        // Add the blood overlay behind the weapon
+        this.bloodOverlay = this.add.graphics();
+        this.bloodOverlay.setScrollFactor(0);
 
         // Weapon Icon Sprite (scaled to fit)
         this.weaponIcon = this.add.sprite(padding + 40, padding + 40, 'guns', 'rifle');
@@ -40,6 +46,8 @@ export class UIScene extends Phaser.Scene {
         // Listen for events from GameScene via the global game EventBus
         this.game.events.on('weaponChanged', this.onWeaponChanged, this);
         this.game.events.on('ammoChanged', this.onAmmoChanged, this);
+
+        EventDispatcher.on('hero-damage', this.onHeroDamage, this);
     }
 
     private onWeaponChanged(weapon: BaseWeapon) {
@@ -62,8 +70,22 @@ export class UIScene extends Phaser.Scene {
         this.ammoText.setText(`${currentAmmo} / ∞`);
     }
 
+    private onHeroDamage(currentHp: number) {
+        const maxHp = 100;
+        const damagePercent = 1 - (currentHp / maxHp);
+
+        this.bloodOverlay.clear();
+
+        if (damagePercent > 0) {
+            // Draw a red rectangle over the background, with opacity scaling by damage taken
+            this.bloodOverlay.fillStyle(0xff0000, damagePercent * 0.8);
+            this.bloodOverlay.fillRect(20 + 40 - 40, 20 + 40 - 40, 80, 80); // padding is 20, rect is at 60,60 center with 80x80 size. Top left is 20, 20.
+        }
+    }
+
     destroy() {
         this.game.events.off('weaponChanged', this.onWeaponChanged, this);
         this.game.events.off('ammoChanged', this.onAmmoChanged, this);
+        EventDispatcher.off('hero-damage', this.onHeroDamage, this);
     }
 }

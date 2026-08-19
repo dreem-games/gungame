@@ -19,6 +19,26 @@
         "w": 212,
         "h": 152
       }
+    },
+    "hero_dead": {
+      "frame": {
+        "x": 0,
+        "y": 256,
+        "w": 256,
+        "h": 187
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 187
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 187
+      }
     }
   }
 }

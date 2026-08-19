@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { IEntity } from '../types/interfaces';
 import { InputManager } from '../core/InputManager';
 import { WeaponManager } from '../weapons/WeaponManager';
+import { EventDispatcher } from '../core/EventBus';
 
 export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public id: string;
@@ -22,6 +23,11 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     private dashTimer: number = 0;
     private dashCooldown: number = 0;
 
+    private isSlowed: boolean = false;
+
+    // Knockback: время, на которое взрыв вырывает управление из-под игрока
+    private knockbackTime: number = 0;
+
     // Stamina config
     public maxStamina: number = 100;
     public currentStamina: number = 100;
@@ -31,6 +37,10 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     // Laser pointer MVP
     private laserGraphics: Phaser.GameObjects.Graphics;
+
+    // Health System
+    public hp: number = 100;
+    public isDead: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, inputManager: InputManager) {
         super(scene.matter.world, x, y, 'hero', 'hero');
@@ -72,8 +82,46 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         return this.weaponManager;
     }
 
+public takeDamage(amount: number) {
+        if (this.isDead) return;
+
+        this.hp -= amount;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.die();
+        }
+
+        EventDispatcher.emit('hero-damage', this.hp);
+    }
+
+    private die() {
+        this.isDead = true;
+
+        EventDispatcher.emit('hero-death');
+        this.scene.sound.play('death');
+
+        // Switch sprite to dead
+        this.setFrame('hero_dead');
+        this.setOrigin(0.5, 0.5); // Center origin
+
+        // Make body a sensor so projectiles pass through, but we still keep it around
+        this.setSensor(true);
+        this.setFrictionAir(0.99); // stop movement
+        this.laserGraphics.clear();
+    }
+
+    public setSlowed(slowed: boolean) {
+        this.isSlowed = slowed;
+    }
+
+    // Ударная волна от взрыва: физика сама разгоняет тело, на это время
+    // отключаем обычное управление, чтобы setVelocity не сбивал импульс.
+    public setKnockback(duration: number) {
+        this.knockbackTime = Math.max(this.knockbackTime, duration);
+    }
+
     update(_time: number, delta: number) {
-        if (this.isDestroyed) return;
+        if (this.isDestroyed || this.isDead) return;
 
         // Decrease cooldowns
         if (this.dashCooldown > 0) this.dashCooldown -= delta;
@@ -85,6 +133,12 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         const moveVector = this.inputManager.getMovementVector();
 
+        // Во время отброса от взрыва управление заморожено — физика гонит тело
+        if (this.knockbackTime > 0) {
+            this.knockbackTime -= delta;
+            // Если дэш начался в момент взрыва, гасим его — иначе isDashing застрянет
+            if (this.isDashing) this.isDashing = false;
+        } else {
         // Handle Dash initialization
         if (this.inputManager.isDashing() && !this.isDashing && this.dashCooldown <= 0 && this.currentStamina >= this.dashStaminaCost) {
             this.isDashing = true;
@@ -124,16 +178,31 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
                 this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
             }
 
+            if (this.isSlowed) {
+                currentSpeed *= 0.5;
+            }
+
             this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
         }
+        } // end knockback check
 
-        // Rotation
-        const angle = Phaser.Math.Angle.Between(
-            this.x,
-            this.y,
-            this.inputManager.pointerWorldX,
-            this.inputManager.pointerWorldY
-        );
+        // Reset slowed state; sensor collisions will reapply it if still inside
+        this.isSlowed = false;
+
+        // Смещение дула от центра спрайта (локальные координаты)
+        const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel
+        const FIRE_POSITION_DY = 0.36 * 100; // Increased Y slightly
+        const MUZZLE_REACH = Math.hypot(FIRE_POSITION_DX, FIRE_POSITION_DY);
+
+        // Поворот спрайта: ствол смотрит на курсор.
+        // angle = направление «центр → курсор» минус поправка на смещение дула,
+        // чтобы лазер из дула проходил ровно через курсор.
+        // Если курсор ближе, чем MUZZLE_REACH («за дулом» — решения нет),
+        // держим текущий поворот, чтобы не было разворота на 180° и выстрела в спину.
+        const pointerDist = Phaser.Math.Distance.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+        const angle = pointerDist > MUZZLE_REACH
+            ? Phaser.Math.Angle.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY) - Math.asin(FIRE_POSITION_DY / pointerDist)
+            : this.rotation;
         this.setRotation(angle);
 
         // Weapon Switching
@@ -151,23 +220,21 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
             this.weaponManager.reload();
         }
 
-        // Calculate Bullet Spawn Position
-        const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel
-        const FIRE_POSITION_DY = 0.36 * 100; // Increased Y slightly
+        // Точка выстрела (дуло) — смещение от центра в сторону взгляда
+        const fireCos = Math.cos(angle);
+        const fireSin = Math.sin(angle);
+        const spawnX = this.x + (FIRE_POSITION_DX * fireCos - FIRE_POSITION_DY * fireSin);
+        const spawnY = this.y + (FIRE_POSITION_DX * fireSin + FIRE_POSITION_DY * fireCos);
 
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-
-        const rotatedX = FIRE_POSITION_DX * cos - FIRE_POSITION_DY * sin;
-        const rotatedY = FIRE_POSITION_DX * sin + FIRE_POSITION_DY * cos;
-
-        const spawnX = this.x + rotatedX;
-        const spawnY = this.y + rotatedY;
+        // Лазер и пули летят строго по направлению взгляда (из дула).
+        // Прицел в курсор на дистанции — это поворот всего спрайта, а не отдельный огонь,
+        // поэтому огонь всегда совпадает с направлением поворота спрайта.
+        const fireAngle = angle;
 
         // Пуля вылетает чуть впереди точки, откуда рисуется лазер
         const BULLET_SPAWN_OFFSET = 20;
-        const bulletX = spawnX + cos * BULLET_SPAWN_OFFSET;
-        const bulletY = spawnY + sin * BULLET_SPAWN_OFFSET;
+        const bulletX = spawnX + fireCos * BULLET_SPAWN_OFFSET;
+        const bulletY = spawnY + fireSin * BULLET_SPAWN_OFFSET;
 
         // Draw MVP Laser Pointer
         this.laserGraphics.clear();
@@ -175,14 +242,14 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.laserGraphics.beginPath();
         this.laserGraphics.moveTo(spawnX, spawnY);
         // Draw laser out far along the angle
-        const laserEndX = spawnX + cos * 2000;
-        const laserEndY = spawnY + sin * 2000;
+        const laserEndX = spawnX + fireCos * 2000;
+        const laserEndY = spawnY + fireSin * 2000;
         this.laserGraphics.lineTo(laserEndX, laserEndY);
         this.laserGraphics.strokePath();
 
         // Shooting
         if (this.inputManager.isShooting) {
-            const fireResult = this.weaponManager.fire(bulletX, bulletY, angle, _time);
+            const fireResult = this.weaponManager.fire(bulletX, bulletY, fireAngle, _time);
 
             if (fireResult === false && this.inputManager.justPressedShoot) {
                 // Out of ammo

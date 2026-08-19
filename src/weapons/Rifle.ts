@@ -13,6 +13,7 @@ export class Rifle extends BaseWeapon {
             spread: 0.01,
             pellets: 1,
             speed: 50,
+            piercing: true,
             texture: 'projectiles',
             frame: 'bullet',
             sound: 'rifle_shot_sound'
@@ -26,7 +27,7 @@ export class Rifle extends BaseWeapon {
         this.lastFiredTime = time;
 
         const spreadAngle = angle + Phaser.Math.FloatBetween(-this.stats.spread, this.stats.spread);
-        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
+        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame, this.stats.piercing);
 
         this.scene.sound.play(this.stats.sound);
 
