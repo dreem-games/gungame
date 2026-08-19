@@ -11,7 +11,8 @@ export class Projectile {
         speed: number,
         damage: number,
         texture: string,
-        frame: string
+        frame: string,
+        piercing: boolean = false
     ) {
         // Create the projectile
         this.gameObject = scene.matter.add.sprite(x, y, texture, frame);
@@ -39,6 +40,7 @@ export class Projectile {
         this.gameObject.setData('isProjectile', true);
         this.gameObject.setData('damage', damage);
         this.gameObject.setData('ignoredBodies', ignoredBodies);
+        this.gameObject.setData('isPiercing', piercing);
 
         // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
         scene.time.delayedCall(3000, () => {

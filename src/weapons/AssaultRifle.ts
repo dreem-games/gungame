@@ -28,7 +28,7 @@ export class AssaultRifle extends BaseWeapon {
         const gaussian = (Math.random() + Math.random() + Math.random() - 1.5) * 2;
         const spreadAngle = angle + (gaussian * this.stats.spread);
 
-        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame);
+        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame, this.stats.piercing);
 
         this.scene.sound.play(this.stats.sound);
 

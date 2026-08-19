@@ -33,7 +33,7 @@ export class Shotgun extends BaseWeapon {
 
             // Add some speed variance to pellets
             const speedVariance = this.stats.speed * Phaser.Math.FloatBetween(0.8, 1.2);
-            new Projectile(this.scene, x, y, spreadAngle, speedVariance, this.stats.damage, this.stats.texture, this.stats.frame);
+            new Projectile(this.scene, x, y, spreadAngle, speedVariance, this.stats.damage, this.stats.texture, this.stats.frame, this.stats.piercing);
         }
 
         this.scene.sound.play(this.stats.sound);
