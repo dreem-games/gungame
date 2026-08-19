@@ -236,14 +236,18 @@ public takeDamage(amount: number) {
         const bulletX = spawnX + fireCos * BULLET_SPAWN_OFFSET;
         const bulletY = spawnY + fireSin * BULLET_SPAWN_OFFSET;
 
-        // Draw MVP Laser Pointer
+        const gameScene = this.scene as Phaser.Scene & {
+            raycastVision?: (x: number, y: number, angle: number, maxDistance: number) => number;
+        };
+        const laserLength = gameScene.raycastVision?.(spawnX, spawnY, fireAngle, 2000) ?? 2000;
+
+        // Лазер заканчивается на ближайшей стене.
         this.laserGraphics.clear();
         this.laserGraphics.lineStyle(2, 0xff0000, 0.5); // 2px red, 50% opacity
         this.laserGraphics.beginPath();
         this.laserGraphics.moveTo(spawnX, spawnY);
-        // Draw laser out far along the angle
-        const laserEndX = spawnX + fireCos * 2000;
-        const laserEndY = spawnY + fireSin * 2000;
+        const laserEndX = spawnX + fireCos * laserLength;
+        const laserEndY = spawnY + fireSin * laserLength;
         this.laserGraphics.lineTo(laserEndX, laserEndY);
         this.laserGraphics.strokePath();
 

@@ -6,11 +6,49 @@ import { Barrel } from '../objects/Barrel';
 import { OilTank } from '../objects/OilTank';
 import { ThinWall } from '../objects/ThinWall';
 
+const LIGHT_FRAGMENT_SHADER = `
+precision mediump float;
+
+varying vec2 outTexCoord;
+uniform vec2 uLightPosition;
+uniform vec2 uWorldSize;
+uniform vec2 uLightDirection;
+uniform float uRadius;
+uniform float uForwardRadius;
+uniform float uConeSlope;
+uniform float uConeTip;
+uniform float uConeBaseWidth;
+
+void main ()
+{
+    vec2 point = outTexCoord * uWorldSize;
+    vec2 lightVector = point - uLightPosition;
+    float distanceToLight = length(lightVector);
+    float forwardDistance = dot(lightVector, uLightDirection);
+    float sideDistance = abs(lightVector.x * uLightDirection.y - lightVector.y * uLightDirection.x);
+    float coneWidth = max(forwardDistance * uConeSlope + uConeBaseWidth, 1.0);
+    float coneWeight = exp(-1.7 * pow(sideDistance / coneWidth, 2.0));
+    coneWeight *= smoothstep(0.0, 80.0, forwardDistance);
+    float lightRadius = uRadius + (uForwardRadius + uConeTip) * coneWeight;
+    float darkness = smoothstep(lightRadius * 0.62, lightRadius, distanceToLight);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, darkness);
+}
+`;
+
 export class GameScene extends Phaser.Scene {
+    private static readonly VISION_RADIUS = 900;
+    private static readonly FORWARD_VISION_RADIUS = 550;
+    private static readonly VISION_CONE_SLOPE = 0.8;
+    private static readonly VISION_CONE_TIP = 100;
+    private static readonly VISION_CONE_BASE_WIDTH = 260;
+    private static readonly VISION_RAY_STEP = Math.PI / 360;
+    private static readonly SHADOW_SOFT_EDGE = 48;
+
     private entityManager!: EntityManager;
     private inputManager!: InputManager;
     private hero!: Hero;
     private barrels: Barrel[] = [];
+    private darkness!: Phaser.GameObjects.Graphics;
 
     constructor() {
         super('GameScene');
@@ -105,6 +143,10 @@ export class GameScene extends Phaser.Scene {
         noise.setDepth(-1);
         noise.setScale(noiseScale);
 
+        this.darkness = this.add.graphics().setDepth(100);
+        const shadowBlur = this.darkness.enableFilters().filters!.internal.addBlur(1, 3, 3, 1, 0x000000, 2);
+        shadowBlur.setPaddingOverride(null);
+
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
@@ -114,6 +156,20 @@ export class GameScene extends Phaser.Scene {
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
         this.entityManager.add(this.hero);
+        this.add.shader({
+            name: 'light-overlay',
+            fragmentSource: LIGHT_FRAGMENT_SHADER,
+            setupUniforms: (setUniform: (name: string, value: unknown) => void) => {
+                setUniform('uLightPosition', [this.hero.x, WORLD_SIZE - this.hero.y]);
+                setUniform('uWorldSize', [WORLD_SIZE, WORLD_SIZE]);
+                setUniform('uLightDirection', [Math.cos(this.hero.rotation), -Math.sin(this.hero.rotation)]);
+                setUniform('uRadius', GameScene.VISION_RADIUS);
+                setUniform('uForwardRadius', GameScene.FORWARD_VISION_RADIUS);
+                setUniform('uConeSlope', GameScene.VISION_CONE_SLOPE);
+                setUniform('uConeTip', GameScene.VISION_CONE_TIP);
+                setUniform('uConeBaseWidth', GameScene.VISION_CONE_BASE_WIDTH);
+            }
+        }, WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE, WORLD_SIZE).setDepth(99);
 
         // Camera setup
         this.cameras.main.startFollow(this.hero);
@@ -306,10 +362,146 @@ export class GameScene extends Phaser.Scene {
         wall.setBody({ type: 'rectangle', width: 256, height: 256 });
         wall.setScale(0.5);
         wall.setStatic(true);
+        wall.setData('blocksVision', true);
     }
 
     update(time: number, delta: number) {
         this.entityManager.update(time, delta);
         this.inputManager.update();
+        this.drawShadows();
+    }
+
+    public raycastVision(x: number, y: number, angle: number, maxDistance: number): number {
+        const directionX = Math.cos(angle);
+        const directionY = Math.sin(angle);
+        let closestDistance = maxDistance;
+
+        for (const body of this.matter.world.getAllBodies()) {
+            const gameObject = body.gameObject as Phaser.GameObjects.GameObject | undefined;
+            if (!gameObject?.getData('blocksVision')) continue;
+
+            const distance = this.getRayIntersectionDistance(
+                x,
+                y,
+                directionX,
+                directionY,
+                body.bounds as unknown as { min: { x: number; y: number }; max: { x: number; y: number } },
+                closestDistance
+            );
+            if (distance !== null) closestDistance = distance;
+        }
+
+        return closestDistance;
+    }
+
+    private drawShadows() {
+        this.darkness.clear();
+
+        const rays: { angle: number; distance: number; radius: number }[] = [];
+        for (let angle = 0; angle <= Math.PI * 2; angle += GameScene.VISION_RAY_STEP) {
+            const radius = this.getVisionRadius(angle);
+            rays.push({
+                angle,
+                distance: this.raycastVision(this.hero.x, this.hero.y, angle, radius),
+                radius
+            });
+        }
+
+        for (let i = 0; i < rays.length - 1; i++) {
+            const current = rays[i];
+            const next = rays[i + 1];
+            if (current.distance === current.radius && next.distance === next.radius) continue;
+
+            const currentSoftStart = this.getSoftShadowStart(current.distance);
+            const nextSoftStart = this.getSoftShadowStart(next.distance);
+            const currentOpaqueStart = this.getOpaqueShadowStart(current.distance, current.radius);
+            const nextOpaqueStart = this.getOpaqueShadowStart(next.distance, next.radius);
+
+            for (let band = 0; band < 16; band++) {
+                const progress = band / 16;
+                const nextProgress = (band + 1) / 16;
+                this.darkness.fillStyle(0x000000, nextProgress);
+                this.fillDarknessSegment(
+                    current.angle,
+                    next.angle,
+                    currentSoftStart + (currentOpaqueStart - currentSoftStart) * progress,
+                    nextSoftStart + (nextOpaqueStart - nextSoftStart) * progress,
+                    currentSoftStart + (currentOpaqueStart - currentSoftStart) * nextProgress,
+                    nextSoftStart + (nextOpaqueStart - nextSoftStart) * nextProgress
+                );
+            }
+
+            // За мягкой тенью стены свет полностью блокируется.
+            this.darkness.fillStyle(0x000000, 1);
+            this.fillDarknessSegment(current.angle, next.angle, currentOpaqueStart, nextOpaqueStart, current.radius, next.radius);
+        }
+    }
+
+    private getVisionRadius(angle: number): number {
+        const angleFromView = angle - this.hero.rotation;
+        const forward = Math.cos(angleFromView);
+        const side = Math.abs(Math.sin(angleFromView));
+        const coneWidth = forward * GameScene.VISION_CONE_SLOPE + GameScene.VISION_CONE_BASE_WIDTH;
+        if (forward <= 0 || side > coneWidth) return GameScene.VISION_RADIUS;
+
+        const sideRatio = side / coneWidth;
+        return GameScene.VISION_RADIUS + GameScene.FORWARD_VISION_RADIUS + (1 - sideRatio) * GameScene.VISION_CONE_TIP;
+    }
+
+    private getSoftShadowStart(distance: number): number {
+        return distance;
+    }
+
+    private getOpaqueShadowStart(distance: number, radius: number): number {
+        return Math.min(distance + GameScene.SHADOW_SOFT_EDGE, radius);
+    }
+
+    private fillDarknessSegment(
+        startAngle: number,
+        endAngle: number,
+        startInnerRadius: number,
+        endInnerRadius: number,
+        startOuterRadius: number,
+        endOuterRadius: number
+    ) {
+        this.darkness.beginPath();
+        this.darkness.moveTo(this.hero.x + Math.cos(startAngle) * startInnerRadius, this.hero.y + Math.sin(startAngle) * startInnerRadius);
+        this.darkness.lineTo(this.hero.x + Math.cos(endAngle) * endInnerRadius, this.hero.y + Math.sin(endAngle) * endInnerRadius);
+        this.darkness.lineTo(this.hero.x + Math.cos(endAngle) * endOuterRadius, this.hero.y + Math.sin(endAngle) * endOuterRadius);
+        this.darkness.lineTo(this.hero.x + Math.cos(startAngle) * startOuterRadius, this.hero.y + Math.sin(startAngle) * startOuterRadius);
+        this.darkness.closePath();
+        this.darkness.fillPath();
+    }
+
+    private getRayIntersectionDistance(
+        originX: number,
+        originY: number,
+        directionX: number,
+        directionY: number,
+        bounds: { min: { x: number; y: number }; max: { x: number; y: number } },
+        maxDistance: number
+    ): number | null {
+        let near = 0;
+        let far = maxDistance;
+
+        const axes = [
+            { origin: originX, direction: directionX, min: bounds.min.x, max: bounds.max.x },
+            { origin: originY, direction: directionY, min: bounds.min.y, max: bounds.max.y }
+        ];
+
+        for (const axis of axes) {
+            if (Math.abs(axis.direction) < Number.EPSILON) {
+                if (axis.origin < axis.min || axis.origin > axis.max) return null;
+                continue;
+            }
+
+            const first = (axis.min - axis.origin) / axis.direction;
+            const second = (axis.max - axis.origin) / axis.direction;
+            near = Math.max(near, Math.min(first, second));
+            far = Math.min(far, Math.max(first, second));
+            if (near > far) return null;
+        }
+
+        return near;
     }
 }

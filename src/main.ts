@@ -5,7 +5,7 @@ import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
 
 const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
+    type: Phaser.WEBGL,
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
