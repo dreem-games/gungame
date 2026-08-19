@@ -128,13 +128,16 @@ export class GameScene extends Phaser.Scene {
         const isPiercing = projectile.getData('isPiercing');
 
         if (target) {
+            // Check properties before applying damage, because taking damage might destroy the target
+            const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
+
             // Apply damage if target supports it
             if ((target as any).takeDamage) {
                 (target as any).takeDamage(damage);
             }
 
             // If the target is a thin wall and the projectile is piercing, do NOT destroy it
-            if ((target as any).getData && (target as any).getData('isThinWall') && isPiercing) {
+            if (isThinWall && isPiercing) {
                 // Ignore the segment so we don't hit it again immediately
                 const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
                 ignoredBodies.push(target);

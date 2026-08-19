@@ -22,12 +22,6 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
         if (this.isTankDestroyed) return;
         this.tankHealth -= amount;
 
-        // Flash red
-        this.setTint(0xff0000);
-        this.scene.time.delayedCall(100, () => {
-            if (!this.isTankDestroyed) this.setTint(0x444444);
-        });
-
         if (this.tankHealth <= 0) {
             this.explode();
         }
@@ -70,10 +64,21 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
         const graphics = this.scene.add.graphics();
         graphics.fillStyle(0x1a2b1a, 0.8); // Dark greenish-black oil color
 
-        // Draw main circle
-        graphics.fillCircle(this.x, this.y, PUDDLE_RADIUS * 0.7);
+        // Helper to create a sensor body
+        const createSensor = (x: number, y: number, radius: number) => {
+            const body = this.scene.matter.add.circle(x, y, radius, {
+                isSensor: true,
+                isStatic: true
+            });
+            (body as any).isPuddle = true;
+        };
 
-        // Draw some smaller intersecting circles around the edges for a "splat" look
+        // Main center puddle part
+        const mainRadius = PUDDLE_RADIUS * 0.7;
+        graphics.fillCircle(this.x, this.y, mainRadius);
+        createSensor(this.x, this.y, mainRadius);
+
+        // Draw and create physics sensors for smaller intersecting circles around the edges
         const numSplats = 8;
         for(let i = 0; i < numSplats; i++) {
             const angle = (Math.PI * 2 / numSplats) * i + Math.random() * 0.5;
@@ -81,17 +86,10 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
             const splatX = this.x + Math.cos(angle) * dist;
             const splatY = this.y + Math.sin(angle) * dist;
             const splatRadius = PUDDLE_RADIUS * 0.2 + Math.random() * PUDDLE_RADIUS * 0.3;
+
             graphics.fillCircle(splatX, splatY, splatRadius);
+            createSensor(splatX, splatY, splatRadius);
         }
         graphics.setDepth(-0.5); // Just above ground (-1), below other objects (0)
-
-        // Create a sensor body for the puddle
-        const puddleBody = this.scene.matter.add.circle(this.x, this.y, PUDDLE_RADIUS, {
-            isSensor: true,
-            isStatic: true
-        });
-
-        // Add some data to the puddle body so we can detect it
-        (puddleBody as any).isPuddle = true;
     }
 }

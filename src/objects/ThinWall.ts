@@ -17,10 +17,6 @@ export class ThinWallSegment extends Phaser.Physics.Matter.Sprite {
     public takeDamage(amount: number) {
         this.health -= amount;
 
-        // Darken based on damage
-        const tint = Math.max(0x555555, 0xffffff - (30 - this.health) * 0x050505);
-        this.setTint(tint);
-
         if (this.health <= 0) {
             this.destroy();
         }
@@ -34,10 +30,20 @@ export class ThinWall {
         // Create a graphics texture for the thin wall segment if it doesn't exist
         if (!scene.textures.exists('thin_wall_tex')) {
             const g = scene.make.graphics({x: 0, y: 0});
-            g.fillStyle(0xa0a0a0);
+
+            // Wooden brown background
+            g.fillStyle(0x8b5a2b);
             g.fillRect(0, 0, 32, 32);
-            g.lineStyle(2, 0x505050);
+
+            // Draw wooden plank lines
+            g.lineStyle(2, 0x5c3a21);
             g.strokeRect(0, 0, 32, 32);
+            g.beginPath();
+            g.moveTo(0, 8); g.lineTo(32, 8);
+            g.moveTo(0, 16); g.lineTo(32, 16);
+            g.moveTo(0, 24); g.lineTo(32, 24);
+            g.strokePath();
+
             g.generateTexture('thin_wall_tex', 32, 32);
             g.destroy();
         }
