@@ -1,3 +1,4 @@
+import { generateSeamlessNoiseTexture } from '../utils/NoiseGenerator';
 import Phaser from 'phaser';
 
 export class PreloadScene extends Phaser.Scene {
@@ -37,6 +38,9 @@ export class PreloadScene extends Phaser.Scene {
     }
 
     create() {
+        // Generate noise texture once before starting the game
+        generateSeamlessNoiseTexture(this, 'grass_noise', 512);
+
         this.scene.start('GameScene');
     }
 }

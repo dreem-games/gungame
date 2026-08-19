@@ -60,8 +60,16 @@ export class GameScene extends Phaser.Scene {
 
         // Add ground texture (also visually scale down the grass tile)
         const ground = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE * 2, WORLD_SIZE * 2, 'level1', 'grass');
-        ground.setDepth(-1);
+        ground.setDepth(-2);
         ground.setScale(0.5);
+
+        // Add procedural noise overlay on top of grass
+        const noiseScale = 4.0; // scale up the texture size to cover more area
+        const noise = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE / noiseScale, WORLD_SIZE / noiseScale, 'grass_noise');
+        noise.setBlendMode(Phaser.BlendModes.MULTIPLY); // MULTIPLY makes dark areas darker, light areas transparent
+        noise.setAlpha(0.7); // Adjust intensity of the noise
+        noise.setDepth(-1);
+        noise.setScale(noiseScale);
 
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
