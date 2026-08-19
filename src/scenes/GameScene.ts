@@ -52,7 +52,7 @@ export class GameScene extends Phaser.Scene {
             });
         });
 
-        const WORLD_SIZE = 4096;
+        const WORLD_SIZE = 6144;
         const TILE_SIZE = 128; // Wall tile size reduced by half
 
         // Set world bounds
@@ -114,8 +114,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     private generateEnvironmentObjects(worldSize: number, tileSize: number) {
-        const CRATE_COUNT = 150;
-        const BARREL_COUNT = 50;
+        const CRATE_COUNT = 75;
+        const BARREL_COUNT = 25;
         const SPAWN_SAFE_RADIUS = 300; // Distance from center
         const CENTER_X = worldSize / 2;
         const CENTER_Y = worldSize / 2;
