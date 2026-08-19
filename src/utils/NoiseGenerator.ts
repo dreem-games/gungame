@@ -35,7 +35,9 @@ export function generateSeamlessNoiseTexture(scene: Phaser.Scene, key: string, s
 
             let finalNoise = (noiseValue * 0.8) + (noiseValue2 * 0.2);
 
-            const color = Math.floor(finalNoise * 255);
+            // Keep values near white so MULTIPLY only adds subtle shading,
+            // not dark blotches that hide the grass.
+            const color = 255 - Math.floor(finalNoise * 45);
 
             const index = (x + y * size) * 4;
             imgData.data[index + 0] = color;
@@ -46,5 +48,27 @@ export function generateSeamlessNoiseTexture(scene: Phaser.Scene, key: string, s
     }
 
     ctx.putImageData(imgData, 0, 0);
+    scene.textures.addCanvas(key, canvas);
+}
+
+// Мягкий тёмный след (radial gradient: центр — непрозрачный, края — в ноль)
+export function generateScorchTexture(scene: Phaser.Scene, key: string, size: number = 256) {
+    if (scene.textures.exists(key)) {
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    const cx = size / 2;
+    const gradient = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+    gradient.addColorStop(0.55, 'rgba(0, 0, 0, 0.30)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
     scene.textures.addCanvas(key, canvas);
 }

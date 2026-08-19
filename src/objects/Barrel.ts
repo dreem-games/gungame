@@ -44,16 +44,25 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         this.scene.sound.play('barrel_explosion');
 
+        // Тёмный след (scorch mark) на месте взрыва — мягкий radial gradient
+        const SCORCH_RADIUS = this.explosionRadius * 0.7;
+        const scorch = this.scene.add.sprite(this.x, this.y, 'scorch');
+        scorch.setDisplaySize(SCORCH_RADIUS * 2, SCORCH_RADIUS * 2);
+        scorch.setDepth(-1); // поверх травы, под объектами
+
         // Strong shake — explosion is the heaviest impact in the game
         this.scene.cameras.main.shake(400, 0.008);
 
-        // Shockwave: отбрасывает героя и другие бочки. Импульс скорости (а не сила)
-        // — мгновенный и предсказуемый, сила при frictionAir=0.1 гасится незаметно.
+        // Shockwave: отбрасывает ящики и героя. Импульс скорости (а не сила)
+        // — мгновенный и предсказуемый. Бочки не отбрасываем — они уничтожаются
+        // при попадании, а не разлетаются.
         const KNOCKBACK_RADIUS = 700;
         const KNOCKBACK_SPEED = 40;
         const allBodies = this.scene.matter.world.getAllBodies();
         for (const body of allBodies) {
             if (body === this.body || body.isStatic) continue;
+            if (body.isSensor) continue; // пули (сенсоры) не отбрасываем
+            if ((body as any).parent instanceof Barrel) continue; // бочки уничтожаются, не разлетаются
 
             const dx = body.position.x - this.x;
             const dy = body.position.y - this.y;
