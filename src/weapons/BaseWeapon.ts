@@ -9,6 +9,7 @@ export interface WeaponStats {
     spread: number; // in radians
     pellets: number; // For shotgun
     speed: number;
+    piercing?: boolean; // Whether the bullet can pierce through thin walls
     texture: string;
     frame: string;
     sound: string;

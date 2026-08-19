@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { Hero } from '../objects/Hero';
 import { EntityManager } from '../core/EntityManager';
 import { InputManager } from '../core/InputManager';
+import { OilTank } from '../objects/OilTank';
+import { ThinWall } from '../objects/ThinWall';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
@@ -20,6 +22,23 @@ export class GameScene extends Phaser.Scene {
         // Projectiles in our system are set up as sensors (setSensor(true)),
         // so they don't produce physical pushing/bouncing forces against other objects.
         // We only need to control whether our custom collision logic runs.
+        this.matter.world.on('collisionactive', (event: Phaser.Physics.Matter.Events.CollisionActiveEvent) => {
+            event.pairs.forEach((pair) => {
+                const bodyA = pair.bodyA as MatterJS.BodyType;
+                const bodyB = pair.bodyB as MatterJS.BodyType;
+
+                const isPuddleA = (bodyA as any).isPuddle;
+                const isPuddleB = (bodyB as any).isPuddle;
+
+                // If hero is in the puddle, slow them down
+                if (isPuddleA && bodyB.gameObject === this.hero) {
+                    this.hero.setSlowed(true);
+                } else if (isPuddleB && bodyA.gameObject === this.hero) {
+                    this.hero.setSlowed(true);
+                }
+            });
+        });
+
         this.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
             event.pairs.forEach((pair) => {
                 const bodyA = pair.bodyA as MatterJS.BodyType;
@@ -52,7 +71,7 @@ export class GameScene extends Phaser.Scene {
             });
         });
 
-        const WORLD_SIZE = 4096;
+        const WORLD_SIZE = 6144;
         const TILE_SIZE = 128; // Wall tile size reduced by half
 
         // Set world bounds
@@ -66,24 +85,8 @@ export class GameScene extends Phaser.Scene {
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
-        // Test objects (Scaled down by half)
-        // We use setBody to set custom physics bounds.
-        // Important: Phaser's setBody automatically scales by the sprite's scale.
-        // A scale of 0.5 makes the sprite visually 128x128 (from 256x256).
-        // So we pass unscaled values to setBody.
-        const box = this.matter.add.sprite(400, 300, 'level1', 'box');
-        // Unscaled Box physics body 256x256 (scaled down it will perfectly match the 128x128 sprite)
-        box.setBody({ type: 'rectangle', width: 256, height: 256 });
-        box.setScale(0.5);
-        box.setFrictionAir(0.1);
-        box.setMass(70);
-
-        const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        // Unscaled Barrel physics body radius 128 (scaled down it will perfectly match the 128x128 sprite)
-        barrel.setBody({ type: 'circle', radius: 128 });
-        barrel.setScale(0.5);
-        barrel.setFrictionAir(0.1);
-        barrel.setMass(50);
+        // Generate environment objects (crates, barrels)
+        this.generateEnvironmentObjects(WORLD_SIZE, TILE_SIZE);
 
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
@@ -120,13 +123,139 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    private processHit(projectile: Phaser.GameObjects.GameObject, _target: Phaser.GameObjects.GameObject) {
-        // Destroy the projectile
-        projectile.destroy();
+    private processHit(projectile: Phaser.GameObjects.GameObject, target: Phaser.GameObjects.GameObject) {
+        const damage = projectile.getData('damage');
+        const isPiercing = projectile.getData('isPiercing');
 
-        // Target taking damage logic would go here
-        // const damage = projectile.getData('damage');
-        // if (target instanceof Enemy) target.takeDamage(damage);
+        if (target) {
+            // Check properties before applying damage, because taking damage might destroy the target
+            const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
+
+            // Apply damage if target supports it
+            if ((target as any).takeDamage) {
+                (target as any).takeDamage(damage);
+            }
+
+            // If the target is a thin wall and the projectile is piercing, do NOT destroy it
+            if (isThinWall && isPiercing) {
+                // Ignore the segment so we don't hit it again immediately
+                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
+                ignoredBodies.push(target);
+                projectile.setData('ignoredBodies', ignoredBodies);
+                return; // Projectile survives
+            }
+
+            // Target taking damage logic for enemies would go here
+            // if (target instanceof Enemy) target.takeDamage(damage);
+        }
+
+        // Projectile is destroyed
+        projectile.destroy();
+    }
+
+    private generateEnvironmentObjects(worldSize: number, tileSize: number) {
+        const CRATE_COUNT = 75;
+        const BARREL_COUNT = 16;
+        const SPAWN_SAFE_RADIUS = 300; // Distance from center
+        const CENTER_X = worldSize / 2;
+        const CENTER_Y = worldSize / 2;
+        const MARGIN = tileSize; // Keep away from walls
+
+        // Helper to check distance
+        const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+
+        // We will keep track of placed objects to avoid overlaps
+        // Each object needs an x, y, and a collision radius
+        const placedObjects: {x: number, y: number, radius: number, isBox?: boolean}[] = [];
+
+        // Try to place an object
+        const placeObject = (type: 'box' | 'barrel' | 'oilTank' | 'thinWall', collisionRadius: number) => {
+            let attempts = 0;
+            const MAX_ATTEMPTS = 50;
+
+            while (attempts < MAX_ATTEMPTS) {
+                let x = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
+                let y = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
+
+                // 30% chance for a box to cluster near another box
+                if (type === 'box' && Math.random() < 0.3) {
+                    const boxes = placedObjects.filter(o => o.isBox);
+                    if (boxes.length > 0) {
+                        const targetBox = boxes[Phaser.Math.Between(0, boxes.length - 1)];
+                        // Try to place near this box (within roughly 2-3 box widths)
+                        x = targetBox.x + Phaser.Math.Between(-300, 300);
+                        y = targetBox.y + Phaser.Math.Between(-300, 300);
+                        // Clamp to world
+                        x = Phaser.Math.Clamp(x, MARGIN, worldSize - MARGIN);
+                        y = Phaser.Math.Clamp(y, MARGIN, worldSize - MARGIN);
+                    }
+                }
+
+                // Check distance to center (hero spawn)
+                if (dist(x, y, CENTER_X, CENTER_Y) < SPAWN_SAFE_RADIUS + collisionRadius) {
+                    attempts++;
+                    continue;
+                }
+
+                // Check collisions with already placed objects
+                let hasCollision = false;
+                for (const obj of placedObjects) {
+                    if (dist(x, y, obj.x, obj.y) < collisionRadius + obj.radius) {
+                        hasCollision = true;
+                        break;
+                    }
+                }
+
+                if (!hasCollision) {
+                    // Place it!
+                    if (type === 'box') {
+                        const box = this.matter.add.sprite(x, y, 'level1', 'box');
+                        box.setBody({ type: 'rectangle', width: 256, height: 256 });
+                        box.setScale(0.5);
+                        box.setFrictionAir(0.1);
+                        box.setMass(70);
+                        placedObjects.push({ x, y, radius: collisionRadius, isBox: true });
+                    } else if (type === 'barrel') {
+                        const barrel = this.matter.add.sprite(x, y, 'level1', 'barrel');
+                        barrel.setBody({ type: 'circle', radius: 128 });
+                        barrel.setScale(0.5);
+                        barrel.setFrictionAir(0.1);
+                        barrel.setMass(50);
+                        placedObjects.push({ x, y, radius: collisionRadius });
+                    } else if (type === 'oilTank') {
+                        new OilTank(this, x, y);
+                        placedObjects.push({ x, y, radius: collisionRadius });
+                    } else if (type === 'thinWall') {
+                        // Place a thin wall of roughly length 256
+                        const isVertical = Math.random() > 0.5;
+                        new ThinWall(this, x - (isVertical ? 0 : 128), y - (isVertical ? 128 : 0), 256, isVertical);
+                        placedObjects.push({ x, y, radius: collisionRadius });
+                    }
+
+                    return true;
+                }
+
+                attempts++;
+            }
+
+            return false; // Failed to place after MAX_ATTEMPTS
+        };
+
+        // Box visual size is 128x128, radius roughly 90 for spacing
+        for (let i = 0; i < CRATE_COUNT; i++) {
+            placeObject('box', 90);
+        }
+
+        // Barrel visual size is 128x128, radius 64
+        for (let i = 0; i < BARREL_COUNT; i++) {
+            placeObject('barrel', 64);
+        }
+
+        // Place one Oil Tank (radius around 102)
+        placeObject('oilTank', 102);
+
+        // Place one Thin Wall (treat as a circle of radius 140 for spawning space)
+        placeObject('thinWall', 140);
     }
 
     private generateBorderWalls(worldSize: number, tileSize: number) {

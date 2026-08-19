@@ -22,6 +22,8 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     private dashTimer: number = 0;
     private dashCooldown: number = 0;
 
+    private isSlowed: boolean = false;
+
     // Stamina config
     public maxStamina: number = 100;
     public currentStamina: number = 100;
@@ -70,6 +72,10 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     public getWeaponManager(): WeaponManager {
         return this.weaponManager;
+    }
+
+    public setSlowed(slowed: boolean) {
+        this.isSlowed = slowed;
     }
 
     update(_time: number, delta: number) {
@@ -124,8 +130,15 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
                 this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
             }
 
+            if (this.isSlowed) {
+                currentSpeed *= 0.5;
+            }
+
             this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
         }
+
+        // Reset slowed state; sensor collisions will reapply it if still inside
+        this.isSlowed = false;
 
         // Rotation
         const angle = Phaser.Math.Angle.Between(
