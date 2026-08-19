@@ -26,6 +26,10 @@ export class ThinWallSegment extends Phaser.Physics.Matter.Sprite {
 export class ThinWall {
     private segments: ThinWallSegment[] = [];
 
+    public getSegments(): ThinWallSegment[] {
+        return this.segments;
+    }
+
     constructor(scene: Phaser.Scene, startX: number, startY: number, length: number, isVertical: boolean) {
         // Create a graphics texture for the thin wall segment if it doesn't exist
         if (!scene.textures.exists('thin_wall_tex')) {

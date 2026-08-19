@@ -82,6 +82,10 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         return this.weaponManager;
     }
 
+    public isDashingNow(): boolean {
+        return this.isDashing;
+    }
+
 public takeDamage(amount: number) {
         if (this.isDead) return;
 

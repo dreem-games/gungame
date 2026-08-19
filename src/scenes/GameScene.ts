@@ -5,12 +5,21 @@ import { InputManager } from '../core/InputManager';
 import { Barrel } from '../objects/Barrel';
 import { OilTank } from '../objects/OilTank';
 import { ThinWall } from '../objects/ThinWall';
+import { generateWorld } from '../core/map-gen';
+import { NetworkManager, WorldLayout } from '../core/NetworkManager';
+import map from '../../multiplayer-map.json';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
     private inputManager!: InputManager;
     private hero!: Hero;
     private barrels: Barrel[] = [];
+    private network!: NetworkManager;
+    private remotePlayers = new Map<string, Phaser.GameObjects.Sprite>();
+    private boxes = new Map<string, Phaser.Physics.Matter.Sprite>();
+    private localEnvironment: Phaser.GameObjects.GameObject[] = [];
+    private usesServerPhysics = false;
+    private multiplayer = true;
 
     constructor() {
         super('GameScene');
@@ -86,7 +95,7 @@ export class GameScene extends Phaser.Scene {
             });
         });
 
-        const WORLD_SIZE = 6144;
+        const WORLD_SIZE = map.worldSize;
         const TILE_SIZE = 128; // Wall tile size reduced by half
 
         // Set world bounds
@@ -108,12 +117,16 @@ export class GameScene extends Phaser.Scene {
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
-// Generate environment objects (crates, barrels)
-        this.generateEnvironmentObjects(WORLD_SIZE, TILE_SIZE);
+        this.createLocalEnvironment(WORLD_SIZE);
 
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
+        this.hero.setDepth(1);
         this.entityManager.add(this.hero);
+        if (this.multiplayer) {
+            this.network = new NetworkManager();
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.network.destroy());
+        }
 
         // Camera setup
         this.cameras.main.startFollow(this.hero);
@@ -150,6 +163,20 @@ export class GameScene extends Phaser.Scene {
         const damage = projectile.getData('damage');
         const isPiercing = projectile.getData('isPiercing');
 
+        const networkId = target.getData('networkId');
+        if (this.usesServerPhysics && typeof networkId === 'string') {
+            this.network.sendHit(networkId, damage);
+            const isThinWall = target.getData('isThinWall');
+            if (isThinWall && isPiercing) {
+                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
+                ignoredBodies.push(target);
+                projectile.setData('ignoredBodies', ignoredBodies);
+                return;
+            }
+            projectile.destroy();
+            return;
+        }
+
 // Check if target is a barrel — it explodes instead of taking generic damage
         if (target instanceof Barrel) {
             target.explode(this.hero, this.barrels);
@@ -183,106 +210,69 @@ export class GameScene extends Phaser.Scene {
         projectile.destroy();
     }
 
-    private generateEnvironmentObjects(worldSize: number, tileSize: number) {
-        const CRATE_COUNT = 75;
-        const BARREL_COUNT = 16;
-        const SPAWN_SAFE_RADIUS = 300; // Distance from center
-        const CENTER_X = worldSize / 2;
-        const CENTER_Y = worldSize / 2;
-        const MARGIN = tileSize; // Keep away from walls
-
-        // Helper to check distance
-        const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-
-        // We will keep track of placed objects to avoid overlaps
-        // Each object needs an x, y, and a collision radius
-        const placedObjects: {x: number, y: number, radius: number, isBox?: boolean}[] = [];
-
-        // Try to place an object
-        const placeObject = (type: 'box' | 'barrel' | 'oilTank' | 'thinWall', collisionRadius: number) => {
-            let attempts = 0;
-            const MAX_ATTEMPTS = 50;
-
-            while (attempts < MAX_ATTEMPTS) {
-                let x = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
-                let y = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
-
-                // 30% chance for a box to cluster near another box
-                if (type === 'box' && Math.random() < 0.3) {
-                    const boxes = placedObjects.filter(o => o.isBox);
-                    if (boxes.length > 0) {
-                        const targetBox = boxes[Phaser.Math.Between(0, boxes.length - 1)];
-                        // Try to place near this box (within roughly 2-3 box widths)
-                        x = targetBox.x + Phaser.Math.Between(-300, 300);
-                        y = targetBox.y + Phaser.Math.Between(-300, 300);
-                        // Clamp to world
-                        x = Phaser.Math.Clamp(x, MARGIN, worldSize - MARGIN);
-                        y = Phaser.Math.Clamp(y, MARGIN, worldSize - MARGIN);
-                    }
-                }
-
-                // Check distance to center (hero spawn)
-                if (dist(x, y, CENTER_X, CENTER_Y) < SPAWN_SAFE_RADIUS + collisionRadius) {
-                    attempts++;
-                    continue;
-                }
-
-                // Check collisions with already placed objects
-                let hasCollision = false;
-                for (const obj of placedObjects) {
-                    if (dist(x, y, obj.x, obj.y) < collisionRadius + obj.radius) {
-                        hasCollision = true;
-                        break;
-                    }
-                }
-
-                if (!hasCollision) {
-                    // Place it!
-                    if (type === 'box') {
-                        const box = this.matter.add.sprite(x, y, 'level1', 'box');
-                        box.setBody({ type: 'rectangle', width: 256, height: 256 });
-                        box.setScale(0.5);
-                        box.setFrictionAir(0.1);
-                        box.setMass(70);
-                        placedObjects.push({ x, y, radius: collisionRadius, isBox: true });
-                    } else if (type === 'barrel') {
-                        const barrel = new Barrel(this, x, y);
-                        this.barrels.push(barrel);
-                        placedObjects.push({ x, y, radius: collisionRadius });
-                    } else if (type === 'oilTank') {
-                        new OilTank(this, x, y);
-                        placedObjects.push({ x, y, radius: collisionRadius });
-                    } else if (type === 'thinWall') {
-                        // Place a thin wall of roughly length 256
-                        const isVertical = Math.random() > 0.5;
-                        new ThinWall(this, x - (isVertical ? 0 : 128), y - (isVertical ? 128 : 0), 256, isVertical);
-                        placedObjects.push({ x, y, radius: collisionRadius });
-                    }
-
-                    return true;
-                }
-
-                attempts++;
-            }
-
-            return false; // Failed to place after MAX_ATTEMPTS
-        };
-
-        // Box visual size is 128x128, radius roughly 90 for spacing
-        for (let i = 0; i < CRATE_COUNT; i++) {
-            placeObject('box', 90);
+    private createSharedObstacles(layout: WorldLayout) {
+        for (const box of layout.boxes) {
+            const sprite = this.matter.add.sprite(box.x, box.y, 'level1', 'box');
+            sprite.setBody({ type: 'rectangle', width: 256, height: 256 });
+            sprite.setScale(0.5);
+            sprite.setFrictionAir(0.1);
+            sprite.setMass(70);
+            sprite.setData('networkId', box.id);
+            this.boxes.set(box.id, sprite);
         }
 
-        // Barrel visual size is 128x128, radius 64
-        for (let i = 0; i < BARREL_COUNT; i++) {
-            placeObject('barrel', 64);
+        for (const barrel of layout.barrels) {
+            const sprite = new Barrel(this, barrel.x, barrel.y);
+            sprite.setData('networkId', barrel.id);
+            this.barrels.push(sprite);
+            this.boxes.set(barrel.id, sprite);
         }
 
-        // Place one Oil Tank (radius around 102)
-        placeObject('oilTank', 102);
+        if (layout.oilTank) {
+            const sprite = new OilTank(this, layout.oilTank.x, layout.oilTank.y);
+            sprite.setData('networkId', layout.oilTank.id);
+            this.boxes.set(layout.oilTank.id, sprite);
+        }
 
-        // Place one Thin Wall (treat as a circle of radius 140 for spawning space)
-        placeObject('thinWall', 140);
+        if (layout.thinWall) {
+            const wall = new ThinWall(this, layout.thinWall.x, layout.thinWall.y, 256, layout.thinWall.isVertical);
+            wall.getSegments().forEach((segment, index) => {
+                const id = layout.thinWall?.segments[index]?.id;
+                if (id) {
+                    segment.setData('networkId', id);
+                    this.boxes.set(id, segment);
+                }
+            });
+        }
+    }
+
+    private createLocalEnvironment(worldSize: number) {
+        const world = generateWorld(worldSize);
+
+        for (const box of world.boxes) {
+            const sprite = this.matter.add.sprite(box.x, box.y, 'level1', 'box');
+            sprite.setBody({ type: 'rectangle', width: 256, height: 256 });
+            sprite.setScale(0.5);
+            sprite.setFrictionAir(0.1);
+            sprite.setMass(70);
+            this.localEnvironment.push(sprite);
+        }
+
+        for (const barrel of world.barrels) {
+            const sprite = new Barrel(this, barrel.x, barrel.y);
+            this.barrels.push(sprite);
+            this.localEnvironment.push(sprite);
+        }
+
+        if (world.oilTank) {
+            const tank = new OilTank(this, world.oilTank.x, world.oilTank.y);
+            this.localEnvironment.push(tank);
+        }
+
+        if (world.thinWall) {
+            const wall = new ThinWall(this, world.thinWall.x, world.thinWall.y, 256, world.thinWall.isVertical);
+            this.localEnvironment.push(...wall.getSegments());
+        }
     }
 
     private generateBorderWalls(worldSize: number, tileSize: number) {
@@ -311,5 +301,111 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number) {
         this.entityManager.update(time, delta);
         this.inputManager.update();
+        if (this.multiplayer) {
+            const movement = this.inputManager.getMovementVector();
+            this.network.sendInput(movement.x, movement.y, this.hero.rotation, this.inputManager.isRunning(), this.hero.isDashingNow());
+            const objects = this.network.getWorldObjects();
+            if (this.network.isConnected() && objects.length) {
+                if (!this.usesServerPhysics) {
+                    this.localEnvironment.forEach((obj) => obj.destroy());
+                    this.localEnvironment = [];
+                    this.barrels = [];
+                    this.boxes.clear();
+                    const layout = this.network.getWorldLayout();
+                    if (layout) this.createSharedObstacles(layout);
+                    this.hero.setFrictionAir(0);
+                    this.usesServerPhysics = true;
+                }
+                for (const object of objects) {
+                    const box = this.boxes.get(object.id);
+                    if (box) {
+                        const distance = Phaser.Math.Distance.Between(box.x, box.y, object.x, object.y);
+                        if (distance > 80) {
+                            box.setPosition(object.x, object.y);
+                        } else {
+                            const k = Math.min(1, delta / 120);
+                            box.setPosition(Phaser.Math.Linear(box.x, object.x, k), Phaser.Math.Linear(box.y, object.y, k));
+                        }
+                        box.setRotation(object.rotation);
+                        box.setVelocity(object.vx, object.vy);
+                    }
+                }
+                this.applyServerEvents();
+                this.reconcileLocalPlayer(delta);
+                this.updateRemotePlayers(delta);
+            }
+        }
+    }
+
+    private applyServerEvents() {
+        for (const event of this.network.consumeWorldEvents()) {
+            if (event.type === 'playerDamaged') {
+                if (this.network.getLocalPlayer()?.id === event.id && event.damage) this.hero.takeDamage(event.damage);
+                continue;
+            }
+            const object = this.boxes.get(event.id);
+            if (!object) continue;
+
+            this.boxes.delete(event.id);
+            if (object instanceof Barrel) this.barrels = this.barrels.filter((barrel) => barrel !== object);
+            if (event.type === 'oilTankRuptured' && object instanceof OilTank) {
+                object.createPuddle();
+                object.destroy();
+                continue;
+            }
+            object.destroy();
+            if (event.type === 'thinWallDestroyed') continue;
+
+            const radius = event.type === 'barrelExploded' ? 500 : 400;
+            const explosion = this.add.sprite(event.x, event.y, 'explosion', 'explosion_10').setDepth(5);
+            explosion.setScale((radius * 2) / 64);
+            explosion.play('explosion_anim');
+            explosion.once('animationcomplete', () => explosion.destroy());
+            this.add.sprite(event.x, event.y, 'scorch').setDisplaySize(radius * 1.4, radius * 1.4).setDepth(-1);
+            this.sound.play('barrel_explosion');
+            this.cameras.main.shake(400, 0.008);
+        }
+    }
+
+    private reconcileLocalPlayer(delta: number) {
+        const state = this.network.getLocalPlayer();
+        if (!state) return;
+
+        const distance = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, state.x, state.y);
+        if (distance < 6) return;
+        if (distance > 80) {
+            this.hero.setPosition(state.x, state.y);
+        } else {
+            const k = Math.min(1, delta / 60);
+            this.hero.setPosition(
+                Phaser.Math.Linear(this.hero.x, state.x, k),
+                Phaser.Math.Linear(this.hero.y, state.y, k)
+            );
+        }
+        this.hero.setVelocity(state.vx ?? 0, state.vy ?? 0);
+    }
+
+    private updateRemotePlayers(delta: number) {
+        const k = Math.min(1, delta / 120);
+        const states = this.network.getRemotePlayers();
+        for (const [id, state] of states) {
+            let player = this.remotePlayers.get(id);
+            if (!player) {
+                player = this.add.sprite(state.x, state.y, 'hero', 'hero').setTint(0x66ccff).setAlpha(0.8).setDepth(1);
+                player.setOrigin(0.2, 0.5);
+                this.remotePlayers.set(id, player);
+            }
+
+            player.x = Phaser.Math.Linear(player.x, state.x, k);
+            player.y = Phaser.Math.Linear(player.y, state.y, k);
+            player.rotation = state.rotation;
+        }
+
+        for (const [id, player] of this.remotePlayers) {
+            if (!states.has(id)) {
+                player.destroy();
+                this.remotePlayers.delete(id);
+            }
+        }
     }
 }

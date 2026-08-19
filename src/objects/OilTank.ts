@@ -33,31 +33,11 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
         // Create the puddle
         this.createPuddle();
 
-        // Push away nearby objects (shockwave)
-        const allBodies = this.scene.matter.world.getAllBodies();
-        const shockwaveRadius = 500;
-        const forceMagniture = 0.5;
-
-        for (const body of allBodies) {
-            if (body === this.body) continue;
-
-            const dx = body.position.x - this.x;
-            const dy = body.position.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < shockwaveRadius && !body.isStatic) {
-                // Normalize and apply force
-                const forceX = (dx / dist) * forceMagniture;
-                const forceY = (dy / dist) * forceMagniture;
-                this.scene.matter.body.applyForce(body as MatterJS.BodyType, {x: this.x, y: this.y}, {x: forceX, y: forceY});
-            }
-        }
-
-        // Destroy the tank itself
+        // Танк разрушается и разливает масло без взрывной волны.
         this.destroy();
     }
 
-    private createPuddle() {
+    public createPuddle() {
         const PUDDLE_RADIUS = 600; // Large puddle
 
         // Procedurally draw a splat
@@ -81,11 +61,11 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
         // Draw and create physics sensors for smaller intersecting circles around the edges
         const numSplats = 8;
         for(let i = 0; i < numSplats; i++) {
-            const angle = (Math.PI * 2 / numSplats) * i + Math.random() * 0.5;
-            const dist = PUDDLE_RADIUS * 0.5 + Math.random() * PUDDLE_RADIUS * 0.3;
+            const angle = (Math.PI * 2 / numSplats) * i;
+            const dist = PUDDLE_RADIUS * 0.65;
             const splatX = this.x + Math.cos(angle) * dist;
             const splatY = this.y + Math.sin(angle) * dist;
-            const splatRadius = PUDDLE_RADIUS * 0.2 + Math.random() * PUDDLE_RADIUS * 0.3;
+            const splatRadius = PUDDLE_RADIUS * 0.35;
 
             graphics.fillCircle(splatX, splatY, splatRadius);
             createSensor(splatX, splatY, splatRadius);
