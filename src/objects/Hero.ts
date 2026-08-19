@@ -93,6 +93,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.isDead = true;
 
         EventDispatcher.emit('hero-death');
+        this.scene.sound.play('death');
 
         // Switch sprite to dead
         this.setFrame('hero_dead');

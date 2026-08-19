@@ -34,6 +34,8 @@ export class PreloadScene extends Phaser.Scene {
         this.load.audio('shotgun_shot_sound', 'assets/sound/shotgun_shot_sound.wav');
         this.load.audio('reload', 'assets/sound/reload.wav');
         this.load.audio('empty_gun_shot', 'assets/sound/empty_gun_shot.wav');
+        this.load.audio('barrel_explosion', 'assets/sound/barrel_explosion.wav');
+        this.load.audio('death', 'assets/sound/death.wav');
     }
 
     create() {
