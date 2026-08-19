@@ -10,7 +10,7 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     // Damage settings
     private maxDamage: number = 100;
-    private explosionRadius: number = 300;
+    private explosionRadius: number = 500;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene.matter.world, x, y, 'level1', 'barrel');
@@ -42,11 +42,15 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         this.scene.sound.play('barrel_explosion');
 
+        // Strong shake — explosion is the heaviest impact in the game
+        this.scene.cameras.main.shake(400, 0.008);
+
         // Apply damage to hero based on distance
         const distToHero = Phaser.Math.Distance.Between(this.x, this.y, hero.x, hero.y);
         if (distToHero <= this.explosionRadius) {
-            // Damage scales linearly from maxDamage (at 0 dist) to 0 (at explosionRadius)
-            const damagePercentage = 1 - (distToHero / this.explosionRadius);
+            // Quadratic falloff: damage stays high at range so a distant blast can still kill
+            const falloff = distToHero / this.explosionRadius;
+            const damagePercentage = 1 - falloff * falloff;
             const damage = Math.round(this.maxDamage * damagePercentage);
             if (damage > 0) {
                 hero.takeDamage(damage);
