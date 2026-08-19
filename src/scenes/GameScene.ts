@@ -66,24 +66,8 @@ export class GameScene extends Phaser.Scene {
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
-        // Test objects (Scaled down by half)
-        // We use setBody to set custom physics bounds.
-        // Important: Phaser's setBody automatically scales by the sprite's scale.
-        // A scale of 0.5 makes the sprite visually 128x128 (from 256x256).
-        // So we pass unscaled values to setBody.
-        const box = this.matter.add.sprite(400, 300, 'level1', 'box');
-        // Unscaled Box physics body 256x256 (scaled down it will perfectly match the 128x128 sprite)
-        box.setBody({ type: 'rectangle', width: 256, height: 256 });
-        box.setScale(0.5);
-        box.setFrictionAir(0.1);
-        box.setMass(70);
-
-        const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        // Unscaled Barrel physics body radius 128 (scaled down it will perfectly match the 128x128 sprite)
-        barrel.setBody({ type: 'circle', radius: 128 });
-        barrel.setScale(0.5);
-        barrel.setFrictionAir(0.1);
-        barrel.setMass(50);
+        // Generate environment objects (crates, barrels)
+        this.generateEnvironmentObjects(WORLD_SIZE, TILE_SIZE);
 
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
@@ -127,6 +111,84 @@ export class GameScene extends Phaser.Scene {
         // Target taking damage logic would go here
         // const damage = projectile.getData('damage');
         // if (target instanceof Enemy) target.takeDamage(damage);
+    }
+
+    private generateEnvironmentObjects(worldSize: number, tileSize: number) {
+        const CRATE_COUNT = 150;
+        const BARREL_COUNT = 50;
+        const SPAWN_SAFE_RADIUS = 300; // Distance from center
+        const CENTER_X = worldSize / 2;
+        const CENTER_Y = worldSize / 2;
+        const MARGIN = tileSize; // Keep away from walls
+
+        // Helper to check distance
+        const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+
+        // We will keep track of placed objects to avoid overlaps
+        // Each object needs an x, y, and a collision radius
+        const placedObjects: {x: number, y: number, radius: number}[] = [];
+
+        // Try to place an object
+        const placeObject = (type: 'box' | 'barrel', collisionRadius: number) => {
+            let attempts = 0;
+            const MAX_ATTEMPTS = 50;
+
+            while (attempts < MAX_ATTEMPTS) {
+                // Random position within bounds (accounting for margins)
+                const x = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
+                const y = Phaser.Math.Between(MARGIN, worldSize - MARGIN);
+
+                // Check distance to center (hero spawn)
+                if (dist(x, y, CENTER_X, CENTER_Y) < SPAWN_SAFE_RADIUS + collisionRadius) {
+                    attempts++;
+                    continue;
+                }
+
+                // Check collisions with already placed objects
+                let hasCollision = false;
+                for (const obj of placedObjects) {
+                    if (dist(x, y, obj.x, obj.y) < collisionRadius + obj.radius) {
+                        hasCollision = true;
+                        break;
+                    }
+                }
+
+                if (!hasCollision) {
+                    // Place it!
+                    if (type === 'box') {
+                        const box = this.matter.add.sprite(x, y, 'level1', 'box');
+                        box.setBody({ type: 'rectangle', width: 256, height: 256 });
+                        box.setScale(0.5);
+                        box.setFrictionAir(0.1);
+                        box.setMass(70);
+                    } else {
+                        const barrel = this.matter.add.sprite(x, y, 'level1', 'barrel');
+                        barrel.setBody({ type: 'circle', radius: 128 });
+                        barrel.setScale(0.5);
+                        barrel.setFrictionAir(0.1);
+                        barrel.setMass(50);
+                    }
+
+                    // Record placed object
+                    placedObjects.push({ x, y, radius: collisionRadius });
+                    return true;
+                }
+
+                attempts++;
+            }
+
+            return false; // Failed to place after MAX_ATTEMPTS
+        };
+
+        // Box visual size is 128x128, radius roughly 90 for spacing
+        for (let i = 0; i < CRATE_COUNT; i++) {
+            placeObject('box', 90);
+        }
+
+        // Barrel visual size is 128x128, radius 64
+        for (let i = 0; i < BARREL_COUNT; i++) {
+            placeObject('barrel', 64);
+        }
     }
 
     private generateBorderWalls(worldSize: number, tileSize: number) {
