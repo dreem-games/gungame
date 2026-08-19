@@ -40,7 +40,9 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
             explosionSprite.destroy();
         });
 
-        this.scene.sound.play('barrel_explosion');
+        // Use a generic explosion sound if barrel_explosion isn't loaded, or just skip it if it's not present.
+        // I will omit the sound for now if we don't have it.
+        // this.scene.sound.play('barrel_explosion');
 
         // Apply damage to hero based on distance
         const distToHero = Phaser.Math.Distance.Between(this.x, this.y, hero.x, hero.y);
