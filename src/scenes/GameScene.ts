@@ -236,12 +236,13 @@ export class GameScene extends Phaser.Scene {
 
         if (layout.thinWall) {
             const wall = new ThinWall(this, layout.thinWall.x, layout.thinWall.y, 256, layout.thinWall.isVertical);
-            wall.getSegments().forEach((segment, index) => {
-                const id = layout.thinWall?.segments[index]?.id;
-                if (id) {
-                    segment.setData('networkId', id);
-                    this.boxes.set(id, segment);
-                }
+            const segments = wall.getSegments();
+            const alive = new Map(layout.thinWall.segments.map((s) => [s.index, s.id]));
+            segments.forEach((segment, index) => {
+                const id = alive.get(index);
+                if (!id) return segment.destroy();
+                segment.setData('networkId', id);
+                this.boxes.set(id, segment);
             });
         }
     }

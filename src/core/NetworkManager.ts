@@ -21,7 +21,7 @@ export interface WorldLayout {
     boxes: { id: string; x: number; y: number }[];
     barrels: { id: string; x: number; y: number }[];
     oilTank: { id: string; x: number; y: number } | null;
-    thinWall: { x: number; y: number; isVertical: boolean; segments: { id: string }[] } | null;
+    thinWall: { x: number; y: number; isVertical: boolean; segments: { id: string; index: number }[] } | null;
 }
 
 export interface WorldEvent {

@@ -89,6 +89,23 @@ function simulate() {
     Matter.Engine.update(engine, 1000 / 60);
 }
 
+function currentWorldLayout() {
+    return {
+        boxes: dynamicObjects.filter(({ type }) => type === 'box').map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
+        barrels: dynamicObjects.filter(({ type }) => type === 'barrel').map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
+        oilTank: dynamicObjects.find(({ type }) => type === 'oilTank') ? (() => {
+            const tank = dynamicObjects.find(({ type }) => type === 'oilTank');
+            return { id: tank.id, x: tank.body.position.x, y: tank.body.position.y };
+        })() : null,
+        thinWall: worldLayout.thinWall ? {
+            x: worldLayout.thinWall.x,
+            y: worldLayout.thinWall.y,
+            isVertical: worldLayout.thinWall.isVertical,
+            segments: wallSegments.map(({ id }) => ({ id, index: Number(id.split('-')[1]) }))
+        } : null
+    };
+}
+
 function snapshot() {
     const playersState = [...players.values()].map(({ id, body, input }) => ({
         id,
@@ -190,7 +207,7 @@ wss.on('connection', (socket) => {
     Matter.Body.setMass(body, 100);
     Matter.World.add(engine.world, body);
     players.set(id, { id, socket, body, dashUntil: 0, input: { x: 0, y: 0, rotation: 0, running: false } });
-    socket.send(JSON.stringify({ type: 'welcome', id, world: worldLayout }));
+    socket.send(JSON.stringify({ type: 'welcome', id, world: currentWorldLayout() }));
     broadcast();
 
     socket.on('message', (rawMessage) => {
