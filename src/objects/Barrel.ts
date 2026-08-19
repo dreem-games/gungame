@@ -32,7 +32,9 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Play visual and sound
         const explosionSprite = this.scene.add.sprite(this.x, this.y, 'explosion', 'explosion_10');
-        explosionSprite.setScale(3); // make explosion bigger
+        // Масштаб под радиус урона, чтобы визуально было видно, куда бьёт взрыв
+        const FRAME_SIZE = 64; // базовый размер фрейма анимации (px)
+        explosionSprite.setScale((this.explosionRadius * 2) / FRAME_SIZE);
         explosionSprite.setDepth(5);
         explosionSprite.play('explosion_anim');
 

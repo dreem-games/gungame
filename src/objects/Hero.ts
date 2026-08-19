@@ -173,13 +173,20 @@ public takeDamage(amount: number) {
         // Reset slowed state; sensor collisions will reapply it if still inside
         this.isSlowed = false;
 
-        // Rotation
-        const angle = Phaser.Math.Angle.Between(
-            this.x,
-            this.y,
-            this.inputManager.pointerWorldX,
-            this.inputManager.pointerWorldY
-        );
+        // Смещение дула от центра спрайта (локальные координаты)
+        const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel
+        const FIRE_POSITION_DY = 0.36 * 100; // Increased Y slightly
+        const MUZZLE_REACH = Math.hypot(FIRE_POSITION_DX, FIRE_POSITION_DY);
+
+        // Поворот спрайта: ствол смотрит на курсор.
+        // angle = направление «центр → курсор» минус поправка на смещение дула,
+        // чтобы лазер из дула проходил ровно через курсор.
+        // Если курсор ближе, чем MUZZLE_REACH («за дулом» — решения нет),
+        // держим текущий поворот, чтобы не было разворота на 180° и выстрела в спину.
+        const pointerDist = Phaser.Math.Distance.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+        const angle = pointerDist > MUZZLE_REACH
+            ? Phaser.Math.Angle.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY) - Math.asin(FIRE_POSITION_DY / pointerDist)
+            : this.rotation;
         this.setRotation(angle);
 
         // Weapon Switching
@@ -197,33 +204,16 @@ public takeDamage(amount: number) {
             this.weaponManager.reload();
         }
 
-        // Calculate Bullet Spawn Position
-        const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel
-        const FIRE_POSITION_DY = 0.36 * 100; // Increased Y slightly
+        // Точка выстрела (дуло) — смещение от центра в сторону взгляда
+        const fireCos = Math.cos(angle);
+        const fireSin = Math.sin(angle);
+        const spawnX = this.x + (FIRE_POSITION_DX * fireCos - FIRE_POSITION_DY * fireSin);
+        const spawnY = this.y + (FIRE_POSITION_DX * fireSin + FIRE_POSITION_DY * fireCos);
 
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-
-        const rotatedX = FIRE_POSITION_DX * cos - FIRE_POSITION_DY * sin;
-        const rotatedY = FIRE_POSITION_DX * sin + FIRE_POSITION_DY * cos;
-
-        const spawnX = this.x + rotatedX;
-        const spawnY = this.y + rotatedY;
-
-        // Мёртвая зона: если курсор слишком близко к герою (рядом или прямо на нём),
-        // целимся в сторону текущего взгляда, а не в курсор — иначе можно бить сквозь себя/спину.
-        const AIM_DEADZONE = 120;
-        const pointerDist = Phaser.Math.Distance.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
-
-        let fireAngle: number;
-        if (pointerDist < AIM_DEADZONE) {
-            fireAngle = angle;
-        } else {
-            // Прицеливаемся из точки выстрела прямо в курсор, чтобы лазер и пуля проходили ровно через него
-            fireAngle = Phaser.Math.Angle.Between(spawnX, spawnY, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
-        }
-        const fireCos = Math.cos(fireAngle);
-        const fireSin = Math.sin(fireAngle);
+        // Лазер и пули летят строго по направлению взгляда (из дула).
+        // Прицел в курсор на дистанции — это поворот всего спрайта, а не отдельный огонь,
+        // поэтому огонь всегда совпадает с направлением поворота спрайта.
+        const fireAngle = angle;
 
         // Пуля вылетает чуть впереди точки, откуда рисуется лазер
         const BULLET_SPAWN_OFFSET = 20;
