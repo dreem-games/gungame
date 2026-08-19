@@ -47,6 +47,29 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
         // Strong shake — explosion is the heaviest impact in the game
         this.scene.cameras.main.shake(400, 0.008);
 
+        // Shockwave: отбрасывает героя и другие бочки. Импульс скорости (а не сила)
+        // — мгновенный и предсказуемый, сила при frictionAir=0.1 гасится незаметно.
+        const KNOCKBACK_RADIUS = 700;
+        const KNOCKBACK_SPEED = 40;
+        const allBodies = this.scene.matter.world.getAllBodies();
+        for (const body of allBodies) {
+            if (body === this.body || body.isStatic) continue;
+
+            const dx = body.position.x - this.x;
+            const dy = body.position.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist === 0 || dist > KNOCKBACK_RADIUS) continue;
+
+            // Чем ближе, тем сильнее; на краю радиуса почти ноль
+            const falloff = 1 - dist / KNOCKBACK_RADIUS;
+            const speed = KNOCKBACK_SPEED * falloff;
+            const vel = (body as any).velocity || { x: 0, y: 0 };
+            this.scene.matter.body.setVelocity(body as MatterJS.BodyType, {
+                x: vel.x + (dx / dist) * speed,
+                y: vel.y + (dy / dist) * speed,
+            });
+        }
+
         // Apply damage to hero based on distance
         const distToHero = Phaser.Math.Distance.Between(this.x, this.y, hero.x, hero.y);
         if (distToHero <= this.explosionRadius) {
@@ -56,6 +79,7 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
             const damage = Math.round(this.maxDamage * damagePercentage);
             if (damage > 0) {
                 hero.takeDamage(damage);
+                hero.setKnockback(500);
             }
         }
 

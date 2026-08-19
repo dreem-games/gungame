@@ -25,6 +25,9 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     private isSlowed: boolean = false;
 
+    // Knockback: время, на которое взрыв вырывает управление из-под игрока
+    private knockbackTime: number = 0;
+
     // Stamina config
     public maxStamina: number = 100;
     public currentStamina: number = 100;
@@ -111,6 +114,12 @@ public takeDamage(amount: number) {
         this.isSlowed = slowed;
     }
 
+    // Ударная волна от взрыва: физика сама разгоняет тело, на это время
+    // отключаем обычное управление, чтобы setVelocity не сбивал импульс.
+    public setKnockback(duration: number) {
+        this.knockbackTime = Math.max(this.knockbackTime, duration);
+    }
+
     update(_time: number, delta: number) {
         if (this.isDestroyed || this.isDead) return;
 
@@ -124,6 +133,12 @@ public takeDamage(amount: number) {
 
         const moveVector = this.inputManager.getMovementVector();
 
+        // Во время отброса от взрыва управление заморожено — физика гонит тело
+        if (this.knockbackTime > 0) {
+            this.knockbackTime -= delta;
+            // Если дэш начался в момент взрыва, гасим его — иначе isDashing застрянет
+            if (this.isDashing) this.isDashing = false;
+        } else {
         // Handle Dash initialization
         if (this.inputManager.isDashing() && !this.isDashing && this.dashCooldown <= 0 && this.currentStamina >= this.dashStaminaCost) {
             this.isDashing = true;
@@ -169,6 +184,7 @@ public takeDamage(amount: number) {
 
             this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
         }
+        } // end knockback check
 
         // Reset slowed state; sensor collisions will reapply it if still inside
         this.isSlowed = false;
