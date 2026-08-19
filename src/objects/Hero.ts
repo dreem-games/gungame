@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { IEntity } from '../types/interfaces';
 import { InputManager } from '../core/InputManager';
 import { WeaponManager } from '../weapons/WeaponManager';
+import { EventDispatcher } from '../core/EventBus';
 
 export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public id: string;
@@ -31,6 +32,10 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
     // Laser pointer MVP
     private laserGraphics: Phaser.GameObjects.Graphics;
+
+    // Health System
+    public hp: number = 100;
+    public isDead: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, inputManager: InputManager) {
         super(scene.matter.world, x, y, 'hero', 'hero');
@@ -72,8 +77,36 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         return this.weaponManager;
     }
 
+    public takeDamage(amount: number) {
+        if (this.isDead) return;
+
+        this.hp -= amount;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.die();
+        }
+
+        EventDispatcher.emit('hero-damage', this.hp);
+    }
+
+    private die() {
+        this.isDead = true;
+
+        EventDispatcher.emit('hero-death');
+        this.scene.sound.play('death');
+
+        // Switch sprite to dead
+        this.setFrame('hero_dead');
+        this.setOrigin(0.5, 0.5); // Center origin
+
+        // Make body a sensor so projectiles pass through, but we still keep it around
+        this.setSensor(true);
+        this.setFrictionAir(0.99); // stop movement
+        this.laserGraphics.clear();
+    }
+
     update(_time: number, delta: number) {
-        if (this.isDestroyed) return;
+        if (this.isDestroyed || this.isDead) return;
 
         // Decrease cooldowns
         if (this.dashCooldown > 0) this.dashCooldown -= delta;

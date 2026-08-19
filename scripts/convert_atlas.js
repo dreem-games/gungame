@@ -3,16 +3,15 @@ const fs = require('fs');
 function parseLibGdxAtlas(text) {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     const frames = {};
-    let currentTexture = '';
 
     let i = 0;
     while(i < lines.length && !lines[i].includes('size:')) i++;
-    i += 4;
+    i += 4; // Skip to the first frame block
 
     while (i < lines.length) {
         const line = lines[i];
         if (!line.includes(':')) {
-            const name = line;
+            let name = line;
             i++;
             const rotate = lines[i++].split(':')[1].trim() === 'true';
             const xy = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
@@ -20,6 +19,11 @@ function parseLibGdxAtlas(text) {
             const orig = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
             const offset = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
             const index = parseInt(lines[i++].split(':')[1].trim());
+
+            if (index !== -1) {
+                // If the atlas specifies an index, append it to the name so we capture all frames.
+                name = `${name}_${index}`;
+            }
 
             frames[name] = {
                 frame: { x: xy[0], y: xy[1], w: size[0], h: size[1] },

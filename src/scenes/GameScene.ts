@@ -2,11 +2,13 @@ import Phaser from 'phaser';
 import { Hero } from '../objects/Hero';
 import { EntityManager } from '../core/EntityManager';
 import { InputManager } from '../core/InputManager';
+import { Barrel } from '../objects/Barrel';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
     private inputManager!: InputManager;
     private hero!: Hero;
+    private barrels: Barrel[] = [];
 
     constructor() {
         super('GameScene');
@@ -16,6 +18,19 @@ export class GameScene extends Phaser.Scene {
         // Initialize Core Systems
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
+
+        // Setup explosion animation
+        this.anims.create({
+            key: 'explosion_anim',
+            frames: this.anims.generateFrameNames('explosion', {
+                prefix: 'explosion_',
+                start: 1,
+                end: 25,
+                zeroPad: 2
+            }),
+            frameRate: 30,
+            repeat: 0
+        });
 
         // Setup Collision events
         this.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
@@ -58,12 +73,14 @@ export class GameScene extends Phaser.Scene {
         box.setFrictionAir(0.1);
         box.setMass(70);
 
-        const barrel = this.matter.add.sprite(800, 500, 'level1', 'barrel');
-        // Unscaled Barrel physics body radius 128 (scaled down it will perfectly match the 128x128 sprite)
-        barrel.setBody({ type: 'circle', radius: 128 });
-        barrel.setScale(0.5);
-        barrel.setFrictionAir(0.1);
-        barrel.setMass(50);
+        // Spawn barrels
+        const barrel1 = new Barrel(this, 800, 500);
+        const barrel2 = new Barrel(this, 900, 500);
+        const barrel3 = new Barrel(this, 850, 400);
+        this.barrels.push(barrel1, barrel2, barrel3);
+        this.entityManager.add(barrel1);
+        this.entityManager.add(barrel2);
+        this.entityManager.add(barrel3);
 
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
@@ -104,9 +121,10 @@ export class GameScene extends Phaser.Scene {
         // Destroy the projectile
         projectile.destroy();
 
-        // Target taking damage logic would go here
-        // const damage = projectile.getData('damage');
-        // if (target instanceof Enemy) target.takeDamage(damage);
+        // Check if target is a barrel
+        if (_target instanceof Barrel) {
+            _target.explode(this.hero, this.barrels);
+        }
     }
 
     private generateBorderWalls(worldSize: number, tileSize: number) {
