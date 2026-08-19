@@ -11,7 +11,8 @@ export class Projectile {
         speed: number,
         damage: number,
         texture: string,
-        frame: string
+        frame: string,
+        piercing: boolean = false
     ) {
         // Create the projectile
         this.gameObject = scene.matter.add.sprite(x, y, texture, frame);
@@ -30,9 +31,16 @@ export class Projectile {
         this.gameObject.setVelocity(vx, vy);
         this.gameObject.setRotation(angle);
 
+        // Check for any bodies at the spawn location
+        const allBodies = scene.matter.world.getAllBodies();
+        const spawnBodies = allBodies.filter(body => scene.matter.containsPoint(body, x, y));
+        const ignoredBodies = spawnBodies.map(body => (body as any).gameObject).filter(obj => obj !== undefined && obj !== null);
+
         // Custom data for collision handling
         this.gameObject.setData('isProjectile', true);
         this.gameObject.setData('damage', damage);
+        this.gameObject.setData('ignoredBodies', ignoredBodies);
+        this.gameObject.setData('isPiercing', piercing);
 
         // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
         scene.time.delayedCall(3000, () => {
