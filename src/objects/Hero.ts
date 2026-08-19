@@ -177,10 +177,15 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         const spawnX = this.x + rotatedX;
         const spawnY = this.y + rotatedY;
 
+        // Прицеливаемся из точки выстрела прямо в курсор, чтобы лазер и пуля проходили ровно через него
+        const fireAngle = Phaser.Math.Angle.Between(spawnX, spawnY, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+        const fireCos = Math.cos(fireAngle);
+        const fireSin = Math.sin(fireAngle);
+
         // Пуля вылетает чуть впереди точки, откуда рисуется лазер
         const BULLET_SPAWN_OFFSET = 20;
-        const bulletX = spawnX + cos * BULLET_SPAWN_OFFSET;
-        const bulletY = spawnY + sin * BULLET_SPAWN_OFFSET;
+        const bulletX = spawnX + fireCos * BULLET_SPAWN_OFFSET;
+        const bulletY = spawnY + fireSin * BULLET_SPAWN_OFFSET;
 
         // Draw MVP Laser Pointer
         this.laserGraphics.clear();
@@ -188,14 +193,14 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.laserGraphics.beginPath();
         this.laserGraphics.moveTo(spawnX, spawnY);
         // Draw laser out far along the angle
-        const laserEndX = spawnX + cos * 2000;
-        const laserEndY = spawnY + sin * 2000;
+        const laserEndX = spawnX + fireCos * 2000;
+        const laserEndY = spawnY + fireSin * 2000;
         this.laserGraphics.lineTo(laserEndX, laserEndY);
         this.laserGraphics.strokePath();
 
         // Shooting
         if (this.inputManager.isShooting) {
-            const fireResult = this.weaponManager.fire(bulletX, bulletY, angle, _time);
+            const fireResult = this.weaponManager.fire(bulletX, bulletY, fireAngle, _time);
 
             if (fireResult === false && this.inputManager.justPressedShoot) {
                 // Out of ammo
