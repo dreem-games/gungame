@@ -1,80 +1,115 @@
 # GunGame — AGENTS.md
 
 ## Что это
-Top-down шутер от третьего лица на libGDX с физикой Box2D, освещением box2dlights и поддержкой геймпада/клавиатуры+мыши.
+Top-down шутер в браузере на **TypeScript + Phaser 4** с физикой **Matter.js** (без гравитации).
+Идёт рефакторинг старой Java/libGDX-версии (Box2D) на веб — см. `TASK.md` (чек-лист переноса фичей)
+и гит-ветку `feat/typescript-rewrite-*`. Старый Java-код и Gradle-файлы больше не актуальны.
 
-## Язык и стиль
-- **Java**, Java 25 (toolchain, использует `record`, текстовые блоки `"""`)
-- Lombok (`@Getter` и др.) — плагин Lombok обязателен в IDE
-- Комментарии исключительно на русском (за исключением стороннего `BodyEditorLoader.java` и единичных секционных заголовков типа `// ───── helpers ─────` в `Laser.java`)
-- Именование: camelCase, классы PascalCase; префиксы/суффиксы по ответственности (`Manager`, `Utils`, `Controller`)
-- Отступы: табы (как в существующих файлах)
+## Стек
+- **Язык:** TypeScript (`strict`, `noUnusedLocals`, `noUnusedParameters` — см. `tsconfig.json`)
+- **Фреймворк:** Phaser `^4.2.1`, физика Matter.js (`gravity: 0`, top-down)
+- **Бандлер:** Vite `^8`, точка входа `index.html` → `src/main.ts`
+- **Тесты:** `@playwright/test` в devDependencies, готового набора тестов нет
+- **Отступы:** 4 пробела. Комментарии в коде пока смешанные (англ./рус) — новые писать на русском
+- **Тип:** `IEntity` (`src/types/interfaces.ts`) — контракт сущности для `EntityManager`
 
 ## Структура проекта
 ```
 gungame/
-├── build.gradle.kts          # Корневой Gradle: версии, модули :core и :desktop
-├── settings.gradle.kts
-├── gradle.properties         # org.gradle.jvmargs, версия 0.1-dev
-├── assets/                   # Ресурсы: font/, sound/, texture/, ui/
-├── core/src/com/gungame/     # Основная логика игры
-│   ├── GunGame.java          # ApplicationAdapter — главный цикл (create/render/dispose)
-│   ├── assets/               # TextureManager, SoundManager
-│   ├── controller/           # Input: ControllersManager, HeroController (+ joystick/keyboard)
-│   ├── ui/                   # UI: UiEngine, HealthBar, StaminaBar, Ammo, CameraShaker
-│   └── world/                # Игровой мир
-│       ├── GameWorld.java    # Центральный orchestrator: физика, рендер, рестарт
-│       ├── GameWorldConfig.java
-│       ├── collision/        # Box2D contact listener, категории коллизий
-│       ├── explosion/        # Анимации взрывов
-│       └── objects/
-│           ├── meta/         # GameObject базовый класс, фабрики, типы
-│           ├── phisical/     # Hero, Bullet, Grenade, Box, Barrel, FirePoint
-│           ├── imaginary/    # GroundContainer, генерация земли
-│           └── weapon/       # Gun, Laser, GrenadeThrower, GunData, BulletData
-├── desktop/src/com/gungame/  # DesktopLauncher.java — точка входа
-└── docs/                     # startup.md, controls.md
+├── index.html                # HTML-обёртка с div#game-container
+├── src/
+│   ├── main.ts               # Точка входа: Phaser.Game config (Matter, gamepad) + resize
+│   ├── scenes/               # Phaser-сцены
+│   │   ├── BootScene.ts      # запуск → PreloadScene
+│   │   ├── PreloadScene.ts   # загрузка atlas/audio → GameScene
+│   │   ├── GameScene.ts      # мир: физика, генерация окружения, коллизии пуль
+│   │   └── UIScene.ts        # HUD (оружие, патроны, полоска урона)
+│   ├── core/
+│   │   ├── EntityManager.ts  # реестр IEntity: add/update/remove, чистка мёртвых
+│   │   ├── InputManager.ts   # клавиатура + мышь + геймпад, координаты прицела
+│   │   └── EventBus.ts       # EventDispatcher (Phaser EventEmitter) + GameEvents
+│   ├── objects/
+│   │   ├── Hero.ts           # игрок: движение, стамины, дэш, прицел, лазер
+│   │   ├── Projectile.ts     # пуля: sensor-body, data (damage/piercing/ignoredBodies)
+│   │   ├── Barrel.ts         # взрывная бочка (цепная реакция, урон по дистанции)
+│   │   ├── OilTank.ts        # танк: shockwave + масляная лужа (slowed)
+│   │   └── ThinWall.ts       # сегменты деревянной стены, пробиваются
+│   ├── weapons/
+│   │   ├── BaseWeapon.ts     # абстрактное оружие: патроны, rate, reload
+│   │   ├── Rifle.ts / AssaultRifle.ts / Shotgun.ts
+│   │   └── WeaponManager.ts  # текущее оружие, fire(), переключение
+│   └── types/interfaces.ts   # IEntity = IUpdateable & IDestroyable & {id, gameObject}
+├── public/assets/            # статика, которую отдаёт Vite (font/, sound/, texture/, ui/)
+│                             #   texture/ui: .atlas (libGDX) + сгенерированные .json
+├── assets/                   # ⚠️ легаси: исходники с Java-ветки, дублирует public/assets
+├── scripts/convert_atlas.js  # libGDX .atlas → Phaser .json (писал в public/, см. ниже)
+├── docs/dev/startup.md       # установка/запуск
+├── docs/play/controls.md     # управление
+└── TASK.md                   # план переноса фичей Java → TS
 ```
 
 ## Ключевые зависимости
 | Dependency | Версия | Назначение |
 |---|---|---|
-| libGDX | 1.14.0 | Core, freetype, box2d |
-| box2dlights | 1.5 | Динамическое освещение (RayHandler) |
-| gdx-controllers | 2.2.4 | Абстракция геймпада |
-| Lombok | 9.2.0 (plugin) | @Getter и др. |
+| phaser | ^4.2.1 | Core + Matter physics |
+| matter-js | ^0.20.0 | типы MatterJS (физика внутри Phaser) |
+| vite | ^8.2.1 | dev-сервер и сборка |
+| typescript | ^7.0.2 | компилятор (`tsc --noEmit` в build) |
+| @playwright/test | ^1.62.1 | E2E (набор тестов пока пуст) |
 
 ## Архитектура
-- **GunGame** (`ApplicationAdapter`) — создаёт камеры, загружает ресурсы, делегирует в `GameWorld`.
-- **GameWorld** — owns Box2D `World`, `RayHandler`, `ControllersManager`, двух героев (`hero`, `hero2`). Обновляет физику, рендерит мир и UI каждый кадр.
-- **GameObject** — абстрактная обёртка над Box2D `Body`. Подклассы: `Hero`, `Bullet`, `Grenade`, `Box`, `Barrel`, `StaticGameObject` и др.
-- **GameObjectFactoryManager** — фабричный паттерн для создания объектов мира.
-- **ControllersManager** → **HeroController** (abstract) → конкретные реализации для джойстика и клавиатуры/мыши.
-- Два игрока: `hero` (P1) и `hero2` (P2/bot). Поле `isWorldToRestart` триггерит рестарт уровня.
+- **Сцены (chain):** `BootScene` → `PreloadScene` → `GameScene` (+ `UIScene` — параллельно через `scene.launch`).
+  Конфиг `Phaser.Game` — в `src/main.ts`.
+- **GameScene** — оркестратор мира: `create()` строит границы, генерирует окружение (ящики/бочки/танк/стену),
+  создаёт `Hero` и `UIScene`, вешает `collisionstart`/`collisionactive` на `matter.world`. `update()` дёргает
+  `entityManager.update()` и `inputManager.update()`.
+- **EntityManager** — реестр `IEntity`; каждый кадр обновляет живых и чистит `isDestroyed`.
+- **InputManager** — клавиатура (WASD/Shift/Space/R/1-3), мышь (`pointerWorldX/Y`), геймпад
+  (левый стик — движение, правый — прицел, R2 — огонь, B — перезарядка, D-pad — смена оружия).
+- **Прицел и выстрел** — в `Hero.update()`: угол `fireAngle` считается из дула в курсор, **но** при
+  дистанции курсора до героя `< AIM_DEADZONE` (120 px) стрельба идёт по текущему направлению взгляда —
+  иначе при наведении на себя стреляет «сквозь спину». Лазерная линия (`laserGraphics`) и все пули
+  используют этот же `fireAngle`, так что правка в одном месте чинит и laser, и projectiles.
+- **Оружие:** `BaseWeapon` (патроны, `fireRate`, `reload`, звук) → `Rifle` (piercing), `AssaultRifle`,
+  `Shotgun` (32 дроби, gaussian spread). `WeaponManager` держит список и текущее оружие,
+  эмитит `weaponChanged`/`ammoChanged` в `game.events`.
+- **Проектиль:** sensor-body (не толкает объекты), data-поля `isProjectile`/`damage`/`isPiercing`/
+  `ignoredBodies`; авто-destroy через 3 с. Логика попаданий — в `GameScene.handleProjectileCollision`:
+  piercing сквозь thin wall не уничтожает пулю (цель добавляется в `ignoredBodies`).
+- **Окружение:** `Barrel` — взрывается с квадратичным спадом урона и цепной реакцией (`explode`),
+  `OilTank` — создаёт
+  масляные сенсоры `isPuddle`, в которых `Hero.setSlowed(true)`; `ThinWall` — сегменты 32px с health.
+- **События:** между сценами — `scene.game.events` (weaponChanged, ammoChanged), между компонентами —
+  глобальный `EventDispatcher` (`hero-damage`, `hero-death`).
 
-## Как запускать
-- Точка входа: `com.gungame.DesktopLauncher` (модуль `desktop`)
-- В IDEA: запустить `DesktopLauncher.main()` напрямую
-- Fat-JAR: `./gradlew :desktop:shadowJar` → `gungame.jar` в корне проекта
-
-## Градл
+## Запуск и сборка
 ```bash
-./gradlew :desktop:shadowJar   # Сборка fat-jar
-./gradlew clean                # Очистка
+npm install
+npm run dev        # vite dev-сервер (http://localhost:5173)
+npm run build      # tsc && vite build → dist/
 ```
+- Атласы: в `public/assets/texture|ui` лежат `.atlas` (libGDX) и `.json` (Phaser).
+  `.json` — сгенерированы `scripts/convert_atlas.js` (читает/пишет `public/assets/...`).
+  При добавлении нового `.atlas` — перегенерировать `.json` и обновить `atlases` в скрипте + `PreloadScene`.
+- Топ-уровневая `assets/` — легаси-копия, Vite её **не** отдаёт. Править ресурсы в `public/assets/`.
 
-## Управление (для контекста)
-- Геймпад: левый стик — движение, правый — прицел, RB — выстрел, X — перезарядка, Y — смена оружия, LB — граната, A — бег, B — рывок
-- Клавиатура+мышь: WASD, ЛКМ, R, G, Shift, Space, 1/2/3, Esc
+## Управление
+- **Мышь+клавиатура:** WASD — движение, мышь — прицел, ЛКМ — огонь, R — перезарядка,
+  1/2/3 или колесо — смена оружия, Shift — бег (стamina), Space — рывок.
+- **Геймпад:** левый стик — движение, правый — прицел, R2 — огонь, B — перезарядка, D-pad — смена оружия.
 
 ## Правила разработки
-1. Новые игровые объекты наследуют `GameObject` (или `VisibleGameObject` / `StaticGameObject`) и регистрируются через `GameObjectFactoryManager`
-2. Коллизии настраиваются через `CollisionCategory` и `setupCollisionFilter()`
-3. Ресурсы загружаются через `TextureManager` / `SoundManager` — не использовать `Gdx.files` напрямую без менеджеров
-4. Все игровые константы — в `GameWorldConfig`
-5. Не коммить секреты, `.gradle/`, `build/`, `.idea/`
+1. Новая сущность: реализует `IEntity` (`src/types/interfaces.ts`), регистрируется через `EntityManager`
+   (или остаётся обычным `Matter.Sprite` при разовой сцене — как `Barrel`/`OilTank`).
+2. Новая пуля/оружие: наследовать `BaseWeapon` и добавить в `WeaponManager.weapons`.
+3. Коллизии — через `matter.world.on('collisionstart' | 'collisionactive')` + data-поля на объектах.
+4. Смена оружия/патроны/урон → события: `game.events` для UI, `EventDispatcher` для игровой логики.
+5. Ресурсы только из `public/assets/` (Vite), не создавать новые пути в `assets/`.
+6. Не коммитить: `.idea/`, `build/`, `node_modules/`, `dist/`, `server.log` (дописать `.gitignore`).
 
 ## Правила для ассистента
-1. Явные ошибки и несоответствия (устаревшая документация, опечатки, неверные версии) исправлять немедленно, а не просто фиксировать их наличие
-2. Инструкции и предпочтения пользователя запоминать в этот файл (AGENTS.md)
-3. При обнаружении существенных ошибок (например, на этапе code review или самопроверки), которые можно исправить оптимальным образом без архитектурных деградаций, исправлять их сразу, не запрашивая разрешение у пользователя.
+1. Явные ошибки и несоответствия (устаревшая документация, опечатки, неверные версии) —
+   исправлять немедленно, а не просто фиксировать их наличие.
+2. Инструкции и предпочтения пользователя запоминать в этот файл (AGENTS.md).
+3. Существенные ошибки, которые можно закрыть без архитектурной деградации, — исправлять сразу.
+4. Перед поиском/чтением кода — использовать `ast-index` (см. системный скилл `ast-index-search`).

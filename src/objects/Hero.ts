@@ -210,8 +210,18 @@ public takeDamage(amount: number) {
         const spawnX = this.x + rotatedX;
         const spawnY = this.y + rotatedY;
 
-        // Прицеливаемся из точки выстрела прямо в курсор, чтобы лазер и пуля проходили ровно через него
-        const fireAngle = Phaser.Math.Angle.Between(spawnX, spawnY, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+        // Мёртвая зона: если курсор слишком близко к герою (рядом или прямо на нём),
+        // целимся в сторону текущего взгляда, а не в курсор — иначе можно бить сквозь себя/спину.
+        const AIM_DEADZONE = 120;
+        const pointerDist = Phaser.Math.Distance.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+
+        let fireAngle: number;
+        if (pointerDist < AIM_DEADZONE) {
+            fireAngle = angle;
+        } else {
+            // Прицеливаемся из точки выстрела прямо в курсор, чтобы лазер и пуля проходили ровно через него
+            fireAngle = Phaser.Math.Angle.Between(spawnX, spawnY, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
+        }
         const fireCos = Math.cos(fireAngle);
         const fireSin = Math.sin(fireAngle);
 
