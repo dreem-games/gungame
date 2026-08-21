@@ -40,5 +40,8 @@ export class Shotgun extends BaseWeapon {
 
         // Heavy shake for Shotgun
         this.scene.cameras.main.shake(150, 0.01);
+        if ((this.scene as any).flashManager) {
+            (this.scene as any).flashManager.createShotFlash(x, y, angle, 500);
+        }
     }
 }

@@ -33,5 +33,8 @@ export class Rifle extends BaseWeapon {
 
         // Moderate shake for Rifle
         this.scene.cameras.main.shake(100, 0.005);
+        if ((this.scene as any).flashManager) {
+            (this.scene as any).flashManager.createShotFlash(x, y, angle, 600);
+        }
     }
 }

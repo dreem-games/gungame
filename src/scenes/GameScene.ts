@@ -8,9 +8,11 @@ import { ThinWall } from '../objects/ThinWall';
 import { generateWorld } from '../core/map-gen';
 import { NetworkManager, WorldLayout } from '../core/NetworkManager';
 import map from '../../multiplayer-map.json';
+import { FlashManager } from '../core/FlashManager';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
+    public flashManager!: FlashManager;
     private inputManager!: InputManager;
     private hero!: Hero;
     private barrels: Barrel[] = [];
@@ -29,6 +31,7 @@ export class GameScene extends Phaser.Scene {
         // Initialize Core Systems
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
+        this.flashManager = new FlashManager(this);
 
         // Setup explosion animation
         this.anims.create({
@@ -365,6 +368,7 @@ export class GameScene extends Phaser.Scene {
             this.add.sprite(event.x, event.y, 'scorch').setDisplaySize(radius * 1.4, radius * 1.4).setDepth(-1);
             this.sound.play('barrel_explosion');
             this.cameras.main.shake(400, 0.008);
+            this.flashManager.createExplosionFlash(event.x, event.y, radius);
         }
     }
 

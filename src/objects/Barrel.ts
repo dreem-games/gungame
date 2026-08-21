@@ -52,6 +52,9 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Strong shake — explosion is the heaviest impact in the game
         this.scene.cameras.main.shake(400, 0.008);
+        if ((this.scene as any).flashManager) {
+            (this.scene as any).flashManager.createExplosionFlash(this.x, this.y, 500);
+        }
 
         // Shockwave: отбрасывает ящики и героя. Импульс скорости (а не сила)
         // — мгновенный и предсказуемый. Бочки не отбрасываем — они уничтожаются
