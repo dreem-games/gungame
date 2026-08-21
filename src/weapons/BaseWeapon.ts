@@ -57,6 +57,7 @@ export abstract class BaseWeapon {
             if (this.reloadTimer) {
                 this.reloadTimer.remove();
             }
+            this.scene.sound.removeByKey('reload');
         }
     }
 }

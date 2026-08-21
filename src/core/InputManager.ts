@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 
+const STICK_DEADZONE = 0.1;
+
 export class InputManager {
     private keys!: {
         W: Phaser.Input.Keyboard.Key;
@@ -25,6 +27,11 @@ export class InputManager {
     public justPressedShoot: boolean = false;
     public wheelDirection: number = 0;
 
+    // Прицел: true, пока правый стик отклонён от нуля; сбрасывается при движении мыши
+    public rightStickAim: boolean = false;
+
+    private wasPadDashDown = false;
+
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
 
@@ -36,6 +43,7 @@ export class InputManager {
             const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
             this.pointerWorldX = worldPoint.x;
             this.pointerWorldY = worldPoint.y;
+            this.rightStickAim = false;
         });
 
         // Track mouse shooting
@@ -63,17 +71,27 @@ export class InputManager {
     }
 
     /**
-     * Returns a normalized movement vector based on currently pressed keys
+     * Returns a normalized movement vector. Left stick wins over keys when pushed past the deadzone.
      */
     public getMovementVector(): Phaser.Math.Vector2 {
         const vector = new Phaser.Math.Vector2(0, 0);
 
-        if (!this.keys) return vector;
+        const pad = this.scene.input.gamepad?.pad1;
+        if (pad) {
+            const ls = pad.leftStick;
+            const magnitude = Math.hypot(ls.x, ls.y);
+            if (magnitude > STICK_DEADZONE) {
+                vector.x = ls.x;
+                vector.y = ls.y;
+            }
+        }
 
-        if (this.keys.W.isDown) vector.y -= 1;
-        if (this.keys.S.isDown) vector.y += 1;
-        if (this.keys.A.isDown) vector.x -= 1;
-        if (this.keys.D.isDown) vector.x += 1;
+        if (vector.lengthSq() === 0 && this.keys) {
+            if (this.keys.W.isDown) vector.y -= 1;
+            if (this.keys.S.isDown) vector.y += 1;
+            if (this.keys.A.isDown) vector.x -= 1;
+            if (this.keys.D.isDown) vector.x += 1;
+        }
 
         if (vector.x !== 0 || vector.y !== 0) {
             vector.normalize();
@@ -83,19 +101,27 @@ export class InputManager {
     }
 
     public isRunning(): boolean {
-        return this.keys && this.keys.SHIFT.isDown;
+        if (!this.keys) return false;
+        const pad = this.scene.input.gamepad?.pad1;
+        const padRun = pad ? pad.A : false;
+        return this.keys.SHIFT.isDown || padRun;
     }
 
     public isDashing(): boolean {
-        // We use JustDown to only trigger once per press
-        return this.keys && Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
+        const pad = this.scene.input.gamepad?.pad1;
+        const padDown = pad ? pad.B : false;
+        const padJustDown = padDown && !this.wasPadDashDown;
+        this.wasPadDashDown = padDown;
+
+        const keyboard = this.keys && Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
+        return keyboard || padJustDown;
     }
 
     public isReloading(): boolean {
         if (!this.keys) return false;
 
         const pad = this.scene.input.gamepad?.pad1;
-        const padReload = pad ? pad.B : false; // Common reload button (B on Xbox / Circle on PS)
+        const padReload = pad ? pad.Y : false; // Common reload button (Y on Xbox / Square on PS)
 
         return Phaser.Input.Keyboard.JustDown(this.keys.R) || padReload;
     }
@@ -119,11 +145,17 @@ export class InputManager {
     }
 
     public update() {
-        // Fallback for pointer if it doesn't move but camera moves
         const pointer = this.scene.input.activePointer;
-        const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        this.pointerWorldX = worldPoint.x;
-        this.pointerWorldY = worldPoint.y;
+
+        // Fallback for pointer if it doesn't move but camera moves.
+        // Пока прицел держит правый стик, не перетягиваем его на позицию мыши —
+        // иначе герой бы резко доворачивался к курсору при отпускании стика.
+        // Возврат на мышь произойдёт при следующем её движении (сбрасывает rightStickAim).
+        if (!this.rightStickAim) {
+            const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            this.pointerWorldX = worldPoint.x;
+            this.pointerWorldY = worldPoint.y;
+        }
 
         // Reset justPressed per frame
         this.justPressedShoot = false;
@@ -153,6 +185,7 @@ export class InputManager {
                 // Extend the pointer distance
                 this.pointerWorldX = cx + rsX * 500;
                 this.pointerWorldY = cy + rsY * 500;
+                this.rightStickAim = true;
             }
         }
     }

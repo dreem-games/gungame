@@ -102,6 +102,8 @@ public takeDamage(amount: number) {
         this.isDead = true;
 
         EventDispatcher.emit('hero-death');
+        // Смерть отменяет перезарядку — иначе звук перезагрузки затрет звук смерти
+        this.weaponManager.cancelReload();
         this.scene.sound.play('death');
 
         // Switch sprite to dead

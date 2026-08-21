@@ -77,4 +77,8 @@ export class WeaponManager {
         const weapon = this.getCurrentWeapon();
         weapon.reload();
     }
+
+    public cancelReload() {
+        this.getCurrentWeapon().cancelReload();
+    }
 }
