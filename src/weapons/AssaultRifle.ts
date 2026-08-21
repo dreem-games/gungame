@@ -35,7 +35,7 @@ export class AssaultRifle extends BaseWeapon {
         // Light shake for Assault Rifle
         this.scene.cameras.main.shake(50, 0.002);
         if ((this.scene as any).flashManager) {
-            (this.scene as any).flashManager.createShotFlash(x, y, angle, 400);
+            (this.scene as any).flashManager.createShotFlash(x, y, angle, 200);
         }
     }
 }

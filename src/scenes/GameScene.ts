@@ -220,6 +220,7 @@ export class GameScene extends Phaser.Scene {
             sprite.setScale(0.5);
             sprite.setFrictionAir(0.1);
             sprite.setMass(70);
+            sprite.setData('blocksVision', true);
             sprite.setData('networkId', box.id);
             this.boxes.set(box.id, sprite);
         }
@@ -259,6 +260,7 @@ export class GameScene extends Phaser.Scene {
             sprite.setScale(0.5);
             sprite.setFrictionAir(0.1);
             sprite.setMass(70);
+            sprite.setData('blocksVision', true);
             this.localEnvironment.push(sprite);
         }
 
@@ -300,6 +302,7 @@ export class GameScene extends Phaser.Scene {
         wall.setBody({ type: 'rectangle', width: 256, height: 256 });
         wall.setScale(0.5);
         wall.setStatic(true);
+        wall.setData('blocksVision', true);
     }
 
     update(time: number, delta: number) {
