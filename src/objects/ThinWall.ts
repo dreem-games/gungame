@@ -12,6 +12,7 @@ export class ThinWallSegment extends Phaser.Physics.Matter.Sprite {
         this.setBody({ type: 'rectangle', width: 32, height: 32 });
         this.setStatic(true);
         this.setData('isThinWall', true);
+        this.setData('blocksVision', true);
     }
 
     public takeDamage(amount: number) {

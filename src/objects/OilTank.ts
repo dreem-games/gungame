@@ -16,6 +16,7 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
         this.setMass(200);
 
         this.setData('isOilTank', true);
+        this.setData('blocksVision', true);
     }
 
     public takeDamage(amount: number) {
