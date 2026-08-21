@@ -232,6 +232,20 @@ wss.on('connection', (socket) => {
                 }
                 return;
             }
+            if (message.type === 'fire') {
+                events.push({
+                    type: 'projectileFired',
+                    x: message.x,
+                    y: message.y,
+                    angle: message.angle,
+                    speed: message.speed,
+                    damage: message.damage,
+                    texture: message.texture,
+                    frame: message.frame,
+                    playerId: id
+                });
+                return;
+            }
             if (message.type !== 'input' || ![message.x, message.y, message.rotation].every(Number.isFinite)) return;
 
             const player = players.get(id);

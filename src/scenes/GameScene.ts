@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Hero } from '../objects/Hero';
+import { Projectile } from '../objects/Projectile';
 import { EntityManager } from '../core/EntityManager';
 import { InputManager } from '../core/InputManager';
 import { Barrel } from '../objects/Barrel';
@@ -82,12 +83,18 @@ export class GameScene extends Phaser.Scene {
                     if (ignoredBodies.includes(gameObjectB)) {
                         return; // Ignore this collision completely
                     }
+                    if (gameObjectB instanceof Hero && bodyB.label === 'hero_movement') {
+                        return; // Ignore collisions with movement body, only hitbox matters
+                    }
                 }
 
                 if (isProjB) {
                     const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectB.getData('ignoredBodies') || [];
                     if (ignoredBodies.includes(gameObjectA)) {
                         return; // Ignore this collision completely
+                    }
+                    if (gameObjectA instanceof Hero && bodyA.label === 'hero_movement') {
+                        return; // Ignore collisions with movement body, only hitbox matters
                     }
                 }
 
@@ -127,6 +134,12 @@ export class GameScene extends Phaser.Scene {
             this.network = new NetworkManager();
             this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.network.destroy());
         }
+
+        this.events.on('projectileFired', (data: any) => {
+             if (this.multiplayer && this.network) {
+                 this.network.sendFire(data.x, data.y, data.angle, data.speed, data.damage, data.texture, data.frame);
+             }
+        });
 
         // Camera setup
         this.cameras.main.startFollow(this.hero);
@@ -340,6 +353,12 @@ export class GameScene extends Phaser.Scene {
 
     private applyServerEvents() {
         for (const event of this.network.consumeWorldEvents()) {
+            if (event.type === 'projectileFired') {
+                if (this.network.getLocalPlayer()?.id !== event.playerId) {
+                    new Projectile(this, event.x, event.y, event.angle!, event.speed!, event.damage!, event.texture!, event.frame!, false, true);
+                }
+                continue;
+            }
             if (event.type === 'playerDamaged') {
                 if (this.network.getLocalPlayer()?.id === event.id && event.damage) this.hero.takeDamage(event.damage);
                 continue;

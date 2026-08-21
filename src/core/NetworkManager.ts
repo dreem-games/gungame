@@ -25,11 +25,16 @@ export interface WorldLayout {
 }
 
 export interface WorldEvent {
-    type: 'barrelExploded' | 'oilTankRuptured' | 'thinWallDestroyed' | 'playerDamaged';
+    type: 'barrelExploded' | 'oilTankRuptured' | 'thinWallDestroyed' | 'playerDamaged' | 'projectileFired';
     id: string;
     x: number;
     y: number;
     damage?: number;
+    angle?: number;
+    speed?: number;
+    texture?: string;
+    frame?: string;
+    playerId?: string;
 }
 
 export class NetworkManager {
@@ -76,6 +81,12 @@ export class NetworkManager {
 
     public sendHit(id: string, damage: number) {
         if (this.socket.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'hit', id, damage }));
+    }
+
+    public sendFire(x: number, y: number, angle: number, speed: number, damage: number, texture: string, frame: string) {
+        if (this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({ type: 'fire', x, y, angle, speed, damage, texture, frame }));
+        }
     }
 
     public isConnected(): boolean { return this.localPlayerId !== null; }
