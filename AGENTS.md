@@ -2,8 +2,7 @@
 
 ## Что это
 Top-down шутер в браузере на **TypeScript + Phaser 4** с физикой **Matter.js** (без гравитации).
-Идёт рефакторинг старой Java/libGDX-версии (Box2D) на веб — см. `TASK.md` (чек-лист переноса фичей)
-и гит-ветку `feat/typescript-rewrite-*`. Старый Java-код и Gradle-файлы больше не актуальны.
+Переписан со старой Java/libGDX-версии (Box2D) на веб. Старый Java-код и Gradle-файлы больше не актуальны.
 
 ## Стек
 - **Язык:** TypeScript (`strict`, `noUnusedLocals`, `noUnusedParameters` — см. `tsconfig.json`)
@@ -44,8 +43,7 @@ gungame/
 ├── assets/                   # ⚠️ легаси: исходники с Java-ветки, дублирует public/assets
 ├── scripts/convert_atlas.js  # libGDX .atlas → Phaser .json (писал в public/, см. ниже)
 ├── docs/dev/startup.md       # установка/запуск
-├── docs/play/controls.md     # управление
-└── TASK.md                   # план переноса фичей Java → TS
+└── docs/play/controls.md     # управление
 ```
 
 ## Ключевые зависимости
