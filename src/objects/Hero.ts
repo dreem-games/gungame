@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { IEntity } from '../types/interfaces';
-import { InputManager } from '../core/InputManager';
-import { WeaponManager } from '../weapons/WeaponManager';
+
 import { EventDispatcher } from '../core/EventBus';
+import { InputManager } from '../core/InputManager';
+import { IEntity } from '../types/interfaces';
+import { WeaponManager } from '../weapons/WeaponManager';
 
 export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     public id: string;
@@ -86,7 +87,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         return this.isDashing;
     }
 
-public takeDamage(amount: number) {
+    public takeDamage(amount: number) {
         if (this.isDead) return;
 
         this.hp -= amount;
@@ -145,51 +146,56 @@ public takeDamage(amount: number) {
             // Если дэш начался в момент взрыва, гасим его — иначе isDashing застрянет
             if (this.isDashing) this.isDashing = false;
         } else {
-        // Handle Dash initialization
-        if (this.inputManager.isDashing() && !this.isDashing && this.dashCooldown <= 0 && this.currentStamina >= this.dashStaminaCost) {
-            this.isDashing = true;
-            this.dashTimer = this.dashDuration;
-            this.currentStamina -= this.dashStaminaCost;
-            this.dashCooldown = 1000; // 1 second cooldown
+            // Handle Dash initialization
+            if (
+                this.inputManager.isDashing() &&
+                !this.isDashing &&
+                this.dashCooldown <= 0 &&
+                this.currentStamina >= this.dashStaminaCost
+            ) {
+                this.isDashing = true;
+                this.dashTimer = this.dashDuration;
+                this.currentStamina -= this.dashStaminaCost;
+                this.dashCooldown = 1000; // 1 second cooldown
 
-            // If no movement vector, dash forward (towards cursor)
-            if (moveVector.x === 0 && moveVector.y === 0) {
-                const angle = this.rotation;
-                moveVector.x = Math.cos(angle);
-                moveVector.y = Math.sin(angle);
-            }
-        }
-
-        // Apply movement
-        if (this.isDashing) {
-            this.dashTimer -= delta;
-            if (this.dashTimer <= 0) {
-                this.isDashing = false;
-            } else {
-                // Ignore other inputs while dashing, maintain high velocity
-                // We keep the vector from when dash started, but normalize it
-                if (moveVector.length() === 0) {
-                     moveVector.x = Math.cos(this.rotation);
-                     moveVector.y = Math.sin(this.rotation);
+                // If no movement vector, dash forward (towards cursor)
+                if (moveVector.x === 0 && moveVector.y === 0) {
+                    const angle = this.rotation;
+                    moveVector.x = Math.cos(angle);
+                    moveVector.y = Math.sin(angle);
                 }
-                this.setVelocity(moveVector.x * this.dashSpeed, moveVector.y * this.dashSpeed);
-            }
-        }
-
-        if (!this.isDashing) {
-            let currentSpeed = this.baseSpeed;
-
-            if (this.inputManager.isRunning() && this.currentStamina > 0 && moveVector.length() > 0) {
-                currentSpeed = this.runSpeed;
-                this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
             }
 
-            if (this.isSlowed) {
-                currentSpeed *= 0.5;
+            // Apply movement
+            if (this.isDashing) {
+                this.dashTimer -= delta;
+                if (this.dashTimer <= 0) {
+                    this.isDashing = false;
+                } else {
+                    // Ignore other inputs while dashing, maintain high velocity
+                    // We keep the vector from when dash started, but normalize it
+                    if (moveVector.length() === 0) {
+                        moveVector.x = Math.cos(this.rotation);
+                        moveVector.y = Math.sin(this.rotation);
+                    }
+                    this.setVelocity(moveVector.x * this.dashSpeed, moveVector.y * this.dashSpeed);
+                }
             }
 
-            this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
-        }
+            if (!this.isDashing) {
+                let currentSpeed = this.baseSpeed;
+
+                if (this.inputManager.isRunning() && this.currentStamina > 0 && moveVector.length() > 0) {
+                    currentSpeed = this.runSpeed;
+                    this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
+                }
+
+                if (this.isSlowed) {
+                    currentSpeed *= 0.5;
+                }
+
+                this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
+            }
         } // end knockback check
 
         // Reset slowed state; sensor collisions will reapply it if still inside
@@ -205,10 +211,21 @@ public takeDamage(amount: number) {
         // чтобы лазер из дула проходил ровно через курсор.
         // Если курсор ближе, чем MUZZLE_REACH («за дулом» — решения нет),
         // держим текущий поворот, чтобы не было разворота на 180° и выстрела в спину.
-        const pointerDist = Phaser.Math.Distance.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY);
-        const angle = pointerDist > MUZZLE_REACH
-            ? Phaser.Math.Angle.Between(this.x, this.y, this.inputManager.pointerWorldX, this.inputManager.pointerWorldY) - Math.asin(FIRE_POSITION_DY / pointerDist)
-            : this.rotation;
+        const pointerDist = Phaser.Math.Distance.Between(
+            this.x,
+            this.y,
+            this.inputManager.pointerWorldX,
+            this.inputManager.pointerWorldY
+        );
+        const angle =
+            pointerDist > MUZZLE_REACH
+                ? Phaser.Math.Angle.Between(
+                      this.x,
+                      this.y,
+                      this.inputManager.pointerWorldX,
+                      this.inputManager.pointerWorldY
+                  ) - Math.asin(FIRE_POSITION_DY / pointerDist)
+                : this.rotation;
         this.setRotation(angle);
 
         // Weapon Switching

@@ -61,13 +61,16 @@ export class InputManager {
         });
 
         // Wheel switching
-        this.scene.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gameObjects: any, _deltaX: number, deltaY: number, _deltaZ: number) => {
-            if (deltaY > 0) {
-                this.wheelDirection = 1;
-            } else if (deltaY < 0) {
-                this.wheelDirection = -1;
+        this.scene.input.on(
+            'wheel',
+            (_pointer: Phaser.Input.Pointer, _gameObjects: any, _deltaX: number, deltaY: number, _deltaZ: number) => {
+                if (deltaY > 0) {
+                    this.wheelDirection = 1;
+                } else if (deltaY < 0) {
+                    this.wheelDirection = -1;
+                }
             }
-        });
+        );
     }
 
     /**

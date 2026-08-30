@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
+
 import { IEntity } from '../types/interfaces';
+
 import { Hero } from './Hero';
 
 export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
@@ -79,7 +81,7 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
             const vel = (body as any).velocity || { x: 0, y: 0 };
             this.scene.matter.body.setVelocity(body as MatterJS.BodyType, {
                 x: vel.x + (dx / dist) * speed,
-                y: vel.y + (dy / dist) * speed,
+                y: vel.y + (dy / dist) * speed
             });
         }
 

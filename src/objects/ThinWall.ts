@@ -34,7 +34,7 @@ export class ThinWall {
     constructor(scene: Phaser.Scene, startX: number, startY: number, length: number, isVertical: boolean) {
         // Create a graphics texture for the thin wall segment if it doesn't exist
         if (!scene.textures.exists('thin_wall_tex')) {
-            const g = scene.make.graphics({x: 0, y: 0});
+            const g = scene.make.graphics({ x: 0, y: 0 });
 
             // Wooden brown background
             g.fillStyle(0x8b5a2b);
@@ -44,9 +44,12 @@ export class ThinWall {
             g.lineStyle(2, 0x5c3a21);
             g.strokeRect(0, 0, 32, 32);
             g.beginPath();
-            g.moveTo(0, 8); g.lineTo(32, 8);
-            g.moveTo(0, 16); g.lineTo(32, 16);
-            g.moveTo(0, 24); g.lineTo(32, 24);
+            g.moveTo(0, 8);
+            g.lineTo(32, 8);
+            g.moveTo(0, 16);
+            g.lineTo(32, 16);
+            g.moveTo(0, 24);
+            g.lineTo(32, 24);
             g.strokePath();
 
             g.generateTexture('thin_wall_tex', 32, 32);

@@ -1,6 +1,8 @@
-import { BaseWeapon } from './BaseWeapon';
-import { Projectile } from '../objects/Projectile';
 import Phaser from 'phaser';
+
+import { Projectile } from '../objects/Projectile';
+
+import { BaseWeapon } from './BaseWeapon';
 
 export class Rifle extends BaseWeapon {
     constructor(scene: Phaser.Scene) {
@@ -27,7 +29,17 @@ export class Rifle extends BaseWeapon {
         this.lastFiredTime = time;
 
         const spreadAngle = angle + Phaser.Math.FloatBetween(-this.stats.spread, this.stats.spread);
-        new Projectile(this.scene, x, y, spreadAngle, this.stats.speed, this.stats.damage, this.stats.texture, this.stats.frame, this.stats.piercing);
+        new Projectile(
+            this.scene,
+            x,
+            y,
+            spreadAngle,
+            this.stats.speed,
+            this.stats.damage,
+            this.stats.texture,
+            this.stats.frame,
+            this.stats.piercing
+        );
 
         this.scene.sound.play(this.stats.sound);
 

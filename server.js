@@ -65,7 +65,9 @@ function createWorld() {
             const body = Matter.Bodies.rectangle(
                 startX + (isVertical ? 0 : i * 32),
                 startY + (isVertical ? i * 32 : 0),
-                32, 32, { isStatic: true }
+                32,
+                32,
+                { isStatic: true }
             );
             const record = { id: `thinWall-${i}`, type: 'thinWall', body, health: 30 };
             wallSegments.push(record);
@@ -78,7 +80,9 @@ function createWorld() {
 
 function simulate() {
     for (const player of players.values()) {
-        const slowed = oilPuddles.some(({ x, y, radius }) => Math.hypot(player.body.position.x - x, player.body.position.y - y) <= radius);
+        const slowed = oilPuddles.some(
+            ({ x, y, radius }) => Math.hypot(player.body.position.x - x, player.body.position.y - y) <= radius
+        );
         const speed = player.dashUntil > Date.now() ? 50 : player.input.running ? 9 : 5;
         Matter.Body.setVelocity(player.body, {
             x: player.input.x * speed * (slowed ? 0.45 : 1),
@@ -91,18 +95,26 @@ function simulate() {
 
 function currentWorldLayout() {
     return {
-        boxes: dynamicObjects.filter(({ type }) => type === 'box').map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
-        barrels: dynamicObjects.filter(({ type }) => type === 'barrel').map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
-        oilTank: dynamicObjects.find(({ type }) => type === 'oilTank') ? (() => {
-            const tank = dynamicObjects.find(({ type }) => type === 'oilTank');
-            return { id: tank.id, x: tank.body.position.x, y: tank.body.position.y };
-        })() : null,
-        thinWall: worldLayout.thinWall ? {
-            x: worldLayout.thinWall.x,
-            y: worldLayout.thinWall.y,
-            isVertical: worldLayout.thinWall.isVertical,
-            segments: wallSegments.map(({ id }) => ({ id, index: Number(id.split('-')[1]) }))
-        } : null
+        boxes: dynamicObjects
+            .filter(({ type }) => type === 'box')
+            .map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
+        barrels: dynamicObjects
+            .filter(({ type }) => type === 'barrel')
+            .map(({ id, body }) => ({ id, x: body.position.x, y: body.position.y })),
+        oilTank: dynamicObjects.find(({ type }) => type === 'oilTank')
+            ? (() => {
+                  const tank = dynamicObjects.find(({ type }) => type === 'oilTank');
+                  return { id: tank.id, x: tank.body.position.x, y: tank.body.position.y };
+              })()
+            : null,
+        thinWall: worldLayout.thinWall
+            ? {
+                  x: worldLayout.thinWall.x,
+                  y: worldLayout.thinWall.y,
+                  isVertical: worldLayout.thinWall.isVertical,
+                  segments: wallSegments.map(({ id }) => ({ id, index: Number(id.split('-')[1]) }))
+              }
+            : null
     };
 }
 
@@ -116,7 +128,8 @@ function snapshot() {
         vy: body.velocity.y
     }));
     const objectsState = dynamicObjects.map(({ id, type, body }) => ({
-        id, type,
+        id,
+        type,
         x: body.position.x,
         y: body.position.y,
         rotation: body.angle,
@@ -128,7 +141,13 @@ function snapshot() {
 
 function broadcast() {
     const snap = snapshot();
-    const message = JSON.stringify({ type: 'snapshot', authoritative: true, players: snap.players, objects: snap.objects, events: snap.events });
+    const message = JSON.stringify({
+        type: 'snapshot',
+        authoritative: true,
+        players: snap.players,
+        objects: snap.objects,
+        events: snap.events
+    });
     for (const player of players.values()) {
         if (player.socket && player.socket.readyState === player.socket.OPEN) {
             player.socket.send(message);
@@ -143,7 +162,12 @@ function explodeObject(record) {
 
     dynamicObjects.splice(index, 1);
     Matter.World.remove(engine.world, record.body);
-    events.push({ type: `${record.type}Exploded`, id: record.id, x: record.body.position.x, y: record.body.position.y });
+    events.push({
+        type: `${record.type}Exploded`,
+        id: record.id,
+        x: record.body.position.x,
+        y: record.body.position.y
+    });
 
     const radius = record.type === 'barrel' ? 700 : 500;
     const maxSpeed = record.type === 'barrel' ? 40 : 30;
@@ -156,14 +180,17 @@ function explodeObject(record) {
         if (distance === 0 || distance > radius) continue;
         const speed = maxSpeed * (1 - distance / radius);
         Matter.Body.setVelocity(body, {
-            x: body.velocity.x + dx / distance * speed,
-            y: body.velocity.y + dy / distance * speed
+            x: body.velocity.x + (dx / distance) * speed,
+            y: body.velocity.y + (dy / distance) * speed
         });
     }
 
     if (record.type === 'barrel') {
         for (const player of players.values()) {
-            const distance = Math.hypot(player.body.position.x - record.body.position.x, player.body.position.y - record.body.position.y);
+            const distance = Math.hypot(
+                player.body.position.x - record.body.position.x,
+                player.body.position.y - record.body.position.y
+            );
             if (distance > 500) continue;
             const damage = Math.round(100 * (1 - (distance / 500) ** 2));
             if (damage > 0) events.push({ type: 'playerDamaged', id: player.id, x: 0, y: 0, damage });
@@ -171,9 +198,14 @@ function explodeObject(record) {
     }
 
     if (record.type !== 'barrel') return;
-    for (const target of [...dynamicObjects]) {
+    for (const target of dynamicObjects) {
         if (target.type !== 'barrel') continue;
-        if (Math.hypot(target.body.position.x - record.body.position.x, target.body.position.y - record.body.position.y) <= 500) {
+        if (
+            Math.hypot(
+                target.body.position.x - record.body.position.x,
+                target.body.position.y - record.body.position.y
+            ) <= 500
+        ) {
             explodeObject(target);
         }
     }
@@ -190,7 +222,7 @@ function ruptureOilTank(record) {
     events.push({ type: 'oilTankRuptured', id: record.id, x, y });
     oilPuddles.push({ x, y, radius: 420 });
     for (let i = 0; i < 8; i++) {
-        const angle = Math.PI * 2 / 8 * i;
+        const angle = ((Math.PI * 2) / 8) * i;
         oilPuddles.push({ x: x + Math.cos(angle) * 390, y: y + Math.sin(angle) * 390, radius: 210 });
     }
 }
@@ -227,7 +259,12 @@ wss.on('connection', (socket) => {
                     if (wall.health <= 0) {
                         wallSegments.splice(wallSegments.indexOf(wall), 1);
                         Matter.World.remove(engine.world, wall.body);
-                        events.push({ type: 'thinWallDestroyed', id: wall.id, x: wall.body.position.x, y: wall.body.position.y });
+                        events.push({
+                            type: 'thinWallDestroyed',
+                            id: wall.id,
+                            x: wall.body.position.x,
+                            y: wall.body.position.y
+                        });
                     }
                 }
                 return;

@@ -1,0 +1,11 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "printWidth": 120,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "sortImports": {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"]
+    },
+    "ignorePatterns": ["assets/**", "public/assets/**/*.json", "multiplayer-map.json"]
+}

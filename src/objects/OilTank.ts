@@ -61,8 +61,8 @@ export class OilTank extends Phaser.Physics.Matter.Sprite {
 
         // Draw and create physics sensors for smaller intersecting circles around the edges
         const numSplats = 8;
-        for(let i = 0; i < numSplats; i++) {
-            const angle = (Math.PI * 2 / numSplats) * i;
+        for (let i = 0; i < numSplats; i++) {
+            const angle = ((Math.PI * 2) / numSplats) * i;
             const dist = PUDDLE_RADIUS * 0.65;
             const splatX = this.x + Math.cos(angle) * dist;
             const splatY = this.y + Math.sin(angle) * dist;
