@@ -1,5 +1,5 @@
-import { createNoise4D } from 'simplex-noise';
 import Phaser from 'phaser';
+import { createNoise4D } from 'simplex-noise';
 
 export function generateSeamlessNoiseTexture(scene: Phaser.Scene, key: string, size: number = 512) {
     if (scene.textures.exists(key)) {
@@ -33,7 +33,7 @@ export function generateSeamlessNoiseTexture(scene: Phaser.Scene, key: string, s
             let noiseValue2 = noise4D(dx * 2, dy * 2, dz * 2, dw * 2);
             noiseValue2 = (noiseValue2 + 1) / 2;
 
-            let finalNoise = (noiseValue * 0.8) + (noiseValue2 * 0.2);
+            const finalNoise = noiseValue * 0.8 + noiseValue2 * 0.2;
 
             // Keep values near white so MULTIPLY only adds subtle shading,
             // not dark blotches that hide the grass.

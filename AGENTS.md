@@ -1,10 +1,12 @@
 # GunGame — AGENTS.md
 
 ## Что это
+
 Top-down шутер в браузере на **TypeScript + Phaser 4** с физикой **Matter.js** (без гравитации).
 Переписан со старой Java/libGDX-версии (Box2D) на веб. Старый Java-код и Gradle-файлы больше не актуальны.
 
 ## Стек
+
 - **Язык:** TypeScript (`strict`, `noUnusedLocals`, `noUnusedParameters` — см. `tsconfig.json`)
 - **Фреймворк:** Phaser `^4.2.1`, физика Matter.js (`gravity: 0`, top-down)
 - **Бандлер:** Vite `^8`, точка входа `index.html` → `src/main.ts`
@@ -13,6 +15,7 @@ Top-down шутер в браузере на **TypeScript + Phaser 4** с физ
 - **Тип:** `IEntity` (`src/types/interfaces.ts`) — контракт сущности для `EntityManager`
 
 ## Структура проекта
+
 ```
 gungame/
 ├── index.html                # HTML-обёртка с div#game-container
@@ -47,15 +50,17 @@ gungame/
 ```
 
 ## Ключевые зависимости
-| Dependency | Версия | Назначение |
-|---|---|---|
-| phaser | ^4.2.1 | Core + Matter physics |
-| matter-js | ^0.20.0 | типы MatterJS (физика внутри Phaser) |
-| vite | ^8.2.1 | dev-сервер и сборка |
-| typescript | ^7.0.2 | компилятор (`tsc --noEmit` в build) |
-| @playwright/test | ^1.62.1 | E2E (набор тестов пока пуст) |
+
+| Dependency       | Версия  | Назначение                           |
+| ---------------- | ------- | ------------------------------------ |
+| phaser           | ^4.2.1  | Core + Matter physics                |
+| matter-js        | ^0.20.0 | типы MatterJS (физика внутри Phaser) |
+| vite             | ^8.2.1  | dev-сервер и сборка                  |
+| typescript       | ^7.0.2  | компилятор (`tsc --noEmit` в build)  |
+| @playwright/test | ^1.62.1 | E2E (набор тестов пока пуст)         |
 
 ## Архитектура
+
 - **Сцены (chain):** `BootScene` → `PreloadScene` → `GameScene` (+ `UIScene` — параллельно через `scene.launch`).
   Конфиг `Phaser.Game` — в `src/main.ts`.
 - **GameScene** — оркестратор мира: `create()` строит границы, генерирует окружение (ящики/бочки/танк/стену),
@@ -81,22 +86,26 @@ gungame/
   глобальный `EventDispatcher` (`hero-damage`, `hero-death`).
 
 ## Запуск и сборка
+
 ```bash
 npm install
 npm run dev        # vite dev-сервер (http://localhost:5173)
 npm run build      # tsc && vite build → dist/
 ```
+
 - Атласы: в `public/assets/texture|ui` лежат `.atlas` (libGDX) и `.json` (Phaser).
   `.json` — сгенерированы `scripts/convert_atlas.js` (читает/пишет `public/assets/...`).
   При добавлении нового `.atlas` — перегенерировать `.json` и обновить `atlases` в скрипте + `PreloadScene`.
 - Топ-уровневая `assets/` — легаси-копия, Vite её **не** отдаёт. Править ресурсы в `public/assets/`.
 
 ## Управление
+
 - **Мышь+клавиатура:** WASD — движение, мышь — прицел, ЛКМ — огонь, R — перезарядка,
   1/2/3 или колесо — смена оружия, Shift — бег (стamina), Space — рывок.
 - **Геймпад:** левый стик — движение, правый — прицел, R2 — огонь, A — бег, B — рывок, Y — перезарядка, D-pad — смена оружия.
 
 ## Правила разработки
+
 1. Новая сущность: реализует `IEntity` (`src/types/interfaces.ts`), регистрируется через `EntityManager`
    (или остаётся обычным `Matter.Sprite` при разовой сцене — как `Barrel`/`OilTank`).
 2. Новая пуля/оружие: наследовать `BaseWeapon` и добавить в `WeaponManager.weapons`.
@@ -106,6 +115,7 @@ npm run build      # tsc && vite build → dist/
 6. Не коммитить: `.idea/`, `build/`, `node_modules/`, `dist/`, `server.log` (дописать `.gitignore`).
 
 ## Правила для ассистента
+
 1. Явные ошибки и несоответствия (устаревшая документация, опечатки, неверные версии) —
    исправлять немедленно, а не просто фиксировать их наличие.
 2. Инструкции и предпочтения пользователя запоминать в этот файл (AGENTS.md).

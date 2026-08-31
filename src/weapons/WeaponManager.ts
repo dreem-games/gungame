@@ -1,8 +1,9 @@
+import Phaser from 'phaser';
+
+import { AssaultRifle } from './AssaultRifle';
 import { BaseWeapon } from './BaseWeapon';
 import { Rifle } from './Rifle';
-import { AssaultRifle } from './AssaultRifle';
 import { Shotgun } from './Shotgun';
-import Phaser from 'phaser';
 
 export class WeaponManager {
     private scene: Phaser.Scene;
@@ -11,11 +12,7 @@ export class WeaponManager {
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        this.weapons = [
-            new Rifle(scene),
-            new AssaultRifle(scene),
-            new Shotgun(scene)
-        ];
+        this.weapons = [new Rifle(scene), new AssaultRifle(scene), new Shotgun(scene)];
     }
 
     public getCurrentWeapon(): BaseWeapon {
@@ -66,7 +63,7 @@ export class WeaponManager {
 
             // Auto-reload
             if (weapon.currentAmmo === 0) {
-                 weapon.reload();
+                weapon.reload();
             }
             return true;
         }

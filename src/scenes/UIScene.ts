@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { BaseWeapon } from '../weapons/BaseWeapon';
+
 import { EventDispatcher } from '../core/EventBus';
+import { BaseWeapon } from '../weapons/BaseWeapon';
 
 export class UIScene extends Phaser.Scene {
     private ammoText!: Phaser.GameObjects.Text;
@@ -16,7 +17,8 @@ export class UIScene extends Phaser.Scene {
         const padding = 20;
 
         // Weapon Icon Background
-        this.add.rectangle(padding + 40, padding + 40, 80, 80, 0x000000, 0.8)
+        this.add
+            .rectangle(padding + 40, padding + 40, 80, 80, 0x000000, 0.8)
             .setStrokeStyle(2, 0xffffff, 0.8)
             .setScrollFactor(0);
 
@@ -55,9 +57,9 @@ export class UIScene extends Phaser.Scene {
 
         // Adjust scale dynamically so it fits nicely inside the 80x80 box
         if (weapon.stats.iconFrame === 'rifle' || weapon.stats.iconFrame === 'shotgun') {
-             this.weaponIcon.setScale(0.08); // These sprites are very long (~900px wide)
+            this.weaponIcon.setScale(0.08); // These sprites are very long (~900px wide)
         } else if (weapon.stats.iconFrame === 'smg') {
-             this.weaponIcon.setScale(0.12); // Slightly shorter (~600px wide)
+            this.weaponIcon.setScale(0.12); // Slightly shorter (~600px wide)
         }
 
         // Let's ensure the sprite uses its actual colors but maybe make it brighter
@@ -72,7 +74,7 @@ export class UIScene extends Phaser.Scene {
 
     private onHeroDamage(currentHp: number) {
         const maxHp = 100;
-        const damagePercent = 1 - (currentHp / maxHp);
+        const damagePercent = 1 - currentHp / maxHp;
 
         this.bloodOverlay.clear();
 

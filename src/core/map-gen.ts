@@ -19,13 +19,13 @@ export interface GeneratedWorld {
     thinWall: ThinWallPlacement | null;
 }
 
+const dist = (x1: number, y1: number, x2: number, y2: number) => Math.hypot(x1 - x2, y1 - y2);
+
 export function generateWorld(worldSize: number, rng: () => number = Math.random): GeneratedWorld {
     const MARGIN = 128;
     const CENTER = worldSize / 2;
     const SAFE_RADIUS = 300;
     const placed: { x: number; y: number; radius: number; type: string }[] = [];
-
-    const dist = (x1: number, y1: number, x2: number, y2: number) => Math.hypot(x1 - x2, y1 - y2);
 
     const findSpot = (radius: number, type: string): PlacedSpot | null => {
         for (let attempts = 0; attempts < 50; attempts++) {

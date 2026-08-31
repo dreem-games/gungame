@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
+
 import { BootScene } from './scenes/BootScene';
-import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
+import { PreloadScene } from './scenes/PreloadScene';
 import { UIScene } from './scenes/UIScene';
 
 const config: Phaser.Types.Core.GameConfig = {

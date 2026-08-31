@@ -9,7 +9,8 @@ export interface IDestroyable {
     isDestroyed?: boolean;
 }
 
-export type IEntity = IUpdateable & IDestroyable & {
-    id: string;
-    gameObject: Phaser.GameObjects.GameObject;
-};
+export type IEntity = IUpdateable &
+    IDestroyable & {
+        id: string;
+        gameObject: Phaser.GameObjects.GameObject;
+    };

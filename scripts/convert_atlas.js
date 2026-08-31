@@ -1,11 +1,14 @@
-const fs = require('fs');
+const fs = require('node:fs');
 
 function parseLibGdxAtlas(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
     const frames = {};
 
     let i = 0;
-    while(i < lines.length && !lines[i].includes('size:')) i++;
+    while (i < lines.length && !lines[i].includes('size:')) i++;
     i += 4; // Skip to the first frame block
 
     while (i < lines.length) {
@@ -14,10 +17,22 @@ function parseLibGdxAtlas(text) {
             let name = line;
             i++;
             const rotate = lines[i++].split(':')[1].trim() === 'true';
-            const xy = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
-            const size = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
-            const orig = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
-            const offset = lines[i++].split(':')[1].split(',').map(s => parseInt(s.trim()));
+            const xy = lines[i++]
+                .split(':')[1]
+                .split(',')
+                .map((s) => parseInt(s.trim()));
+            const size = lines[i++]
+                .split(':')[1]
+                .split(',')
+                .map((s) => parseInt(s.trim()));
+            const orig = lines[i++]
+                .split(':')[1]
+                .split(',')
+                .map((s) => parseInt(s.trim()));
+            const offset = lines[i++]
+                .split(':')[1]
+                .split(',')
+                .map((s) => parseInt(s.trim()));
             const index = parseInt(lines[i++].split(':')[1].trim());
 
             if (index !== -1) {

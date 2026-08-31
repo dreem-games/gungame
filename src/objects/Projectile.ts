@@ -33,8 +33,10 @@ export class Projectile {
 
         // Check for any bodies at the spawn location
         const allBodies = scene.matter.world.getAllBodies();
-        const spawnBodies = allBodies.filter(body => scene.matter.containsPoint(body, x, y));
-        const ignoredBodies = spawnBodies.map(body => (body as any).gameObject).filter(obj => obj !== undefined && obj !== null);
+        const spawnBodies = allBodies.filter((body) => scene.matter.containsPoint(body, x, y));
+        const ignoredBodies = spawnBodies
+            .map((body) => (body as any).gameObject)
+            .filter((obj) => obj !== undefined && obj !== null);
 
         // Custom data for collision handling
         this.gameObject.setData('isProjectile', true);

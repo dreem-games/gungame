@@ -1,6 +1,8 @@
-import { BaseWeapon } from './BaseWeapon';
-import { Projectile } from '../objects/Projectile';
 import Phaser from 'phaser';
+
+import { Projectile } from '../objects/Projectile';
+
+import { BaseWeapon } from './BaseWeapon';
 
 export class Shotgun extends BaseWeapon {
     constructor(scene: Phaser.Scene) {
@@ -29,11 +31,21 @@ export class Shotgun extends BaseWeapon {
             // Java used nextGaussian() * spread, so let's approximate
             // Math.random() + Math.random() - 1 gives a cheap pseudo-gaussian
             const gaussian = (Math.random() + Math.random() + Math.random() - 1.5) * 2;
-            const spreadAngle = angle + (gaussian * this.stats.spread);
+            const spreadAngle = angle + gaussian * this.stats.spread;
 
             // Add some speed variance to pellets
             const speedVariance = this.stats.speed * Phaser.Math.FloatBetween(0.8, 1.2);
-            new Projectile(this.scene, x, y, spreadAngle, speedVariance, this.stats.damage, this.stats.texture, this.stats.frame, this.stats.piercing);
+            new Projectile(
+                this.scene,
+                x,
+                y,
+                spreadAngle,
+                speedVariance,
+                this.stats.damage,
+                this.stats.texture,
+                this.stats.frame,
+                this.stats.piercing
+            );
         }
 
         this.scene.sound.play(this.stats.sound);
