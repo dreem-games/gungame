@@ -200,7 +200,8 @@ export class GameScene extends Phaser.Scene {
         if (this.usesServerPhysics && typeof networkId === 'string') {
             this.network.sendHit(networkId, damage);
             const isThinWall = target.getData('isThinWall');
-            if (isThinWall && isPiercing) {
+            const isHero = target instanceof Hero;
+            if ((isThinWall && isPiercing) || isHero) {
                 const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
                 ignoredBodies.push(target);
                 projectile.setData('ignoredBodies', ignoredBodies);
@@ -227,7 +228,8 @@ export class GameScene extends Phaser.Scene {
             }
 
             // If the target is a thin wall and the projectile is piercing, do NOT destroy it
-            if (isThinWall && isPiercing) {
+            const isHero = target instanceof Hero;
+            if ((isThinWall && isPiercing) || isHero) {
                 // Ignore the segment so we don't hit it again immediately
                 const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
                 ignoredBodies.push(target);
@@ -460,7 +462,7 @@ export class GameScene extends Phaser.Scene {
             let player = this.remotePlayers.get(id);
             if (!player) {
                 player = this.add.sprite(state.x, state.y, 'hero', 'hero').setTint(0x66ccff).setAlpha(0.8).setDepth(1);
-                player.setOrigin(0.2, 0.5);
+                player.setOrigin(0.5, 0.5);
                 this.remotePlayers.set(id, player);
             }
 

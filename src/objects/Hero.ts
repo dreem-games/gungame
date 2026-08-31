@@ -58,7 +58,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         // Setup physics body
         // Body needs to be smaller and offset towards the head
         const radius = 30;
-        const circleBody = scene.matter.bodies.circle(0, 0, radius, { label: 'hero_movement' });
+        const circleBody = scene.matter.bodies.circle(-40, 0, radius, { label: 'hero_movement' });
 
         const shapes = scene.cache.json.get('bodies_json');
         const heroData = shapes.rigidBodies.find((b: any) => b.name === 'hero');
@@ -67,8 +67,10 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         if (heroData && heroData.polygons) {
             const spriteWidth = 212;
             const spriteHeight = 152;
+            const cx = spriteWidth / 2;
+            const cy = spriteHeight / 2;
             vertexSets = heroData.polygons.map((poly: any[]) =>
-                poly.map((v) => ({ x: v.x * spriteWidth, y: v.y * spriteHeight }))
+                poly.map((v) => ({ x: v.x * spriteWidth - cx, y: v.y * spriteHeight - cy }))
             );
         }
 
@@ -93,7 +95,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         // We shift the visual sprite relative to the physical body.
         // The hero's head in the sprite (facing right) is at roughly X=50, Y=76
         // This means the center of the physics circle should be offset to the left of the sprite center.
-        this.setOrigin(0.2, 0.5);
+        this.setOrigin(0.5, 0.5);
         this.setPosition(x, y);
 
         this.weaponManager = new WeaponManager(scene);

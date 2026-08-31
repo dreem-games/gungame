@@ -18,7 +18,7 @@ const engine = Matter.Engine.create({ gravity: { x: 0, y: 0 } });
 function addDynamicBody(type, x, y) {
     const isCircle = type === 'barrel' || type === 'oilTank';
     const body = isCircle
-        ? Matter.Bodies.circle(x, y, 128, { frictionAir: 0.1 })
+        ? Matter.Bodies.circle(x, y, 64, { frictionAir: 0.1 })
         : Matter.Bodies.rectangle(x, y, 128, 128, { frictionAir: 0.1 });
     Matter.Body.setMass(body, type === 'oilTank' ? 200 : type === 'barrel' ? 50 : 70);
     Matter.World.add(engine.world, body);
