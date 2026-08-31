@@ -1,17 +1,20 @@
 import Phaser from 'phaser';
-import { Hero } from '../objects/Hero';
-import { Projectile } from '../objects/Projectile';
+
+import map from '../../multiplayer-map.json';
 import { EntityManager } from '../core/EntityManager';
+import { FlashManager } from '../core/FlashManager';
 import { InputManager } from '../core/InputManager';
-import { Barrel } from '../objects/Barrel';
-import { OilTank } from '../objects/OilTank';
-import { ThinWall } from '../objects/ThinWall';
 import { generateWorld } from '../core/map-gen';
 import { NetworkManager, WorldLayout } from '../core/NetworkManager';
-import map from '../../multiplayer-map.json';
+import { Barrel } from '../objects/Barrel';
+import { Hero } from '../objects/Hero';
+import { OilTank } from '../objects/OilTank';
+import { Projectile } from '../objects/Projectile';
+import { ThinWall } from '../objects/ThinWall';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
+    public flashManager!: FlashManager;
     private inputManager!: InputManager;
     private hero!: Hero;
     private barrels: Barrel[] = [];
@@ -30,6 +33,7 @@ export class GameScene extends Phaser.Scene {
         // Initialize Core Systems
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
+        this.flashManager = new FlashManager(this);
 
         // Setup explosion animation
         this.anims.create({
@@ -109,13 +113,26 @@ export class GameScene extends Phaser.Scene {
         this.matter.world.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
 
         // Add ground texture (also visually scale down the grass tile)
-        const ground = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE * 2, WORLD_SIZE * 2, 'level1', 'grass');
+        const ground = this.add.tileSprite(
+            WORLD_SIZE / 2,
+            WORLD_SIZE / 2,
+            WORLD_SIZE * 2,
+            WORLD_SIZE * 2,
+            'level1',
+            'grass'
+        );
         ground.setDepth(-2);
         ground.setScale(0.5);
 
         // Add procedural noise overlay on top of grass
         const noiseScale = 4.0; // scale up the texture size to cover more area
-        const noise = this.add.tileSprite(WORLD_SIZE / 2, WORLD_SIZE / 2, WORLD_SIZE / noiseScale, WORLD_SIZE / noiseScale, 'grass_noise');
+        const noise = this.add.tileSprite(
+            WORLD_SIZE / 2,
+            WORLD_SIZE / 2,
+            WORLD_SIZE / noiseScale,
+            WORLD_SIZE / noiseScale,
+            'grass_noise'
+        );
         noise.setBlendMode(Phaser.BlendModes.MULTIPLY); // MULTIPLY makes dark areas darker, light areas transparent
         noise.setAlpha(0.7); // Adjust intensity of the noise
         noise.setDepth(-1);
@@ -136,9 +153,9 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.events.on('projectileFired', (data: any) => {
-             if (this.multiplayer && this.network) {
-                 this.network.sendFire(data.x, data.y, data.angle, data.speed, data.damage, data.texture, data.frame);
-             }
+            if (this.multiplayer && this.network) {
+                this.network.sendFire(data.x, data.y, data.angle, data.speed, data.damage, data.texture, data.frame);
+            }
         });
 
         // Camera setup
@@ -152,14 +169,17 @@ export class GameScene extends Phaser.Scene {
 
         // Emit initial weapon state so UI can render
         this.events.once('update', () => {
-             const wm = this.hero.getWeaponManager();
-             const wp = wm.getCurrentWeapon();
-             this.game.events.emit('weaponChanged', wp);
-             this.game.events.emit('ammoChanged', wp.currentAmmo, wp.stats.maxAmmo);
+            const wm = this.hero.getWeaponManager();
+            const wp = wm.getCurrentWeapon();
+            this.game.events.emit('weaponChanged', wp);
+            this.game.events.emit('ammoChanged', wp.currentAmmo, wp.stats.maxAmmo);
         });
     }
 
-    private handleProjectileCollision(gameObjectA: Phaser.GameObjects.GameObject, gameObjectB: Phaser.GameObjects.GameObject) {
+    private handleProjectileCollision(
+        gameObjectA: Phaser.GameObjects.GameObject,
+        gameObjectB: Phaser.GameObjects.GameObject
+    ) {
         const isProjA = gameObjectA.getData('isProjectile');
         const isProjB = gameObjectB.getData('isProjectile');
 
@@ -190,7 +210,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-// Check if target is a barrel — it explodes instead of taking generic damage
+        // Check if target is a barrel — it explodes instead of taking generic damage
         if (target instanceof Barrel) {
             target.explode(this.hero, this.barrels);
             projectile.destroy();
@@ -230,6 +250,7 @@ export class GameScene extends Phaser.Scene {
             sprite.setScale(0.5);
             sprite.setFrictionAir(0.1);
             sprite.setMass(70);
+            sprite.setData('blocksVision', true);
             sprite.setData('networkId', box.id);
             this.boxes.set(box.id, sprite);
         }
@@ -269,6 +290,7 @@ export class GameScene extends Phaser.Scene {
             sprite.setScale(0.5);
             sprite.setFrictionAir(0.1);
             sprite.setMass(70);
+            sprite.setData('blocksVision', true);
             this.localEnvironment.push(sprite);
         }
 
@@ -310,14 +332,22 @@ export class GameScene extends Phaser.Scene {
         wall.setBody({ type: 'rectangle', width: 256, height: 256 });
         wall.setScale(0.5);
         wall.setStatic(true);
+        wall.setData('blocksVision', true);
     }
 
     update(time: number, delta: number) {
         this.entityManager.update(time, delta);
         this.inputManager.update();
-        if (this.multiplayer) {
+        if (this.multiplayer && this.network) {
             const movement = this.inputManager.getMovementVector();
-            this.network.sendInput(movement.x, movement.y, this.hero.rotation, this.inputManager.isRunning(), this.hero.isDashingNow());
+            this.network.sendInput(
+                movement.x,
+                movement.y,
+                this.hero.rotation,
+                this.inputManager.isRunning(),
+                this.hero.isDashingNow(),
+                this.hero.isDead
+            );
             const objects = this.network.getWorldObjects();
             if (this.network.isConnected() && objects.length) {
                 if (!this.usesServerPhysics) {
@@ -338,7 +368,10 @@ export class GameScene extends Phaser.Scene {
                             box.setPosition(object.x, object.y);
                         } else {
                             const k = Math.min(1, delta / 120);
-                            box.setPosition(Phaser.Math.Linear(box.x, object.x, k), Phaser.Math.Linear(box.y, object.y, k));
+                            box.setPosition(
+                                Phaser.Math.Linear(box.x, object.x, k),
+                                Phaser.Math.Linear(box.y, object.y, k)
+                            );
                         }
                         box.setRotation(object.rotation);
                         box.setVelocity(object.vx, object.vy);
@@ -355,7 +388,18 @@ export class GameScene extends Phaser.Scene {
         for (const event of this.network.consumeWorldEvents()) {
             if (event.type === 'projectileFired') {
                 if (this.network.getLocalPlayer()?.id !== event.playerId) {
-                    new Projectile(this, event.x, event.y, event.angle!, event.speed!, event.damage!, event.texture!, event.frame!, false, true);
+                    new Projectile(
+                        this,
+                        event.x,
+                        event.y,
+                        event.angle!,
+                        event.speed!,
+                        event.damage!,
+                        event.texture!,
+                        event.frame!,
+                        false,
+                        true
+                    );
                 }
                 continue;
             }
@@ -381,9 +425,13 @@ export class GameScene extends Phaser.Scene {
             explosion.setScale((radius * 2) / 64);
             explosion.play('explosion_anim');
             explosion.once('animationcomplete', () => explosion.destroy());
-            this.add.sprite(event.x, event.y, 'scorch').setDisplaySize(radius * 1.4, radius * 1.4).setDepth(-1);
+            this.add
+                .sprite(event.x, event.y, 'scorch')
+                .setDisplaySize(radius * 1.4, radius * 1.4)
+                .setDepth(-1);
             this.sound.play('barrel_explosion');
             this.cameras.main.shake(400, 0.008);
+            this.flashManager.createExplosionFlash(event.x, event.y, radius);
         }
     }
 
@@ -419,6 +467,11 @@ export class GameScene extends Phaser.Scene {
             player.x = Phaser.Math.Linear(player.x, state.x, k);
             player.y = Phaser.Math.Linear(player.y, state.y, k);
             player.rotation = state.rotation;
+            if (state.isDead && player.frame.name !== 'hero_dead') {
+                player.setFrame('hero_dead');
+            } else if (!state.isDead && player.frame.name === 'hero_dead') {
+                player.setFrame('hero');
+            }
         }
 
         for (const [id, player] of this.remotePlayers) {

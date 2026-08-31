@@ -1,0 +1,25 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["eslint", "import", "oxc", "typescript", "unicorn"],
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "categories": {
+        "correctness": "error",
+        "suspicious": "error",
+        "perf": "error"
+    },
+    "ignorePatterns": ["assets/**", "dist/**", "node_modules/**", "public/assets/**"],
+    "rules": {
+        "eqeqeq": "error",
+        "import/no-named-as-default-member": "off",
+        "no-debugger": "error",
+        "no-duplicate-imports": "error",
+        "no-new": "off",
+        "no-var": "error",
+        "prefer-const": "error",
+        "typescript/no-explicit-any": "off",
+        "unicorn/prefer-node-protocol": "error"
+    }
+}

@@ -3,6 +3,7 @@ export interface RemotePlayerState {
     x: number;
     y: number;
     rotation: number;
+    isDead?: boolean;
     vx?: number;
     vy?: number;
 }
@@ -13,6 +14,7 @@ export interface WorldObjectState {
     x: number;
     y: number;
     rotation: number;
+    isDead?: boolean;
     vx: number;
     vy: number;
 }
@@ -54,11 +56,11 @@ export class NetworkManager {
         this.socket.addEventListener('message', (event) => this.handleMessage(event));
     }
 
-    public sendInput(x: number, y: number, rotation: number, running: boolean, dash: boolean) {
+    public sendInput(x: number, y: number, rotation: number, running: boolean, dash: boolean, isDead?: boolean) {
         if (this.socket.readyState !== WebSocket.OPEN || performance.now() - this.lastSentAt < 33) return;
 
         this.lastSentAt = performance.now();
-        this.socket.send(JSON.stringify({ type: 'input', x, y, rotation, running, dash }));
+        this.socket.send(JSON.stringify({ type: 'input', x, y, rotation, running, dash, isDead }));
     }
 
     public getRemotePlayers(): ReadonlyMap<string, RemotePlayerState> {
@@ -69,9 +71,13 @@ export class NetworkManager {
         return this.isAuthoritative && this.localPlayerId ? this.players.get(this.localPlayerId) : undefined;
     }
 
-    public getWorldObjects(): readonly WorldObjectState[] { return this.worldObjects; }
+    public getWorldObjects(): readonly WorldObjectState[] {
+        return this.worldObjects;
+    }
 
-    public getWorldLayout(): WorldLayout | null { return this.worldLayout; }
+    public getWorldLayout(): WorldLayout | null {
+        return this.worldLayout;
+    }
 
     public consumeWorldEvents(): WorldEvent[] {
         const events = this.worldEvents;
@@ -83,13 +89,23 @@ export class NetworkManager {
         if (this.socket.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'hit', id, damage }));
     }
 
-    public sendFire(x: number, y: number, angle: number, speed: number, damage: number, texture: string, frame: string) {
+    public sendFire(
+        x: number,
+        y: number,
+        angle: number,
+        speed: number,
+        damage: number,
+        texture: string,
+        frame: string
+    ) {
         if (this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({ type: 'fire', x, y, angle, speed, damage, texture, frame }));
         }
     }
 
-    public isConnected(): boolean { return this.localPlayerId !== null; }
+    public isConnected(): boolean {
+        return this.localPlayerId !== null;
+    }
 
     public destroy() {
         this.socket.close();
@@ -111,9 +127,27 @@ export class NetworkManager {
         this.worldEvents.push(...message.events);
     }
 
-    private isMessage(message: unknown): message is { type: 'welcome'; id: string; world: WorldLayout } | { type: 'snapshot'; authoritative: boolean; players: RemotePlayerState[]; objects: WorldObjectState[]; events: WorldEvent[] } {
+    private isMessage(message: unknown): message is
+        | { type: 'welcome'; id: string; world: WorldLayout }
+        | {
+              type: 'snapshot';
+              authoritative: boolean;
+              players: RemotePlayerState[];
+              objects: WorldObjectState[];
+              events: WorldEvent[];
+          } {
         if (typeof message !== 'object' || message === null || !('type' in message)) return false;
         if (message.type === 'welcome') return 'id' in message && typeof message.id === 'string' && 'world' in message;
-        return message.type === 'snapshot' && 'authoritative' in message && typeof message.authoritative === 'boolean' && 'players' in message && Array.isArray(message.players) && 'objects' in message && Array.isArray(message.objects) && 'events' in message && Array.isArray(message.events);
+        return (
+            message.type === 'snapshot' &&
+            'authoritative' in message &&
+            typeof message.authoritative === 'boolean' &&
+            'players' in message &&
+            Array.isArray(message.players) &&
+            'objects' in message &&
+            Array.isArray(message.objects) &&
+            'events' in message &&
+            Array.isArray(message.events)
+        );
     }
 }

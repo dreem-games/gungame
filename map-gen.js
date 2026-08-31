@@ -1,11 +1,11 @@
 // Раскладка карты: один алгоритм для сервера и офлайн-клиента.
+const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
+
 function generateWorld(worldSize, rng = Math.random) {
     const MARGIN = 128;
     const CENTER = worldSize / 2;
     const SAFE_RADIUS = 300;
     const placed = [];
-
-    const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
 
     const findSpot = (radius, type) => {
         for (let attempts = 0; attempts < 50; attempts++) {

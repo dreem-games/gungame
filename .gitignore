@@ -2,3 +2,6 @@ node_modules
 dist
 build
 server.log
+.devenv
+.direnv
+devenv.local.nix

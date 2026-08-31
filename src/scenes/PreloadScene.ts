@@ -1,5 +1,6 @@
-import { generateSeamlessNoiseTexture, generateScorchTexture } from '../utils/NoiseGenerator';
 import Phaser from 'phaser';
+
+import { generateSeamlessNoiseTexture, generateScorchTexture } from '../utils/NoiseGenerator';
 
 export class PreloadScene extends Phaser.Scene {
     constructor() {
