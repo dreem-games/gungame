@@ -308,6 +308,13 @@ wss.on('connection', (socket) => {
             if (message.type === 'fire') {
                 if (![message.x, message.y, message.angle, message.speed, message.damage].every(Number.isFinite))
                     return;
+                const player = players.get(id);
+                if (
+                    !player ||
+                    player.input.isDead ||
+                    Math.hypot(message.x - player.body.position.x, message.y - player.body.position.y) > 300
+                )
+                    return;
 
                 const projectileBody = Matter.Bodies.circle(message.x, message.y, 4, {
                     isSensor: true,

@@ -2,6 +2,8 @@ node_modules
 dist
 build
 server.log
+ws.log
+test-results/
 .devenv
 .direnv
 devenv.local.nix

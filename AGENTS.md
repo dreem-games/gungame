@@ -19,6 +19,7 @@ Top-down шутер в браузере на **TypeScript + Phaser 4** с физ
 ```
 gungame/
 ├── index.html                # HTML-обёртка с div#game-container
+├── server.js                 # WebSocket-сервер и авторитетная физика мультиплеера
 ├── src/
 │   ├── main.ts               # Точка входа: Phaser.Game config (Matter, gamepad) + resize
 │   ├── scenes/               # Phaser-сцены
@@ -29,6 +30,7 @@ gungame/
 │   ├── core/
 │   │   ├── EntityManager.ts  # реестр IEntity: add/update/remove, чистка мёртвых
 │   │   ├── InputManager.ts   # клавиатура + мышь + геймпад, координаты прицела
+│   │   ├── NetworkManager.ts # WebSocket-клиент, снапшоты и события мира
 │   │   └── EventBus.ts       # EventDispatcher (Phaser EventEmitter) + GameEvents
 │   ├── objects/
 │   │   ├── Hero.ts           # игрок: движение, стамины, дэш, прицел, лазер
@@ -70,7 +72,7 @@ gungame/
 - **InputManager** — клавиатура (WASD/Shift/Space/R/1-3), мышь (`pointerWorldX/Y`), геймпад
   (левый стик — движение, правый — прицел, R2 — огонь, A — бег, B — рывок, Y — перезарядка, D-pad — смена оружия).
 - **Прицел и выстрел** — в `Hero.update()`: угол `fireAngle` считается из дула в курсор, **но** при
-  дистанции курсора до героя `< AIM_DEADZONE` (120 px) стрельба идёт по текущему направлению взгляда —
+  дистанции курсора до героя меньше расстояния до дула стрельба идёт по текущему направлению взгляда —
   иначе при наведении на себя стреляет «сквозь спину». Лазерная линия (`laserGraphics`) и все пули
   используют этот же `fireAngle`, так что правка в одном месте чинит и laser, и projectiles.
 - **Оружие:** `BaseWeapon` (патроны, `fireRate`, `reload`, звук) → `Rifle` (piercing), `AssaultRifle`,
@@ -90,7 +92,7 @@ gungame/
 ```bash
 npm install
 npm run dev        # vite dev-сервер (http://localhost:5173)
-npm run build      # tsc && vite build → dist/
+npm run build      # typecheck + vite build → dist/
 npm run check      # typecheck + oxlint + oxfmt
 ```
 
@@ -116,7 +118,7 @@ npm run check      # typecheck + oxlint + oxfmt
 3. Коллизии — через `matter.world.on('collisionstart' | 'collisionactive')` + data-поля на объектах.
 4. Смена оружия/патроны/урон → события: `game.events` для UI, `EventDispatcher` для игровой логики.
 5. Ресурсы только из `public/assets/` (Vite), не создавать новые пути в `assets/`.
-6. Не коммитить: `.idea/`, `build/`, `node_modules/`, `dist/`, `server.log` (дописать `.gitignore`).
+6. Не коммитить: `.idea/`, `build/`, `node_modules/`, `dist/`, `server.log`, `ws.log`, `test-results/`.
 
 ## Правила для ассистента
 

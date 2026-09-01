@@ -210,7 +210,15 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
+        const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
+
         if (this.usesServerPhysics) {
+            if (isThinWall && isPiercing) {
+                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
+                ignoredBodies.push(target);
+                projectile.setData('ignoredBodies', ignoredBodies);
+                return;
+            }
             projectile.destroy();
             return;
         }
@@ -224,8 +232,6 @@ export class GameScene extends Phaser.Scene {
 
         if (target) {
             // Check properties before applying damage, because taking damage might destroy the target
-            const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
-
             // Apply damage if target supports it
             if ((target as any).takeDamage) {
                 (target as any).takeDamage(damage);
