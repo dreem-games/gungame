@@ -62,9 +62,7 @@ export class FlashManager {
         if (ctx) {
             const bodies = this.scene.matter.world.getAllBodies().filter((body) => {
                 const object = body.gameObject as Phaser.GameObjects.GameObject | undefined;
-                return (
-                    object?.getData('blocksVision') && !this.scene.matter.containsPoint(body as MatterJS.BodyType, x, y)
-                );
+                return object?.getData('blocksVision') && !this.scene.matter.containsPoint(body as MatterJS.BodyType, x, y);
             });
 
             ctx.beginPath();
@@ -113,8 +111,7 @@ export class FlashManager {
     }
 
     private createFlash(x: number, y: number, radius: number, texture: string, rotation: number, cleanup?: () => void) {
-        const flash = this.scene.add
-            .image(x, y, texture)
+        const flash = this.scene.add.image(x, y, texture)
             .setScale((radius * 2) / 512)
             .setRotation(rotation)
             .setDepth(10);
