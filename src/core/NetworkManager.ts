@@ -3,6 +3,7 @@ export interface RemotePlayerState {
     x: number;
     y: number;
     rotation: number;
+    isDead?: boolean;
     vx?: number;
     vy?: number;
 }
@@ -13,6 +14,7 @@ export interface WorldObjectState {
     x: number;
     y: number;
     rotation: number;
+    isDead?: boolean;
     vx: number;
     vy: number;
 }
@@ -25,11 +27,23 @@ export interface WorldLayout {
 }
 
 export interface WorldEvent {
-    type: 'barrelExploded' | 'oilTankRuptured' | 'thinWallDestroyed' | 'playerDamaged';
+    type:
+        | 'barrelExploded'
+        | 'oilTankRuptured'
+        | 'thinWallDestroyed'
+        | 'playerDamaged'
+        | 'projectileFired'
+        | 'projectileDestroyed';
     id: string;
     x: number;
     y: number;
     damage?: number;
+    angle?: number;
+    speed?: number;
+    texture?: string;
+    frame?: string;
+    piercing?: boolean;
+    playerId?: string;
 }
 
 export class NetworkManager {
@@ -49,11 +63,11 @@ export class NetworkManager {
         this.socket.addEventListener('message', (event) => this.handleMessage(event));
     }
 
-    public sendInput(x: number, y: number, rotation: number, running: boolean, dash: boolean) {
+    public sendInput(x: number, y: number, rotation: number, running: boolean, dash: boolean, isDead?: boolean) {
         if (this.socket.readyState !== WebSocket.OPEN || performance.now() - this.lastSentAt < 33) return;
 
         this.lastSentAt = performance.now();
-        this.socket.send(JSON.stringify({ type: 'input', x, y, rotation, running, dash }));
+        this.socket.send(JSON.stringify({ type: 'input', x, y, rotation, running, dash, isDead }));
     }
 
     public getRemotePlayers(): ReadonlyMap<string, RemotePlayerState> {
@@ -78,8 +92,22 @@ export class NetworkManager {
         return events;
     }
 
-    public sendHit(id: string, damage: number) {
-        if (this.socket.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'hit', id, damage }));
+    public sendFire(
+        id: string,
+        x: number,
+        y: number,
+        angle: number,
+        speed: number,
+        damage: number,
+        texture: string,
+        frame: string,
+        piercing: boolean
+    ) {
+        if (this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(
+                JSON.stringify({ type: 'fire', id, x, y, angle, speed, damage, texture, frame, piercing })
+            );
+        }
     }
 
     public isConnected(): boolean {

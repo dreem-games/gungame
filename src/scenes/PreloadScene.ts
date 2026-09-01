@@ -27,6 +27,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.atlas('projectiles', 'assets/texture/projectiles.png', 'assets/texture/projectiles.json');
 
         this.load.atlas('guns', 'assets/ui/guns.png', 'assets/ui/guns.json');
+        this.load.json('bodies_json', 'assets/texture/bodies.json');
 
         this.load.image('cursor', 'assets/texture/cursor.png');
 

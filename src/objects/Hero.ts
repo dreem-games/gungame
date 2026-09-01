@@ -57,24 +57,46 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Setup physics body
         // Body needs to be smaller and offset towards the head
-        // The original sprite is 212x152. By default the origin is 0.5, 0.5.
-        // We make the physics body a much smaller circle, offset heavily to the left
-        // (because in the sprite, the head is on the left side facing right).
         const radius = 30;
-        this.setBody({
-            type: 'circle',
-            radius: radius
+        const circleBody = scene.matter.bodies.circle(0, 0, radius, { label: 'hero_movement' });
+
+        const shapes = scene.cache.json.get('bodies_json');
+        const heroData = shapes.rigidBodies.find((b: any) => b.name === 'hero');
+
+        let vertexSets: any[][] = [];
+        if (heroData && heroData.polygons) {
+            const spriteWidth = 212;
+            const spriteHeight = 152;
+            const cx = spriteWidth / 2;
+            const cy = spriteHeight / 2;
+            vertexSets = heroData.polygons.map((poly: any[]) =>
+                poly.map((v) => ({ x: v.x * spriteWidth - cx, y: v.y * spriteHeight - cy }))
+            );
+        }
+
+        const hitboxBody = scene.matter.bodies.fromVertices(0, 0, vertexSets, {
+            isSensor: true,
+            label: 'hero_hitbox'
         });
+
+        // We combine them into a compound body.
+        const compoundBody = scene.matter.body.create({
+            parts: [circleBody, hitboxBody],
+            frictionAir: 0.1,
+            mass: 100
+        });
+
+        this.setExistingBody(compoundBody);
+
+        // After setting body, reset fixed rotation
+        this.setFixedRotation();
 
         // In Matter.js with Phaser, setting a new body resets origin to center of mass.
         // We shift the visual sprite relative to the physical body.
         // The hero's head in the sprite (facing right) is at roughly X=50, Y=76
         // This means the center of the physics circle should be offset to the left of the sprite center.
         this.setOrigin(0.2, 0.5);
-
-        this.setFrictionAir(0.1);
-        this.setFixedRotation();
-        this.setMass(100);
+        this.setPosition(x, y);
 
         this.weaponManager = new WeaponManager(scene);
     }
@@ -94,6 +116,9 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         if (this.hp <= 0) {
             this.hp = 0;
             this.die();
+            if ((this.scene as any).network) {
+                (this.scene as any).network.sendInput(0, 0, this.rotation, false, false, true);
+            }
         }
 
         EventDispatcher.emit('hero-damage', this.hp);
@@ -109,10 +134,12 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Switch sprite to dead
         this.setFrame('hero_dead');
-        this.setOrigin(0.5, 0.5); // Center origin
+        this.setOrigin(0.5, 0.5);
+        this.setDepth(-0.5);
+        this.setVelocity(0, 0);
 
         // Make body a sensor so projectiles pass through, but we still keep it around
-        this.setSensor(true);
+        if (this.body) this.scene.matter.world.remove(this.body);
         this.setFrictionAir(0.99); // stop movement
         this.laserGraphics.clear();
     }

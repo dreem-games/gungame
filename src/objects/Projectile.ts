@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 export class Projectile {
     public gameObject: Phaser.Physics.Matter.Sprite;
+    public id: string;
 
     constructor(
         scene: Phaser.Scene,
@@ -12,8 +13,11 @@ export class Projectile {
         damage: number,
         texture: string,
         frame: string,
-        piercing: boolean = false
+        piercing: boolean = false,
+        isRemote: boolean = false,
+        id: string = crypto.randomUUID()
     ) {
+        this.id = id;
         // Create the projectile
         this.gameObject = scene.matter.add.sprite(x, y, texture, frame);
 
@@ -43,6 +47,22 @@ export class Projectile {
         this.gameObject.setData('damage', damage);
         this.gameObject.setData('ignoredBodies', ignoredBodies);
         this.gameObject.setData('isPiercing', piercing);
+        this.gameObject.setData('isRemote', isRemote);
+
+        if (!isRemote) {
+            scene.events.emit('projectileFired', {
+                id: this.id,
+                gameObject: this.gameObject,
+                x,
+                y,
+                angle,
+                speed,
+                damage,
+                texture,
+                frame,
+                piercing
+            });
+        }
 
         // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
         scene.time.delayedCall(3000, () => {

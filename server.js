@@ -10,6 +10,7 @@ const players = new Map();
 const dynamicObjects = [];
 const wallSegments = [];
 const oilPuddles = [];
+const projectiles = new Map();
 let events = [];
 let worldLayout = null;
 const wss = new WebSocketServer({ port: PORT });
@@ -18,7 +19,7 @@ const engine = Matter.Engine.create({ gravity: { x: 0, y: 0 } });
 function addDynamicBody(type, x, y) {
     const isCircle = type === 'barrel' || type === 'oilTank';
     const body = isCircle
-        ? Matter.Bodies.circle(x, y, 128, { frictionAir: 0.1 })
+        ? Matter.Bodies.circle(x, y, 64, { frictionAir: 0.1 })
         : Matter.Bodies.rectangle(x, y, 128, 128, { frictionAir: 0.1 });
     Matter.Body.setMass(body, type === 'oilTank' ? 200 : type === 'barrel' ? 50 : 70);
     Matter.World.add(engine.world, body);
@@ -80,6 +81,12 @@ function createWorld() {
 
 function simulate() {
     for (const player of players.values()) {
+        if (player.input.isDead) {
+            Matter.Body.setVelocity(player.body, { x: 0, y: 0 });
+            player.body.isSensor = true;
+            continue;
+        }
+
         const slowed = oilPuddles.some(
             ({ x, y, radius }) => Math.hypot(player.body.position.x - x, player.body.position.y - y) <= radius
         );
@@ -89,9 +96,67 @@ function simulate() {
             y: player.input.y * speed * (slowed ? 0.45 : 1)
         });
         Matter.Body.setAngle(player.body, player.input.rotation);
+        player.body.isSensor = player.input.isDead;
     }
     Matter.Engine.update(engine, 1000 / 60);
+
+    for (const projectile of projectiles.values()) {
+        if (Date.now() - projectile.createdAt > 3000) removeProjectile(projectile);
+    }
 }
+
+function removeProjectile(projectile) {
+    projectiles.delete(projectile.body.id);
+    Matter.World.remove(engine.world, projectile.body);
+    events.push({
+        type: 'projectileDestroyed',
+        id: projectile.id,
+        x: projectile.body.position.x,
+        y: projectile.body.position.y
+    });
+}
+
+Matter.Events.on(engine, 'collisionStart', (event) => {
+    for (const pair of event.pairs) {
+        const projectile = projectiles.get(pair.bodyA.id) ?? projectiles.get(pair.bodyB.id);
+        if (!projectile) continue;
+
+        const targetBody = pair.bodyA === projectile.body ? pair.bodyB : pair.bodyA;
+        const player = [...players.values()].find(({ body }) => body === targetBody);
+        if (player) {
+            if (player.id !== projectile.ownerId && !player.input.isDead) {
+                events.push({ type: 'playerDamaged', id: player.id, x: 0, y: 0, damage: projectile.damage });
+                removeProjectile(projectile);
+            }
+            continue;
+        }
+
+        const object = dynamicObjects.find(({ body }) => body === targetBody);
+        if (object?.type === 'barrel') explodeObject(object);
+        if (object?.type === 'oilTank') {
+            object.health -= projectile.damage;
+            if (object.health <= 0) ruptureOilTank(object);
+        }
+
+        const wall = wallSegments.find(({ body }) => body === targetBody);
+        if (wall) {
+            wall.health -= projectile.damage;
+            if (wall.health <= 0) {
+                wallSegments.splice(wallSegments.indexOf(wall), 1);
+                Matter.World.remove(engine.world, wall.body);
+                events.push({
+                    type: 'thinWallDestroyed',
+                    id: wall.id,
+                    x: wall.body.position.x,
+                    y: wall.body.position.y
+                });
+            }
+            if (projectile.piercing) continue;
+        }
+
+        removeProjectile(projectile);
+    }
+});
 
 function currentWorldLayout() {
     return {
@@ -124,6 +189,7 @@ function snapshot() {
         x: body.position.x,
         y: body.position.y,
         rotation: input.rotation,
+        isDead: input.isDead,
         vx: body.velocity.x,
         vy: body.velocity.y
     }));
@@ -245,28 +311,50 @@ wss.on('connection', (socket) => {
     socket.on('message', (rawMessage) => {
         try {
             const message = JSON.parse(rawMessage.toString());
-            if (message.type === 'hit' && typeof message.id === 'string' && Number.isFinite(message.damage)) {
-                const target = dynamicObjects.find((object) => object.id === message.id);
-                if (target?.type === 'barrel') explodeObject(target);
-                if (target?.type === 'oilTank') {
-                    target.health -= Math.max(0, Math.min(message.damage, 100));
-                    if (target.health <= 0) ruptureOilTank(target);
-                }
+            if (message.type === 'fire') {
+                if (
+                    typeof message.id !== 'string' ||
+                    ![message.x, message.y, message.angle, message.speed, message.damage].every(Number.isFinite)
+                )
+                    return;
+                const player = players.get(id);
+                if (
+                    !player ||
+                    player.input.isDead ||
+                    Math.hypot(message.x - player.body.position.x, message.y - player.body.position.y) > 300
+                )
+                    return;
 
-                const wall = wallSegments.find((object) => object.id === message.id);
-                if (wall) {
-                    wall.health -= Math.max(0, Math.min(message.damage, 100));
-                    if (wall.health <= 0) {
-                        wallSegments.splice(wallSegments.indexOf(wall), 1);
-                        Matter.World.remove(engine.world, wall.body);
-                        events.push({
-                            type: 'thinWallDestroyed',
-                            id: wall.id,
-                            x: wall.body.position.x,
-                            y: wall.body.position.y
-                        });
-                    }
-                }
+                const projectileBody = Matter.Bodies.circle(message.x, message.y, 4, {
+                    isSensor: true,
+                    frictionAir: 0
+                });
+                Matter.Body.setVelocity(projectileBody, {
+                    x: Math.cos(message.angle) * message.speed,
+                    y: Math.sin(message.angle) * message.speed
+                });
+                Matter.World.add(engine.world, projectileBody);
+                projectiles.set(projectileBody.id, {
+                    id: message.id,
+                    body: projectileBody,
+                    ownerId: id,
+                    damage: Math.max(0, Math.min(message.damage, 100)),
+                    piercing: message.piercing === true,
+                    createdAt: Date.now()
+                });
+                events.push({
+                    type: 'projectileFired',
+                    id: message.id,
+                    x: message.x,
+                    y: message.y,
+                    angle: message.angle,
+                    speed: message.speed,
+                    damage: message.damage,
+                    texture: message.texture,
+                    frame: message.frame,
+                    piercing: message.piercing === true,
+                    playerId: id
+                });
                 return;
             }
             if (message.type !== 'input' || ![message.x, message.y, message.rotation].every(Number.isFinite)) return;
@@ -278,7 +366,9 @@ wss.on('connection', (socket) => {
                 player.input.y = length > 1 ? message.y / length : message.y;
                 player.input.rotation = message.rotation;
                 player.input.running = message.running === true;
-                if (message.dash === true) player.dashUntil = Date.now() + 250;
+                player.input.isDead = message.isDead === true;
+                if (player.input.isDead) player.dashUntil = 0;
+                else if (message.dash === true) player.dashUntil = Date.now() + 250;
             }
         } catch {
             // Некорректные сообщения просто игнорируются.

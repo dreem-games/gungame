@@ -14,7 +14,7 @@ export class Rifle extends BaseWeapon {
             damage: 55,
             spread: 0.01,
             pellets: 1,
-            speed: 50,
+            speed: 60,
             piercing: true,
             texture: 'projectiles',
             frame: 'bullet',

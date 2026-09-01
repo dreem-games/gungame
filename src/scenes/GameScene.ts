@@ -9,6 +9,7 @@ import { NetworkManager, WorldLayout } from '../core/NetworkManager';
 import { Barrel } from '../objects/Barrel';
 import { Hero } from '../objects/Hero';
 import { OilTank } from '../objects/OilTank';
+import { Projectile } from '../objects/Projectile';
 import { ThinWall } from '../objects/ThinWall';
 
 export class GameScene extends Phaser.Scene {
@@ -21,6 +22,7 @@ export class GameScene extends Phaser.Scene {
     private remotePlayers = new Map<string, Phaser.GameObjects.Sprite>();
     private boxes = new Map<string, Phaser.Physics.Matter.Sprite>();
     private localEnvironment: Phaser.GameObjects.GameObject[] = [];
+    private projectiles = new Map<string, Phaser.Physics.Matter.Sprite>();
     private usesServerPhysics = false;
     private multiplayer = true;
 
@@ -86,12 +88,18 @@ export class GameScene extends Phaser.Scene {
                     if (ignoredBodies.includes(gameObjectB)) {
                         return; // Ignore this collision completely
                     }
+                    if (gameObjectB instanceof Hero && bodyB.label === 'hero_movement') {
+                        return; // Ignore collisions with movement body, only hitbox matters
+                    }
                 }
 
                 if (isProjB) {
                     const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectB.getData('ignoredBodies') || [];
                     if (ignoredBodies.includes(gameObjectA)) {
                         return; // Ignore this collision completely
+                    }
+                    if (gameObjectA instanceof Hero && bodyA.label === 'hero_movement') {
+                        return; // Ignore collisions with movement body, only hitbox matters
                     }
                 }
 
@@ -145,6 +153,23 @@ export class GameScene extends Phaser.Scene {
             this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.network.destroy());
         }
 
+        this.events.on('projectileFired', (data: any) => {
+            this.projectiles.set(data.id, data.gameObject);
+            if (this.multiplayer && this.network) {
+                this.network.sendFire(
+                    data.id,
+                    data.x,
+                    data.y,
+                    data.angle,
+                    data.speed,
+                    data.damage,
+                    data.texture,
+                    data.frame,
+                    data.piercing
+                );
+            }
+        });
+
         // Camera setup
         this.cameras.main.startFollow(this.hero);
         this.cameras.main.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
@@ -183,10 +208,14 @@ export class GameScene extends Phaser.Scene {
         const damage = projectile.getData('damage');
         const isPiercing = projectile.getData('isPiercing');
 
-        const networkId = target.getData('networkId');
-        if (this.usesServerPhysics && typeof networkId === 'string') {
-            this.network.sendHit(networkId, damage);
-            const isThinWall = target.getData('isThinWall');
+        if (target instanceof Hero && target.isDead) {
+            // Ignore dead heroes
+            return;
+        }
+
+        const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
+
+        if (this.usesServerPhysics) {
             if (isThinWall && isPiercing) {
                 const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
                 ignoredBodies.push(target);
@@ -206,8 +235,6 @@ export class GameScene extends Phaser.Scene {
 
         if (target) {
             // Check properties before applying damage, because taking damage might destroy the target
-            const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
-
             // Apply damage if target supports it
             if ((target as any).takeDamage) {
                 (target as any).takeDamage(damage);
@@ -325,14 +352,15 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number) {
         this.entityManager.update(time, delta);
         this.inputManager.update();
-        if (this.multiplayer) {
+        if (this.multiplayer && this.network) {
             const movement = this.inputManager.getMovementVector();
             this.network.sendInput(
                 movement.x,
                 movement.y,
                 this.hero.rotation,
                 this.inputManager.isRunning(),
-                this.hero.isDashingNow()
+                this.hero.isDashingNow(),
+                this.hero.isDead
             );
             const objects = this.network.getWorldObjects();
             if (this.network.isConnected() && objects.length) {
@@ -372,6 +400,30 @@ export class GameScene extends Phaser.Scene {
 
     private applyServerEvents() {
         for (const event of this.network.consumeWorldEvents()) {
+            if (event.type === 'projectileFired') {
+                if (this.network.getLocalPlayer()?.id !== event.playerId) {
+                    const projectile = new Projectile(
+                        this,
+                        event.x,
+                        event.y,
+                        event.angle!,
+                        event.speed!,
+                        event.damage!,
+                        event.texture!,
+                        event.frame!,
+                        event.piercing,
+                        true,
+                        event.id
+                    );
+                    this.projectiles.set(event.id, projectile.gameObject);
+                }
+                continue;
+            }
+            if (event.type === 'projectileDestroyed') {
+                this.projectiles.get(event.id)?.destroy();
+                this.projectiles.delete(event.id);
+                continue;
+            }
             if (event.type === 'playerDamaged') {
                 if (this.network.getLocalPlayer()?.id === event.id && event.damage) this.hero.takeDamage(event.damage);
                 continue;
@@ -436,6 +488,13 @@ export class GameScene extends Phaser.Scene {
             player.x = Phaser.Math.Linear(player.x, state.x, k);
             player.y = Phaser.Math.Linear(player.y, state.y, k);
             player.rotation = state.rotation;
+            if (state.isDead && player.frame.name !== 'hero_dead') {
+                player.setFrame('hero_dead');
+                player.setDepth(-0.5);
+            } else if (!state.isDead && player.frame.name === 'hero_dead') {
+                player.setFrame('hero');
+                player.setDepth(1);
+            }
         }
 
         for (const [id, player] of this.remotePlayers) {
