@@ -206,6 +206,11 @@ export class GameScene extends Phaser.Scene {
         if (this.usesServerPhysics && typeof networkId === 'string') {
             this.network.sendHit(networkId, damage);
             const isThinWall = target.getData('isThinWall');
+
+            if (target instanceof Hero && target.isDead) {
+                return;
+            }
+
             if (isThinWall && isPiercing) {
                 const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
                 ignoredBodies.push(target);
@@ -475,8 +480,10 @@ export class GameScene extends Phaser.Scene {
             player.rotation = state.rotation;
             if (state.isDead && player.frame.name !== 'hero_dead') {
                 player.setFrame('hero_dead');
+                player.setDepth(-0.5);
             } else if (!state.isDead && player.frame.name === 'hero_dead') {
                 player.setFrame('hero');
+                player.setDepth(1);
             }
         }
 

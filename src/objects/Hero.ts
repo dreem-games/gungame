@@ -116,6 +116,9 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         if (this.hp <= 0) {
             this.hp = 0;
             this.die();
+            if ((this.scene as any).network) {
+                (this.scene as any).network.sendInput(0, 0, this.rotation, false, false, true);
+            }
         }
 
         EventDispatcher.emit('hero-damage', this.hp);
@@ -132,6 +135,8 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         // Switch sprite to dead
         this.setFrame('hero_dead');
         this.setOrigin(0.5, 0.5);
+        this.setDepth(-0.5);
+        this.setVelocity(0, 0);
 
         // Make body a sensor so projectiles pass through, but we still keep it around
         if (this.body) this.scene.matter.world.remove(this.body);
