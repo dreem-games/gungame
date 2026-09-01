@@ -154,7 +154,16 @@ export class GameScene extends Phaser.Scene {
 
         this.events.on('projectileFired', (data: any) => {
             if (this.multiplayer && this.network) {
-                this.network.sendFire(data.x, data.y, data.angle, data.speed, data.damage, data.texture, data.frame);
+                this.network.sendFire(
+                    data.x,
+                    data.y,
+                    data.angle,
+                    data.speed,
+                    data.damage,
+                    data.texture,
+                    data.frame,
+                    data.piercing
+                );
             }
         });
 
@@ -196,27 +205,12 @@ export class GameScene extends Phaser.Scene {
         const damage = projectile.getData('damage');
         const isPiercing = projectile.getData('isPiercing');
 
-        const networkId = target.getData('networkId');
-
         if (target instanceof Hero && target.isDead) {
             // Ignore dead heroes
             return;
         }
 
-        if (this.usesServerPhysics && typeof networkId === 'string') {
-            this.network.sendHit(networkId, damage);
-            const isThinWall = target.getData('isThinWall');
-
-            if (target instanceof Hero && target.isDead) {
-                return;
-            }
-
-            if (isThinWall && isPiercing) {
-                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
-                ignoredBodies.push(target);
-                projectile.setData('ignoredBodies', ignoredBodies);
-                return;
-            }
+        if (this.usesServerPhysics) {
             projectile.destroy();
             return;
         }
@@ -408,7 +402,7 @@ export class GameScene extends Phaser.Scene {
                         event.damage!,
                         event.texture!,
                         event.frame!,
-                        false,
+                        event.piercing,
                         true
                     );
                 }

@@ -36,6 +36,7 @@ export interface WorldEvent {
     speed?: number;
     texture?: string;
     frame?: string;
+    piercing?: boolean;
     playerId?: string;
 }
 
@@ -85,10 +86,6 @@ export class NetworkManager {
         return events;
     }
 
-    public sendHit(id: string, damage: number) {
-        if (this.socket.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'hit', id, damage }));
-    }
-
     public sendFire(
         x: number,
         y: number,
@@ -96,10 +93,11 @@ export class NetworkManager {
         speed: number,
         damage: number,
         texture: string,
-        frame: string
+        frame: string,
+        piercing: boolean
     ) {
         if (this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify({ type: 'fire', x, y, angle, speed, damage, texture, frame }));
+            this.socket.send(JSON.stringify({ type: 'fire', x, y, angle, speed, damage, texture, frame, piercing }));
         }
     }
 

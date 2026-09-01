@@ -25,7 +25,7 @@ export class Barrel extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.setScale(0.5);
         this.setFrictionAir(0.1);
         this.setMass(50);
-        this.setDepth(1);
+        this.setDepth(0);
         this.setData('blocksVision', true);
     }
 

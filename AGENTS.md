@@ -91,7 +91,11 @@ gungame/
 npm install
 npm run dev        # vite dev-сервер (http://localhost:5173)
 npm run build      # tsc && vite build → dist/
+npm run check      # typecheck + oxlint + oxfmt
 ```
+
+- Перед отправкой изменений запускать `npm run check`.
+- Форматирование: `npm run format`; автоисправление линтера: `npm run lint`.
 
 - Атласы: в `public/assets/texture|ui` лежат `.atlas` (libGDX) и `.json` (Phaser).
   `.json` — сгенерированы `scripts/convert_atlas.js` (читает/пишет `public/assets/...`).

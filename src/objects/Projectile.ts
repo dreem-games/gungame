@@ -47,7 +47,7 @@ export class Projectile {
         this.gameObject.setData('isRemote', isRemote);
 
         if (!isRemote) {
-            scene.events.emit('projectileFired', { x, y, angle, speed, damage, texture, frame });
+            scene.events.emit('projectileFired', { x, y, angle, speed, damage, texture, frame, piercing });
         }
 
         // Destroy after a certain time to prevent memory leaks (e.g., 3 seconds)
