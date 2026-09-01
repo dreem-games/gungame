@@ -22,6 +22,7 @@ export class GameScene extends Phaser.Scene {
     private remotePlayers = new Map<string, Phaser.GameObjects.Sprite>();
     private boxes = new Map<string, Phaser.Physics.Matter.Sprite>();
     private localEnvironment: Phaser.GameObjects.GameObject[] = [];
+    private projectiles = new Map<string, Phaser.Physics.Matter.Sprite>();
     private usesServerPhysics = false;
     private multiplayer = true;
 
@@ -153,8 +154,10 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.events.on('projectileFired', (data: any) => {
+            this.projectiles.set(data.id, data.gameObject);
             if (this.multiplayer && this.network) {
                 this.network.sendFire(
+                    data.id,
                     data.x,
                     data.y,
                     data.angle,
@@ -399,7 +402,7 @@ export class GameScene extends Phaser.Scene {
         for (const event of this.network.consumeWorldEvents()) {
             if (event.type === 'projectileFired') {
                 if (this.network.getLocalPlayer()?.id !== event.playerId) {
-                    new Projectile(
+                    const projectile = new Projectile(
                         this,
                         event.x,
                         event.y,
@@ -409,9 +412,16 @@ export class GameScene extends Phaser.Scene {
                         event.texture!,
                         event.frame!,
                         event.piercing,
-                        true
+                        true,
+                        event.id
                     );
+                    this.projectiles.set(event.id, projectile.gameObject);
                 }
+                continue;
+            }
+            if (event.type === 'projectileDestroyed') {
+                this.projectiles.get(event.id)?.destroy();
+                this.projectiles.delete(event.id);
                 continue;
             }
             if (event.type === 'playerDamaged') {

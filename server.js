@@ -108,6 +108,12 @@ function simulate() {
 function removeProjectile(projectile) {
     projectiles.delete(projectile.body.id);
     Matter.World.remove(engine.world, projectile.body);
+    events.push({
+        type: 'projectileDestroyed',
+        id: projectile.id,
+        x: projectile.body.position.x,
+        y: projectile.body.position.y
+    });
 }
 
 Matter.Events.on(engine, 'collisionStart', (event) => {
@@ -306,7 +312,10 @@ wss.on('connection', (socket) => {
         try {
             const message = JSON.parse(rawMessage.toString());
             if (message.type === 'fire') {
-                if (![message.x, message.y, message.angle, message.speed, message.damage].every(Number.isFinite))
+                if (
+                    typeof message.id !== 'string' ||
+                    ![message.x, message.y, message.angle, message.speed, message.damage].every(Number.isFinite)
+                )
                     return;
                 const player = players.get(id);
                 if (
@@ -326,6 +335,7 @@ wss.on('connection', (socket) => {
                 });
                 Matter.World.add(engine.world, projectileBody);
                 projectiles.set(projectileBody.id, {
+                    id: message.id,
                     body: projectileBody,
                     ownerId: id,
                     damage: Math.max(0, Math.min(message.damage, 100)),
@@ -334,6 +344,7 @@ wss.on('connection', (socket) => {
                 });
                 events.push({
                     type: 'projectileFired',
+                    id: message.id,
                     x: message.x,
                     y: message.y,
                     angle: message.angle,
