@@ -197,6 +197,12 @@ export class GameScene extends Phaser.Scene {
         const isPiercing = projectile.getData('isPiercing');
 
         const networkId = target.getData('networkId');
+
+        if (target instanceof Hero && target.isDead) {
+            // Ignore dead heroes
+            return;
+        }
+
         if (this.usesServerPhysics && typeof networkId === 'string') {
             this.network.sendHit(networkId, damage);
             const isThinWall = target.getData('isThinWall');

@@ -134,7 +134,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         this.setOrigin(0.5, 0.5);
 
         // Make body a sensor so projectiles pass through, but we still keep it around
-        this.setSensor(true);
+        if (this.body) this.scene.matter.world.remove(this.body);
         this.setFrictionAir(0.99); // stop movement
         this.laserGraphics.clear();
     }

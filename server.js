@@ -89,6 +89,7 @@ function simulate() {
             y: player.input.y * speed * (slowed ? 0.45 : 1)
         });
         Matter.Body.setAngle(player.body, player.input.rotation);
+        player.body.isSensor = player.input.isDead;
     }
     Matter.Engine.update(engine, 1000 / 60);
 }
@@ -267,6 +268,11 @@ wss.on('connection', (socket) => {
                             y: wall.body.position.y
                         });
                     }
+                } else {
+                    // Could be a player hit
+                    const player = players.get(message.id);
+                    if (player && !player.input.isDead)
+                        events.push({ type: 'playerDamaged', id: player.id, x: 0, y: 0, damage: message.damage });
                 }
                 return;
             }
