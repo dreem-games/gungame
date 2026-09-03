@@ -49,7 +49,22 @@ npm run dev
 порту, что и сайт, — дополнительные порты открывать не требуется.
 
 Команда `npm run server` поднимает только автономный WebSocket-сервер на порту `8080` — статику нужно раздавать
-отдельно (Nginx/Apache/CDN) и проксировать `/ws` на этот сервер.
+отдельно (Nginx/Apache/CDN) и проксировать `/ws` на этот сервер. По умолчанию сервер слушает только
+`127.0.0.1`; адрес можно изменить через переменную окружения `HOST`.
+
+### Локальный production-подобный режим
+
+Команда собирает оптимизированный frontend, запускает авторитетный сервер на `127.0.0.1:18082` и Nginx на
+`http://127.0.0.1:18083`:
+
+```bash
+devenv shell
+gg-production
+```
+
+Nginx раздаёт `dist/`, обрабатывает SPA fallback и проксирует `/ws` на отдельный Node.js-процесс. Этот режим
+проверяет тот же контракт «статика + same-origin WebSocket», который нужен при обычном production-развёртывании.
+Для быстрой разработки с HMR продолжайте использовать `npm run dev`.
 
 ## Полупубличный dev-стенд
 
@@ -74,6 +89,23 @@ npm run build
 ```
 
 Готовые статические файлы (HTML, JS, CSS, картинки) появятся в папке `dist/`. Их можно загрузить на любой хостинг (GitHub Pages, Vercel, Netlify или обычный Nginx/Apache).
+
+### Воспроизводимая сборка через Nix
+
+Корневой `flake.nix` экспортирует два пакета для `x86_64-linux` и `aarch64-linux`. Например, на ARM-сервере или настроенном Linux remote builder:
+
+```bash
+nix build .#packages.aarch64-linux.gungame-frontend
+nix build .#packages.aarch64-linux.gungame-server
+```
+
+- `gungame-frontend` содержит готовую статику в `share/gungame`;
+- `gungame-server` предоставляет команду `bin/gungame-server` с Node.js и runtime-зависимостями.
+
+Flake также экспортирует универсальный `nixosModules.gungame`. Модуль запускает только авторитетный сервер через
+systemd и по умолчанию привязывает его к `127.0.0.1:8080`. Выбор веб-сервера, TLS, доменов и способа доставки
+остаётся за конфигурацией конкретного окружения. Reverse proxy должен направлять WebSocket Upgrade с `/ws` на
+настроенные `services.gungame.address` и `services.gungame.port`.
 
 ## Проверки качества
 
