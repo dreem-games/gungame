@@ -59,6 +59,51 @@ npm run build
 
 Готовые статические файлы (HTML, JS, CSS, картинки) появятся в папке `dist/`. Их можно загрузить на любой хостинг (GitHub Pages, Vercel, Netlify или обычный Nginx/Apache).
 
+### Воспроизводимая сборка через Nix
+
+Корневой `flake.nix` экспортирует два пакета для `x86_64-linux` и `aarch64-linux`. Например, на ARM-сервере или настроенном Linux remote builder:
+
+```bash
+nix build .#packages.aarch64-linux.gungame-frontend
+nix build .#packages.aarch64-linux.gungame-server
+```
+
+- `gungame-frontend` содержит готовую статику в `share/gungame`;
+- `gungame-server` предоставляет команду `bin/gungame-server` с Node.js и runtime-зависимостями.
+
+Flake также экспортирует `nixosModules.gungame` и `nixosModules.host`. Первый модуль запускает авторитетный сервер через systemd и раздаёт frontend через Caddy. Второй хранит версионируемую конфигурацию будущего NixOS-хоста. WebSocket Upgrade на том же домене проксируется на локальный игровой сервер, поэтому браузер использует единый HTTPS/WSS origin.
+
+## Деплой на NixOS
+
+Каталог `nix/host/` содержит версионируемую конфигурацию NixOS-хоста и минимальный bootstrap flake для `/etc/nixos`. По умолчанию шаблон использует `aarch64-linux`; для x86-сервера замените `system` на `x86_64-linux`. При обновлении input `gungame` машина получает и новую версию приложения, и изменения host-конфигурации из репозитория. Перед первым развёртыванием:
+
+1. Скопируйте `nix/host/flake.nix` в `/etc/nixos/flake.nix`.
+2. Скопируйте `nix/host/local.nix.example` в `/etc/nixos/local.nix`, затем задайте реальный домен и CI public key. Реальный `local.nix` не должен попадать в Git.
+3. Создайте `/etc/nixos/hardware-configuration.nix` через `nixos-generate-config` или `nixos-anywhere`. Файл `hardware-configuration.nix.example` предназначен только как ориентир; загрузочное устройство и файловые системы нельзя безопасно угадать заранее.
+4. Создайте отдельную SSH-пару для GitHub Actions и укажите её публичный ключ в `services.gungame.deploy.authorizedKeys`.
+5. Выполните `nix flake lock --flake /etc/nixos`, затем первый `nixos-rebuild switch --flake /etc/nixos#gungame` вручную.
+
+Host flake держит этот репозиторий как input с именем `gungame`. Установленная модулем команда `gungame-deploy`:
+
+1. блокирует параллельные деплои;
+2. копирует `/etc/nixos` во временный каталог;
+3. выполняет `nix flake update gungame` только в этой копии;
+4. проверяет flake и собирает новое поколение;
+5. активирует поколение и проверяет `gungame-server.service`;
+6. обновляет рабочий `flake.lock` только после успеха;
+7. откатывает поколение при ошибке активации или запуска сервиса.
+
+CI-job `deploy` запускается только после успешных quality- и Nix-проверок на push в `web`. Создайте GitHub Environment `production`, ограничьте его веткой `web` и, если тариф репозитория поддерживает это, включите обязательное ручное подтверждение. Добавьте в Environment:
+
+- secret `GUNGAME_DEPLOY_SSH_KEY` — приватный CI-ключ;
+- secret `GUNGAME_DEPLOY_KNOWN_HOSTS` — заранее проверенная строка `known_hosts`, полученная вне CI;
+- variable `GUNGAME_DEPLOY_HOST` — домен или IP NixOS-машины;
+- variable `GUNGAME_DEPLOY_USER` — `gungame-deploy`.
+
+SSH-ключ на сервере получает forced command и не может передать deploy-скрипту произвольные аргументы. Не используйте `ssh-keyscan` внутри CI: сохранённый `known_hosts` защищает первый контакт от подмены.
+
+Активация новой версии перезапускает авторитетный сервер и завершает текущий матч. До появления переноса состояния между поколениями production Environment рекомендуется защищать ручным подтверждением и выполнять деплой в согласованное окно.
+
 ## Проверки качества
 
 Перед коммитом запустите общий набор проверок:

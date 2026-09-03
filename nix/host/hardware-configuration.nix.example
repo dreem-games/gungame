@@ -1,0 +1,16 @@
+{ ... }:
+
+{
+  # Не используйте этот файл вслепую. Замените его результатом
+  # `nixos-generate-config` или генерации `nixos-anywhere` для конкретной машины.
+  boot.initrd.availableKernelModules = [
+    "virtio_pci"
+    "virtio_scsi"
+    "xhci_pci"
+  ];
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+}

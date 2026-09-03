@@ -38,3 +38,62 @@ jobs:
 
             - name: Check formatting
               run: npm run format:check
+
+    nix:
+        name: Nix packages
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+
+            - name: Install Nix
+              uses: cachix/install-nix-action@v31
+
+            - name: Check flake
+              run: nix flake check --print-build-logs
+
+            - name: Evaluate deployment architectures
+              run: |
+                  nix eval .#packages.x86_64-linux.gungame-server.drvPath
+                  nix eval .#packages.x86_64-linux.gungame-frontend.drvPath
+                  nix eval .#packages.aarch64-linux.gungame-server.drvPath
+                  nix eval .#packages.aarch64-linux.gungame-frontend.drvPath
+
+    deploy:
+        name: Deploy production
+        needs:
+            - quality
+            - nix
+        if: github.event_name == 'push' && github.ref == 'refs/heads/web'
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        concurrency:
+            group: gungame-production
+            cancel-in-progress: false
+        environment:
+            name: production
+
+        steps:
+            - name: Configure deploy SSH key
+              env:
+                  DEPLOY_KEY: ${{ secrets.GUNGAME_DEPLOY_SSH_KEY }}
+                  DEPLOY_KNOWN_HOSTS: ${{ secrets.GUNGAME_DEPLOY_KNOWN_HOSTS }}
+              run: |
+                  install -d -m 0700 "$HOME/.ssh"
+                  printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/gungame_deploy"
+                  printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+                  chmod 0600 "$HOME/.ssh/gungame_deploy" "$HOME/.ssh/known_hosts"
+
+            - name: Update and deploy the pinned gungame input
+              env:
+                  DEPLOY_HOST: ${{ vars.GUNGAME_DEPLOY_HOST }}
+                  DEPLOY_USER: ${{ vars.GUNGAME_DEPLOY_USER }}
+              run: |
+                  ssh \
+                      -i "$HOME/.ssh/gungame_deploy" \
+                      -o BatchMode=yes \
+                      -o StrictHostKeyChecking=yes \
+                      "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                      deploy

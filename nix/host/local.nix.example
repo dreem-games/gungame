@@ -1,0 +1,15 @@
+{ ... }:
+
+{
+  # Этот файл копируется в /etc/nixos/local.nix и не коммитится с реальными значениями.
+  services.gungame = {
+    domain = "game.example.com";
+
+    deploy = {
+      enable = true;
+      authorizedKeys = [
+        "ssh-ed25519 AAAA_REPLACE_WITH_GITHUB_ACTIONS_DEPLOY_KEY github-actions-gungame"
+      ];
+    };
+  };
+}
