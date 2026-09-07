@@ -31,6 +31,10 @@ export class InputManager {
     public rightStickAim: boolean = false;
 
     private wasPadDashDown = false;
+    private wasPadLeftDown = false;
+    private wasPadUpDown = false;
+    private wasPadRightDown = false;
+    private movementVector = new Phaser.Math.Vector2();
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -77,7 +81,7 @@ export class InputManager {
      * Returns a normalized movement vector. Left stick wins over keys when pushed past the deadzone.
      */
     public getMovementVector(): Phaser.Math.Vector2 {
-        const vector = new Phaser.Math.Vector2(0, 0);
+        const vector = this.movementVector.set(0, 0);
 
         const pad = this.scene.input.gamepad?.pad1;
         if (pad) {
@@ -130,21 +134,26 @@ export class InputManager {
     }
 
     public getWeaponSwitch(): number | null {
-        if (!this.keys) return null;
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys.ONE)) return 0;
-        if (Phaser.Input.Keyboard.JustDown(this.keys.TWO)) return 1;
-        if (Phaser.Input.Keyboard.JustDown(this.keys.THREE)) return 2;
-
         const pad = this.scene.input.gamepad?.pad1;
-        if (pad) {
-            // Usually D-pad or bumpers for switching
-            if (pad.left) return 0;
-            if (pad.up) return 1;
-            if (pad.right) return 2;
-        }
+        const padLeft = pad?.left ?? false;
+        const padUp = pad?.up ?? false;
+        const padRight = pad?.right ?? false;
+        const padIndex =
+            padLeft && !this.wasPadLeftDown
+                ? 0
+                : padUp && !this.wasPadUpDown
+                  ? 1
+                  : padRight && !this.wasPadRightDown
+                    ? 2
+                    : null;
+        this.wasPadLeftDown = padLeft;
+        this.wasPadUpDown = padUp;
+        this.wasPadRightDown = padRight;
 
-        return null;
+        if (this.keys && Phaser.Input.Keyboard.JustDown(this.keys.ONE)) return 0;
+        if (this.keys && Phaser.Input.Keyboard.JustDown(this.keys.TWO)) return 1;
+        if (this.keys && Phaser.Input.Keyboard.JustDown(this.keys.THREE)) return 2;
+        return padIndex;
     }
 
     public update() {

@@ -20,6 +20,7 @@ Top-down шутер в браузере на **TypeScript + Phaser 4** с физ
 gungame/
 ├── index.html                # HTML-обёртка с div#game-container
 ├── server.js                 # WebSocket-сервер и авторитетная физика мультиплеера
+├── vite.config.mts           # конфиг Vite (ESM): в dev игровой ws-сервер вешается на /ws того же порта
 ├── src/
 │   ├── main.ts               # Точка входа: Phaser.Game config (Matter, gamepad) + resize
 │   ├── scenes/               # Phaser-сцены
@@ -91,9 +92,9 @@ gungame/
 
 ```bash
 npm install
-npm run dev        # vite dev-сервер (http://localhost:5173)
+npm run dev        # vite dev-сервер (http://localhost:5173) + игровой ws-сервер (тот же порт, /ws)
 npm run build      # typecheck + vite build → dist/
-npm run check      # typecheck + oxlint + oxfmt
+npm run check      # typecheck + oxlint + oxfmt + shared-ws/server/load smoke
 ```
 
 - Перед отправкой изменений запускать `npm run check`.

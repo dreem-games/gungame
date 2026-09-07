@@ -13,6 +13,8 @@ export class UIScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+
         // UI Layout in top-left
         const padding = 20;
 
@@ -85,7 +87,7 @@ export class UIScene extends Phaser.Scene {
         }
     }
 
-    destroy() {
+    private shutdown() {
         this.game.events.off('weaponChanged', this.onWeaponChanged, this);
         this.game.events.off('ammoChanged', this.onAmmoChanged, this);
         EventDispatcher.off('hero-damage', this.onHeroDamage, this);

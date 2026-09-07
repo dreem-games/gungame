@@ -1,8 +1,6 @@
 import Phaser from 'phaser';
 
 export class ThinWallSegment extends Phaser.Physics.Matter.Sprite {
-    private health: number = 30;
-
     constructor(scene: Phaser.Scene, x: number, y: number) {
         // We will just create a tiny grey rectangle for the segment
         // Alternatively, we can load a texture, but drawing a graphics is easy
@@ -13,14 +11,6 @@ export class ThinWallSegment extends Phaser.Physics.Matter.Sprite {
         this.setStatic(true);
         this.setData('isThinWall', true);
         this.setData('blocksVision', true);
-    }
-
-    public takeDamage(amount: number) {
-        this.health -= amount;
-
-        if (this.health <= 0) {
-            this.destroy();
-        }
     }
 }
 

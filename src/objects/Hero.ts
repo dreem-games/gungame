@@ -13,21 +13,11 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
     private inputManager: InputManager;
     private weaponManager: WeaponManager;
 
-    // Movement config
-    private baseSpeed: number = 5;
-    private runSpeed: number = 9;
-    private dashSpeed: number = 50;
-    private dashDuration: number = 250; // ms
-
-    // State
+    // Movement state (состояние для HUD и sendInput; сами позиции приходят из снимков сервера)
     private isDashing: boolean = false;
     private dashTimer: number = 0;
     private dashCooldown: number = 0;
-
-    private isSlowed: boolean = false;
-
-    // Knockback: время, на которое взрыв вырывает управление из-под игрока
-    private knockbackTime: number = 0;
+    private dashDuration: number = 250; // ms
 
     // Stamina config
     public maxStamina: number = 100;
@@ -56,45 +46,15 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         scene.add.existing(this);
 
         // Setup physics body
-        // Body needs to be smaller and offset towards the head
-        const radius = 30;
-        const circleBody = scene.matter.bodies.circle(0, 0, radius, { label: 'hero_movement' });
+        // Круг r=30 — паритет с серверным хитбоксом (playerRadius=30).
+        // frictionAir: 0 — как у серверного тела; позицию двигают только снапшоты.
+        this.setExistingBody(scene.matter.bodies.circle(0, 0, 30, { frictionAir: 0 }));
 
-        const shapes = scene.cache.json.get('bodies_json');
-        const heroData = shapes.rigidBodies.find((b: any) => b.name === 'hero');
-
-        let vertexSets: any[][] = [];
-        if (heroData && heroData.polygons) {
-            const spriteWidth = 212;
-            const spriteHeight = 152;
-            const cx = spriteWidth / 2;
-            const cy = spriteHeight / 2;
-            vertexSets = heroData.polygons.map((poly: any[]) =>
-                poly.map((v) => ({ x: v.x * spriteWidth - cx, y: v.y * spriteHeight - cy }))
-            );
-        }
-
-        const hitboxBody = scene.matter.bodies.fromVertices(0, 0, vertexSets, {
-            isSensor: true,
-            label: 'hero_hitbox'
-        });
-
-        // We combine them into a compound body.
-        const compoundBody = scene.matter.body.create({
-            parts: [circleBody, hitboxBody],
-            frictionAir: 0.1,
-            mass: 100
-        });
-
-        this.setExistingBody(compoundBody);
-
-        // After setting body, reset fixed rotation
         this.setFixedRotation();
 
-        // In Matter.js with Phaser, setting a new body resets origin to center of mass.
-        // We shift the visual sprite relative to the physical body.
-        // The hero's head in the sprite (facing right) is at roughly X=50, Y=76
-        // This means the center of the physics circle should be offset to the left of the sprite center.
+        // Matter.js сбрасывает origin в центр массы при замене тела.
+        // Центр спрайта (физический круг) — не геометрический центр текстуры,
+        // поэтому картинка смещена относительно тела (как и раньше).
         this.setOrigin(0.2, 0.5);
         this.setPosition(x, y);
 
@@ -116,18 +76,22 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
         if (this.hp <= 0) {
             this.hp = 0;
             this.die();
-            if ((this.scene as any).network) {
-                (this.scene as any).network.sendInput(0, 0, this.rotation, false, false, true);
-            }
         }
 
         EventDispatcher.emit('hero-damage', this.hp);
     }
 
+    public applyServerHealth(hp: number) {
+        if (hp < this.hp) this.takeDamage(this.hp - hp);
+    }
+
+    public applyServerStamina(stamina: number) {
+        this.currentStamina = stamina;
+    }
+
     private die() {
         this.isDead = true;
 
-        EventDispatcher.emit('hero-death');
         // Смерть отменяет перезарядку — иначе звук перезагрузки затрет звук смерти
         this.weaponManager.cancelReload();
         this.scene.sound.play('death');
@@ -140,18 +104,7 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         // Make body a sensor so projectiles pass through, but we still keep it around
         if (this.body) this.scene.matter.world.remove(this.body);
-        this.setFrictionAir(0.99); // stop movement
         this.laserGraphics.clear();
-    }
-
-    public setSlowed(slowed: boolean) {
-        this.isSlowed = slowed;
-    }
-
-    // Ударная волна от взрыва: физика сама разгоняет тело, на это время
-    // отключаем обычное управление, чтобы setVelocity не сбивал импульс.
-    public setKnockback(duration: number) {
-        this.knockbackTime = Math.max(this.knockbackTime, duration);
     }
 
     update(_time: number, delta: number) {
@@ -167,66 +120,27 @@ export class Hero extends Phaser.Physics.Matter.Sprite implements IEntity {
 
         const moveVector = this.inputManager.getMovementVector();
 
-        // Во время отброса от взрыва управление заморожено — физика гонит тело
-        if (this.knockbackTime > 0) {
-            this.knockbackTime -= delta;
-            // Если дэш начался в момент взрыва, гасим его — иначе isDashing застрянет
-            if (this.isDashing) this.isDashing = false;
-        } else {
-            // Handle Dash initialization
-            if (
-                this.inputManager.isDashing() &&
-                !this.isDashing &&
-                this.dashCooldown <= 0 &&
-                this.currentStamina >= this.dashStaminaCost
-            ) {
-                this.isDashing = true;
-                this.dashTimer = this.dashDuration;
-                this.currentStamina -= this.dashStaminaCost;
-                this.dashCooldown = 1000; // 1 second cooldown
-
-                // If no movement vector, dash forward (towards cursor)
-                if (moveVector.x === 0 && moveVector.y === 0) {
-                    const angle = this.rotation;
-                    moveVector.x = Math.cos(angle);
-                    moveVector.y = Math.sin(angle);
-                }
+        // Дэш: фиксируем состояние (HUD, sendInput); саму скорость даёт серверная физика
+        if (this.isDashing) {
+            this.dashTimer -= delta;
+            if (this.dashTimer <= 0) {
+                this.isDashing = false;
             }
+        } else if (
+            this.inputManager.isDashing() &&
+            this.dashCooldown <= 0 &&
+            this.currentStamina >= this.dashStaminaCost
+        ) {
+            this.isDashing = true;
+            this.dashTimer = this.dashDuration;
+            this.currentStamina -= this.dashStaminaCost;
+            this.dashCooldown = 1000; // 1 second cooldown
+        }
 
-            // Apply movement
-            if (this.isDashing) {
-                this.dashTimer -= delta;
-                if (this.dashTimer <= 0) {
-                    this.isDashing = false;
-                } else {
-                    // Ignore other inputs while dashing, maintain high velocity
-                    // We keep the vector from when dash started, but normalize it
-                    if (moveVector.length() === 0) {
-                        moveVector.x = Math.cos(this.rotation);
-                        moveVector.y = Math.sin(this.rotation);
-                    }
-                    this.setVelocity(moveVector.x * this.dashSpeed, moveVector.y * this.dashSpeed);
-                }
-            }
-
-            if (!this.isDashing) {
-                let currentSpeed = this.baseSpeed;
-
-                if (this.inputManager.isRunning() && this.currentStamina > 0 && moveVector.length() > 0) {
-                    currentSpeed = this.runSpeed;
-                    this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
-                }
-
-                if (this.isSlowed) {
-                    currentSpeed *= 0.5;
-                }
-
-                this.setVelocity(moveVector.x * currentSpeed, moveVector.y * currentSpeed);
-            }
-        } // end knockback check
-
-        // Reset slowed state; sensor collisions will reapply it if still inside
-        this.isSlowed = false;
+        // Бег расходует стамину, пока задано движение (для HUD; движение решает сервер)
+        if (!this.isDashing && this.inputManager.isRunning() && this.currentStamina > 0 && moveVector.length() > 0) {
+            this.currentStamina = Math.max(0, this.currentStamina - this.runStaminaCost * (delta / 1000));
+        }
 
         // Смещение дула от центра спрайта (локальные координаты)
         const FIRE_POSITION_DX = 1.7 * 100; // Increased X to reach the end of the barrel

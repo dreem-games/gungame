@@ -4,71 +4,66 @@ import map from '../../multiplayer-map.json';
 import { EntityManager } from '../core/EntityManager';
 import { FlashManager } from '../core/FlashManager';
 import { InputManager } from '../core/InputManager';
-import { generateWorld } from '../core/map-gen';
-import { NetworkManager, WorldLayout } from '../core/NetworkManager';
+import { NetworkManager, WorldLayout, WorldObjectState } from '../core/NetworkManager';
 import { Barrel } from '../objects/Barrel';
 import { Hero } from '../objects/Hero';
 import { OilTank } from '../objects/OilTank';
 import { Projectile } from '../objects/Projectile';
-import { ThinWall } from '../objects/ThinWall';
+import { ThinWall, ThinWallSegment } from '../objects/ThinWall';
 
 export class GameScene extends Phaser.Scene {
     private entityManager!: EntityManager;
     public flashManager!: FlashManager;
     private inputManager!: InputManager;
     private hero!: Hero;
-    private barrels: Barrel[] = [];
     private network!: NetworkManager;
     private remotePlayers = new Map<string, Phaser.GameObjects.Sprite>();
     private boxes = new Map<string, Phaser.Physics.Matter.Sprite>();
-    private localEnvironment: Phaser.GameObjects.GameObject[] = [];
     private projectiles = new Map<string, Phaser.Physics.Matter.Sprite>();
-    private usesServerPhysics = false;
-    private multiplayer = true;
+    private networkProjectiles = new Set<string>();
+    private puddles = new Map<string, Phaser.GameObjects.Graphics>();
+    private scorchMarks = new Map<string, Phaser.GameObjects.Sprite>();
+    private connectionText!: Phaser.GameObjects.Text;
+    private enterKey: Phaser.Input.Keyboard.Key | null = null;
+    private builtWelcomeSequence = 0;
 
     constructor() {
         super('GameScene');
     }
 
     create() {
+        // Scene-инстанс переживает restart, а игровые объекты — нет.
+        this.remotePlayers.clear();
+        this.boxes.clear();
+        this.projectiles.clear();
+        this.networkProjectiles.clear();
+        this.puddles.clear();
+        this.scorchMarks.clear();
+        this.builtWelcomeSequence = 0;
+
         // Initialize Core Systems
         this.entityManager = new EntityManager();
         this.inputManager = new InputManager(this);
         this.flashManager = new FlashManager(this);
 
         // Setup explosion animation
-        this.anims.create({
-            key: 'explosion_anim',
-            frames: this.anims.generateFrameNames('explosion', {
-                prefix: 'explosion_',
-                start: 1,
-                end: 25,
-                zeroPad: 2
-            }),
-            frameRate: 30,
-            repeat: 0
-        });
+        if (!this.anims.exists('explosion_anim')) {
+            this.anims.create({
+                key: 'explosion_anim',
+                frames: this.anims.generateFrameNames('explosion', {
+                    prefix: 'explosion_',
+                    start: 1,
+                    end: 25,
+                    zeroPad: 2
+                }),
+                frameRate: 30,
+                repeat: 0
+            });
+        }
 
         // Projectiles in our system are set up as sensors (setSensor(true)),
         // so they don't produce physical pushing/bouncing forces against other objects.
-        // We only need to control whether our custom collision logic runs.
-        this.matter.world.on('collisionactive', (event: Phaser.Physics.Matter.Events.CollisionActiveEvent) => {
-            event.pairs.forEach((pair) => {
-                const bodyA = pair.bodyA as MatterJS.BodyType;
-                const bodyB = pair.bodyB as MatterJS.BodyType;
-
-                const isPuddleA = (bodyA as any).isPuddle;
-                const isPuddleB = (bodyB as any).isPuddle;
-
-                // If hero is in the puddle, slow them down
-                if (isPuddleA && bodyB.gameObject === this.hero) {
-                    this.hero.setSlowed(true);
-                } else if (isPuddleB && bodyA.gameObject === this.hero) {
-                    this.hero.setSlowed(true);
-                }
-            });
-        });
-
+        // Мы только контролируем, запускается ли наша своя логика коллизий.
         this.matter.world.on('collisionstart', (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
             event.pairs.forEach((pair) => {
                 const bodyA = pair.bodyA as MatterJS.BodyType;
@@ -79,29 +74,9 @@ export class GameScene extends Phaser.Scene {
 
                 if (!gameObjectA || !gameObjectB) return;
 
-                // Check if one is a projectile and the other is ignored
-                const isProjA = gameObjectA.getData('isProjectile');
-                const isProjB = gameObjectB.getData('isProjectile');
-
-                if (isProjA) {
-                    const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectA.getData('ignoredBodies') || [];
-                    if (ignoredBodies.includes(gameObjectB)) {
-                        return; // Ignore this collision completely
-                    }
-                    if (gameObjectB instanceof Hero && bodyB.label === 'hero_movement') {
-                        return; // Ignore collisions with movement body, only hitbox matters
-                    }
-                }
-
-                if (isProjB) {
-                    const ignoredBodies: Phaser.GameObjects.GameObject[] = gameObjectB.getData('ignoredBodies') || [];
-                    if (ignoredBodies.includes(gameObjectA)) {
-                        return; // Ignore this collision completely
-                    }
-                    if (gameObjectA instanceof Hero && bodyA.label === 'hero_movement') {
-                        return; // Ignore collisions with movement body, only hitbox matters
-                    }
-                }
+                // Локальный hero — не цель для локальных расчётов: его здоровьем
+                // распоряжается сервер (playerDamaged), своими пулями — тоже сервер.
+                if (gameObjectA === this.hero || gameObjectB === this.hero) return;
 
                 this.handleProjectileCollision(gameObjectA, gameObjectB);
             });
@@ -142,33 +117,10 @@ export class GameScene extends Phaser.Scene {
         // Generate border walls
         this.generateBorderWalls(WORLD_SIZE, TILE_SIZE);
 
-        this.createLocalEnvironment(WORLD_SIZE);
-
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
         this.hero.setDepth(1);
         this.entityManager.add(this.hero);
-        if (this.multiplayer) {
-            this.network = new NetworkManager();
-            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.network.destroy());
-        }
-
-        this.events.on('projectileFired', (data: any) => {
-            this.projectiles.set(data.id, data.gameObject);
-            if (this.multiplayer && this.network) {
-                this.network.sendFire(
-                    data.id,
-                    data.x,
-                    data.y,
-                    data.angle,
-                    data.speed,
-                    data.damage,
-                    data.texture,
-                    data.frame,
-                    data.piercing
-                );
-            }
-        });
 
         // Camera setup
         this.cameras.main.startFollow(this.hero);
@@ -176,8 +128,45 @@ export class GameScene extends Phaser.Scene {
         // Make everything appear 2 times smaller (see 2x more space)
         this.cameras.main.setZoom(0.5);
 
+        this.network = new NetworkManager(this.getInterestRadius());
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.network.destroy();
+            this.events.off('projectileFired');
+        });
+
+        this.events.on('projectileFired', (data: any) => {
+            this.projectiles.set(data.id, data.gameObject);
+            data.gameObject.once('destroy', () => this.projectiles.delete(data.id));
+            this.network.sendFire(
+                data.id,
+                data.x,
+                data.y,
+                data.angle,
+                data.speed,
+                data.damage,
+                data.texture,
+                data.frame,
+                data.piercing
+            );
+        });
+
         // Start UI scene
         this.scene.launch('UIScene');
+
+        // Оверлей соединения: «Подключение…» до welcome, «потеряно» при обрыве.
+        // ENTER после обрыва рестартит сцены — свежий сокет (полный backoff придёт с п. 21(d)).
+        this.connectionText = this.add
+            .text(0, 0, '', {
+                font: '24px monospace',
+                color: '#ffffff',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                padding: { x: 16, y: 8 }
+            })
+            .setOrigin(0.5)
+            .setDepth(1000)
+            .setScrollFactor(0)
+            .setVisible(false);
+        this.enterKey = this.input.keyboard?.addKey('ENTER') ?? null;
 
         // Emit initial weapon state so UI can render
         this.events.once('update', () => {
@@ -196,6 +185,8 @@ export class GameScene extends Phaser.Scene {
         const isProjB = gameObjectB.getData('isProjectile');
 
         if (isProjA && isProjB) return; // Projectiles don't collide with each other
+        if (isProjA && (gameObjectA.getData('ignoredBodies') || []).includes(gameObjectB)) return;
+        if (isProjB && (gameObjectB.getData('ignoredBodies') || []).includes(gameObjectA)) return;
 
         if (isProjA) {
             this.processHit(gameObjectA, gameObjectB);
@@ -205,55 +196,22 @@ export class GameScene extends Phaser.Scene {
     }
 
     private processHit(projectile: Phaser.GameObjects.GameObject, target: Phaser.GameObjects.GameObject) {
-        const damage = projectile.getData('damage');
-        const isPiercing = projectile.getData('isPiercing');
-
         if (target instanceof Hero && target.isDead) {
             // Ignore dead heroes
             return;
         }
 
-        const isThinWall = (target as any).getData ? (target as any).getData('isThinWall') : false;
-
-        if (this.usesServerPhysics) {
-            if (isThinWall && isPiercing) {
-                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
-                ignoredBodies.push(target);
-                projectile.setData('ignoredBodies', ignoredBodies);
-                return;
-            }
-            projectile.destroy();
+        // Локально пуля всегда гаснет по контакту; настоящим уроном управляет сервер.
+        // Исключение: pierce через тонкую стену — сегмент игнорируем, пуля живёт дальше
+        // до решения сервера (projectileDestroyed).
+        const isPiercing = projectile.getData('isPiercing');
+        const isThinWall = target.getData?.('isThinWall') === true;
+        if (isThinWall && isPiercing) {
+            const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
+            ignoredBodies.push(target);
+            projectile.setData('ignoredBodies', ignoredBodies);
             return;
         }
-
-        // Check if target is a barrel — it explodes instead of taking generic damage
-        if (target instanceof Barrel) {
-            target.explode(this.hero, this.barrels);
-            projectile.destroy();
-            return;
-        }
-
-        if (target) {
-            // Check properties before applying damage, because taking damage might destroy the target
-            // Apply damage if target supports it
-            if ((target as any).takeDamage) {
-                (target as any).takeDamage(damage);
-            }
-
-            // If the target is a thin wall and the projectile is piercing, do NOT destroy it
-            if (isThinWall && isPiercing) {
-                // Ignore the segment so we don't hit it again immediately
-                const ignoredBodies: Phaser.GameObjects.GameObject[] = projectile.getData('ignoredBodies') || [];
-                ignoredBodies.push(target);
-                projectile.setData('ignoredBodies', ignoredBodies);
-                return; // Projectile survives
-            }
-
-            // Target taking damage logic for enemies would go here
-            // if (target instanceof Enemy) target.takeDamage(damage);
-        }
-
-        // Projectile is destroyed
         projectile.destroy();
     }
 
@@ -272,7 +230,6 @@ export class GameScene extends Phaser.Scene {
         for (const barrel of layout.barrels) {
             const sprite = new Barrel(this, barrel.x, barrel.y);
             sprite.setData('networkId', barrel.id);
-            this.barrels.push(sprite);
             this.boxes.set(barrel.id, sprite);
         }
 
@@ -292,36 +249,6 @@ export class GameScene extends Phaser.Scene {
                 segment.setData('networkId', id);
                 this.boxes.set(id, segment);
             });
-        }
-    }
-
-    private createLocalEnvironment(worldSize: number) {
-        const world = generateWorld(worldSize);
-
-        for (const box of world.boxes) {
-            const sprite = this.matter.add.sprite(box.x, box.y, 'level1', 'box');
-            sprite.setBody({ type: 'rectangle', width: 256, height: 256 });
-            sprite.setScale(0.5);
-            sprite.setFrictionAir(0.1);
-            sprite.setMass(70);
-            sprite.setData('blocksVision', true);
-            this.localEnvironment.push(sprite);
-        }
-
-        for (const barrel of world.barrels) {
-            const sprite = new Barrel(this, barrel.x, barrel.y);
-            this.barrels.push(sprite);
-            this.localEnvironment.push(sprite);
-        }
-
-        if (world.oilTank) {
-            const tank = new OilTank(this, world.oilTank.x, world.oilTank.y);
-            this.localEnvironment.push(tank);
-        }
-
-        if (world.thinWall) {
-            const wall = new ThinWall(this, world.thinWall.x, world.thinWall.y, 256, world.thinWall.isVertical);
-            this.localEnvironment.push(...wall.getSegments());
         }
     }
 
@@ -352,7 +279,28 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number) {
         this.entityManager.update(time, delta);
         this.inputManager.update();
-        if (this.multiplayer && this.network) {
+
+        const connected = this.network.isConnected();
+        if (connected) {
+            if (this.network.consumeSessionReplacement()) {
+                const ui = this.scene.get('UIScene') as Phaser.Scene;
+                ui.scene.restart();
+                this.scene.restart();
+                return;
+            }
+            const welcomeSequence = this.network.getWelcomeSequence();
+            if (welcomeSequence !== this.builtWelcomeSequence) {
+                const layout = this.network.getWorldLayout();
+                const spawn = this.network.getSpawnPosition();
+                if (layout && spawn) {
+                    for (const object of this.boxes.values()) object.destroy();
+                    this.boxes.clear();
+                    this.hero.setPosition(spawn.x, spawn.y);
+                    this.createSharedObstacles(layout);
+                    this.builtWelcomeSequence = welcomeSequence;
+                }
+            }
+
             const movement = this.inputManager.getMovementVector();
             this.network.sendInput(
                 movement.x,
@@ -360,48 +308,113 @@ export class GameScene extends Phaser.Scene {
                 this.hero.rotation,
                 this.inputManager.isRunning(),
                 this.hero.isDashingNow(),
-                this.hero.isDead
+                this.getInterestRadius()
             );
-            const objects = this.network.getWorldObjects();
-            if (this.network.isConnected() && objects.length) {
-                if (!this.usesServerPhysics) {
-                    this.localEnvironment.forEach((obj) => obj.destroy());
-                    this.localEnvironment = [];
-                    this.barrels = [];
-                    this.boxes.clear();
-                    const layout = this.network.getWorldLayout();
-                    if (layout) this.createSharedObstacles(layout);
-                    this.hero.setFrictionAir(0);
-                    this.usesServerPhysics = true;
+            const worldObjects = this.network.getWorldObjects();
+            for (const object of worldObjects) {
+                if (object.type === 'projectile') {
+                    this.syncNetworkProjectile(object);
+                    continue;
                 }
-                for (const object of objects) {
-                    const box = this.boxes.get(object.id);
-                    if (box) {
-                        const distance = Phaser.Math.Distance.Between(box.x, box.y, object.x, object.y);
-                        if (distance > 80) {
-                            box.setPosition(object.x, object.y);
-                        } else {
-                            const k = Math.min(1, delta / 120);
-                            box.setPosition(
-                                Phaser.Math.Linear(box.x, object.x, k),
-                                Phaser.Math.Linear(box.y, object.y, k)
-                            );
-                        }
-                        box.setRotation(object.rotation);
-                        box.setVelocity(object.vx, object.vy);
+                if (object.type === 'oilPuddle') {
+                    this.syncPuddle(object);
+                    continue;
+                }
+                if (object.type === 'scorch') {
+                    this.syncScorch(object);
+                    continue;
+                }
+                const box = this.boxes.get(object.id) ?? this.createNetworkObject(object);
+                if (box) {
+                    const distance = Phaser.Math.Distance.Between(box.x, box.y, object.x, object.y);
+                    if (distance > 80) {
+                        box.setPosition(object.x, object.y);
+                    } else {
+                        const k = Math.min(1, delta / 120);
+                        box.setPosition(Phaser.Math.Linear(box.x, object.x, k), Phaser.Math.Linear(box.y, object.y, k));
                     }
+                    box.setRotation(object.rotation);
+                    box.setVelocity(object.vx, object.vy);
                 }
-                this.applyServerEvents();
-                this.reconcileLocalPlayer(delta);
-                this.updateRemotePlayers(delta);
             }
+            this.applyServerEvents();
+            if (this.network.hasReceivedWorldState()) {
+                const visible = new Set(
+                    worldObjects
+                        .filter(({ type }) => type !== 'projectile' && type !== 'oilPuddle' && type !== 'scorch')
+                        .map(({ id }) => id)
+                );
+                for (const [id, object] of this.boxes) {
+                    if (visible.has(id)) continue;
+                    object.destroy();
+                    this.boxes.delete(id);
+                }
+                const visibleProjectiles = new Set(
+                    worldObjects.filter(({ type }) => type === 'projectile').map(({ id }) => id)
+                );
+                for (const id of this.networkProjectiles) {
+                    if (visibleProjectiles.has(id)) continue;
+                    this.projectiles.get(id)?.destroy();
+                    this.projectiles.delete(id);
+                    this.networkProjectiles.delete(id);
+                }
+                const visiblePuddles = new Set(
+                    worldObjects.filter(({ type }) => type === 'oilPuddle').map(({ id }) => id)
+                );
+                for (const [id, puddle] of this.puddles) {
+                    if (visiblePuddles.has(id)) continue;
+                    puddle.destroy();
+                    this.puddles.delete(id);
+                }
+                const visibleScorches = new Set(
+                    worldObjects.filter(({ type }) => type === 'scorch').map(({ id }) => id)
+                );
+                for (const [id, scorch] of this.scorchMarks) {
+                    if (visibleScorches.has(id)) continue;
+                    scorch.destroy();
+                    this.scorchMarks.delete(id);
+                }
+            }
+            this.reconcileLocalPlayer(delta);
+            this.updateRemotePlayers();
+        }
+        this.updateConnectionOverlay(connected);
+    }
+
+    private getInterestRadius(): number {
+        const camera = this.cameras.main;
+        return Math.hypot(camera.width, camera.height) / (2 * camera.zoom) + 512;
+    }
+
+    private updateConnectionOverlay(connected: boolean) {
+        const lost = this.network.hasLostConnection();
+        const dead = this.hero.isDead;
+        if (lost && this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+            this.network.retryNow();
+            return;
+        }
+        if (dead && this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+            const ui = this.scene.get('UIScene') as Phaser.Scene;
+            ui.scene.restart();
+            this.scene.restart();
+            return;
+        }
+        this.connectionText.setPosition(this.cameras.main.width / 2, this.cameras.main.height / 2);
+        if (dead) {
+            this.connectionText.setText('Вы погибли — нажмите ENTER').setVisible(true);
+        } else if (lost) {
+            this.connectionText.setText('Соединение потеряно — нажмите ENTER').setVisible(true);
+        } else if (!connected) {
+            this.connectionText.setText('Подключение к серверу…').setVisible(true);
+        } else {
+            this.connectionText.setVisible(false);
         }
     }
 
     private applyServerEvents() {
         for (const event of this.network.consumeWorldEvents()) {
             if (event.type === 'projectileFired') {
-                if (this.network.getLocalPlayer()?.id !== event.playerId) {
+                if (this.network.getLocalPlayer()?.id !== event.playerId && !this.projectiles.has(event.id)) {
                     const projectile = new Projectile(
                         this,
                         event.x,
@@ -416,6 +429,7 @@ export class GameScene extends Phaser.Scene {
                         event.id
                     );
                     this.projectiles.set(event.id, projectile.gameObject);
+                    projectile.gameObject.once('destroy', () => this.projectiles.delete(event.id));
                 }
                 continue;
             }
@@ -429,27 +443,25 @@ export class GameScene extends Phaser.Scene {
                 continue;
             }
             const object = this.boxes.get(event.id);
-            if (!object) continue;
-
-            this.boxes.delete(event.id);
-            if (object instanceof Barrel) this.barrels = this.barrels.filter((barrel) => barrel !== object);
-            if (event.type === 'oilTankRuptured' && object instanceof OilTank) {
-                object.createPuddle();
-                object.destroy();
+            if (event.type === 'oilTankRuptured') {
+                if (object instanceof OilTank) object.destroy();
+                this.boxes.delete(event.id);
                 continue;
             }
-            object.destroy();
-            if (event.type === 'thinWallDestroyed') continue;
+            if (event.type === 'thinWallDestroyed') {
+                object?.destroy();
+                this.boxes.delete(event.id);
+                continue;
+            }
+            if (event.type !== 'barrelExploded') continue;
+            object?.destroy();
+            this.boxes.delete(event.id);
 
-            const radius = event.type === 'barrelExploded' ? 500 : 400;
+            const radius = 500;
             const explosion = this.add.sprite(event.x, event.y, 'explosion', 'explosion_10').setDepth(5);
             explosion.setScale((radius * 2) / 64);
             explosion.play('explosion_anim');
             explosion.once('animationcomplete', () => explosion.destroy());
-            this.add
-                .sprite(event.x, event.y, 'scorch')
-                .setDisplaySize(radius * 1.4, radius * 1.4)
-                .setDepth(-1);
             this.sound.play('barrel_explosion');
             this.cameras.main.shake(400, 0.008);
             this.flashManager.createExplosionFlash(event.x, event.y, radius);
@@ -459,6 +471,8 @@ export class GameScene extends Phaser.Scene {
     private reconcileLocalPlayer(delta: number) {
         const state = this.network.getLocalPlayer();
         if (!state) return;
+        if (state.hp !== undefined) this.hero.applyServerHealth(state.hp);
+        if (state.stamina !== undefined) this.hero.applyServerStamina(state.stamina);
 
         const distance = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, state.x, state.y);
         if (distance < 6) return;
@@ -474,8 +488,76 @@ export class GameScene extends Phaser.Scene {
         this.hero.setVelocity(state.vx ?? 0, state.vy ?? 0);
     }
 
-    private updateRemotePlayers(delta: number) {
-        const k = Math.min(1, delta / 120);
+    private createNetworkObject(state: { id: string; type: string; x: number; y: number }) {
+        let object: Phaser.Physics.Matter.Sprite;
+        if (state.type === 'barrel') {
+            object = new Barrel(this, state.x, state.y);
+        } else if (state.type === 'oilTank') {
+            object = new OilTank(this, state.x, state.y);
+        } else if (state.type === 'thinWall') {
+            object = new ThinWallSegment(this, state.x, state.y);
+        } else if (state.type === 'box') {
+            object = this.matter.add.sprite(state.x, state.y, 'level1', 'box');
+            object.setBody({ type: 'rectangle', width: 256, height: 256 });
+            object.setScale(0.5);
+            object.setFrictionAir(0.1);
+            object.setMass(70);
+            object.setData('blocksVision', true);
+        } else {
+            return null;
+        }
+        object.setData('networkId', state.id);
+        this.boxes.set(state.id, object);
+        return object;
+    }
+
+    private syncNetworkProjectile(state: WorldObjectState) {
+        let object = this.projectiles.get(state.id);
+        if (!object) {
+            const projectile = new Projectile(
+                this,
+                state.x,
+                state.y,
+                state.rotation,
+                0,
+                0,
+                state.texture ?? 'projectiles',
+                state.frame ?? 'bullet',
+                state.piercing,
+                true,
+                state.id
+            );
+            object = projectile.gameObject;
+            this.projectiles.set(state.id, object);
+            object.once('destroy', () => this.projectiles.delete(state.id));
+        }
+        this.networkProjectiles.add(state.id);
+        object.setPosition(state.x, state.y);
+        object.setRotation(state.rotation);
+        object.setVelocity(state.vx, state.vy);
+    }
+
+    private syncScorch(state: WorldObjectState) {
+        if (this.scorchMarks.has(state.id)) return;
+        const radius = state.radius ?? 350;
+        this.scorchMarks.set(
+            state.id,
+            this.add
+                .sprite(state.x, state.y, 'scorch')
+                .setDisplaySize(radius * 2, radius * 2)
+                .setDepth(-1)
+        );
+    }
+
+    private syncPuddle(state: WorldObjectState) {
+        if (this.puddles.has(state.id)) return;
+        const puddle = this.add.graphics().setDepth(-0.5);
+        puddle.fillStyle(0x1a2b1a, 0.8);
+        puddle.fillCircle(state.x, state.y, state.radius ?? 0);
+        this.puddles.set(state.id, puddle);
+    }
+
+    private updateRemotePlayers() {
         const states = this.network.getRemotePlayers();
         for (const [id, state] of states) {
             let player = this.remotePlayers.get(id);
@@ -485,8 +567,8 @@ export class GameScene extends Phaser.Scene {
                 this.remotePlayers.set(id, player);
             }
 
-            player.x = Phaser.Math.Linear(player.x, state.x, k);
-            player.y = Phaser.Math.Linear(player.y, state.y, k);
+            player.x = state.x;
+            player.y = state.y;
             player.rotation = state.rotation;
             if (state.isDead && player.frame.name !== 'hero_dead') {
                 player.setFrame('hero_dead');
