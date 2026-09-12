@@ -1,0 +1,70 @@
+# Публикация и deployment-артефакты
+
+Этот документ фиксирует только публичный контракт репозитория. Домены, имена хостов, топология сети, TLS,
+секреты и конкретный deployment-контроллер принадлежат окружению владельца и не должны появляться здесь.
+
+## Принятые решения
+
+- `flake.nix` собирает согласованную пару пакетов `gungame-frontend` и `gungame-server` для
+  `x86_64-linux` и `aarch64-linux`.
+- `nixosModules.gungame` предоставляет переиспользуемый systemd-сервис авторитетного backend. Модуль ничего не
+  знает о внешнем reverse proxy, доменах и доставке артефактов.
+- Production-подобный профиль `devenv` использует тот же контракт, что и обычное развёртывание: Nginx раздаёт
+  собранную статику, а `/ws` проксируется на отдельный loopback-порт backend.
+- Поддерживаемые release-теги имеют строгий вид `vMAJOR.MINOR.PATCH` без ведущих нулей и суффиксов.
+- Гарантированная история deployment-сборок начинается с коммита
+  `e2f3db3ab611185252a407458b40bdb96ac7e5f2`, в котором впервые появился полный механизм сборки и публикации
+  артефактов. Коммиты должны быть его потомками.
+- Один артефакт всегда содержит frontend и backend одного commit SHA для `x86_64-linux`.
+- Формат артефакта — сжатый файловый Nix binary cache. Внутри находятся cache и `manifest.json`; рядом публикуется
+  SHA-256-файл.
+- Теговые сборки публикуются в GitHub Release соответствующего тега. Веточные сборки публикуются как неизменяемые
+  SHA-именованные assets технического prerelease `gungame-build-cache`.
+- Сборочный workflow имеет только `contents: read`. Отдельный доверенный workflow из default branch проверяет SHA,
+  ancestry, ref, manifest и checksum, и только после этого получает `contents: write` для GitHub Releases.
+- Ручной `workflow_dispatch` принимает полный commit SHA, тип ref и имя ref. Это позволяет внешнему контроллеру
+  восстановить отсутствующий артефакт без выполнения workflow на production-хосте.
+
+## Контракт manifest
+
+`manifest.json` содержит:
+
+- `schemaVersion` — сейчас `1`;
+- `commitSha` — полный lowercase SHA;
+- `refType` — `branch` или `tag`;
+- `refName` — исходное имя ветки либо тега;
+- `system` — сейчас release workflow поддерживает `x86_64-linux`;
+- `frontendStorePath` и `serverStorePath` — согласованные пути Nix store.
+
+Потребитель обязан проверить checksum архива, поля manifest, deployment-baseline и соответствие тега коммиту до
+импорта binary cache. Значения из HTTP-запроса или manifest нельзя вставлять в shell-команду строковой
+конкатенацией.
+
+## Проверки
+
+```bash
+npm run check
+bash -n scripts/build_nix_release.sh
+actionlint
+nix flake check --print-build-logs
+```
+
+Локальная упаковка release-артефакта рассчитана на `x86_64-linux` и требует подходящего Linux builder:
+
+```bash
+GUNGAME_COMMIT_SHA="$(git rev-parse HEAD)" \
+GUNGAME_REF_TYPE=branch \
+GUNGAME_REF_NAME="$(git branch --show-current)" \
+bash scripts/build_nix_release.sh release-artifacts
+```
+
+## Текущее состояние
+
+- [x] Воспроизводимые frontend/backend Nix-пакеты.
+- [x] Переиспользуемый NixOS-модуль backend.
+- [x] Production-подобный профиль Nginx + WebSocket в `devenv`.
+- [x] Разделение недоверенной сборки и доверенной публикации GitHub Release assets.
+- [x] Строгая проверка SemVer-тегов и deployment-baseline.
+- [ ] Влить механизм в default branch: до этого `workflow_run` не сможет использовать доверенный publisher из
+      default branch.
+- [ ] Проверить первую веточную публикацию и первый тег на GitHub после слияния.

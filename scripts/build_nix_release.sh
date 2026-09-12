@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-baseline_sha="${GUNGAME_BASELINE_SHA:-84e7a6b7afabf722cb0b824864657ccdbb71a099}"
+baseline_sha="${GUNGAME_BASELINE_SHA:-e2f3db3ab611185252a407458b40bdb96ac7e5f2}"
 commit_sha="${GUNGAME_COMMIT_SHA:-$(git rev-parse HEAD)}"
 ref_type="${GUNGAME_REF_TYPE:-branch}"
 ref_name="${GUNGAME_REF_NAME:-$(git branch --show-current)}"

@@ -38,7 +38,7 @@ jobs:
             - name: Verify artifact metadata
               id: artifact
               env:
-                  BASELINE_SHA: 84e7a6b7afabf722cb0b824864657ccdbb71a099
+                  BASELINE_SHA: e2f3db3ab611185252a407458b40bdb96ac7e5f2
                   EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
                   ORIGIN_EVENT: ${{ github.event.workflow_run.event }}
               run: |
@@ -105,6 +105,7 @@ jobs:
                   } >> "$GITHUB_OUTPUT"
 
             - name: Publish build-cache asset
+              if: steps.artifact.outputs.ref_type == 'branch'
               env:
                   ASSET: ${{ steps.artifact.outputs.asset }}
                   CHECKSUM: ${{ steps.artifact.outputs.checksum }}
@@ -120,16 +121,19 @@ jobs:
                           --notes "Machine-readable deployment artifacts."
                   fi
 
-                  asset_name="$(basename "$ASSET")"
-                  if gh release view gungame-build-cache \
+                  published_assets="$(gh release view gungame-build-cache \
                       --repo "$GITHUB_REPOSITORY" \
                       --json assets \
-                      --jq '.assets[].name' | grep -Fxq "$asset_name"; then
-                      echo "$asset_name is already published"
-                  else
-                      gh release upload gungame-build-cache "$ASSET" "$CHECKSUM" \
-                          --repo "$GITHUB_REPOSITORY"
-                  fi
+                      --jq '.assets[].name')"
+                  for file in "$ASSET" "$CHECKSUM"; do
+                      asset_name="$(basename "$file")"
+                      if grep -Fxq "$asset_name" <<< "$published_assets"; then
+                          echo "$asset_name is already published"
+                      else
+                          gh release upload gungame-build-cache "$file" \
+                              --repo "$GITHUB_REPOSITORY"
+                      fi
+                  done
 
             - name: Publish SemVer release asset
               if: steps.artifact.outputs.ref_type == 'tag'
@@ -152,11 +156,16 @@ jobs:
                           --title "$REF_NAME"
                   fi
 
-                  asset_name="$(basename "$ASSET")"
-                  if ! gh release view "$REF_NAME" \
+                  published_assets="$(gh release view "$REF_NAME" \
                       --repo "$GITHUB_REPOSITORY" \
                       --json assets \
-                      --jq '.assets[].name' | grep -Fxq "$asset_name"; then
-                      gh release upload "$REF_NAME" "$ASSET" "$CHECKSUM" \
-                          --repo "$GITHUB_REPOSITORY"
-                  fi
+                      --jq '.assets[].name')"
+                  for file in "$ASSET" "$CHECKSUM"; do
+                      asset_name="$(basename "$file")"
+                      if grep -Fxq "$asset_name" <<< "$published_assets"; then
+                          echo "$asset_name is already published"
+                      else
+                          gh release upload "$REF_NAME" "$file" \
+                              --repo "$GITHUB_REPOSITORY"
+                      fi
+                  done
