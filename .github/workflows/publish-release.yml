@@ -38,7 +38,7 @@ jobs:
             - name: Verify artifact metadata
               id: artifact
               env:
-                  BASELINE_SHA: e2f3db3ab611185252a407458b40bdb96ac7e5f2
+                  BASELINE_SHA: 75dc118083ad0ac017837c68df1c76ccafa5845c
                   EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
                   ORIGIN_EVENT: ${{ github.event.workflow_run.event }}
               run: |
