@@ -63,8 +63,11 @@ jobs:
                   checksum="$asset.sha256"
                   test -f "$asset"
                   test -f "$checksum"
-                  test "$(jq -r '.schemaVersion' "$manifest")" = 1
+                  test "$(jq -r '.schemaVersion' "$manifest")" = 2
+                  test "$(jq -r '.projectId' "$manifest")" = gungame
                   test "$(jq -r '.system' "$manifest")" = x86_64-linux
+                  test "$(jq -r '.outputs | keys | sort | join(",")' "$manifest")" = backend,frontend
+                  jq -e '.outputs[] | test("^/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+$")' "$manifest" >/dev/null
 
                   if [[ "$ORIGIN_EVENT" == push ]]; then
                       test "$commit_sha" = "$EXPECTED_SHA"
@@ -76,6 +79,10 @@ jobs:
                   expected_hash="$(cut -d ' ' -f 1 "$checksum")"
                   actual_hash="$(sha256sum "$asset" | cut -d ' ' -f 1)"
                   test "$actual_hash" = "$expected_hash"
+
+                  archived_manifest="$(mktemp)"
+                  tar -xOzf "$asset" ./manifest.json > "$archived_manifest"
+                  cmp --silent "$manifest" "$archived_manifest"
 
                   ref_type="$(jq -r '.refType' "$manifest")"
                   ref_name="$(jq -r '.refName' "$manifest")"

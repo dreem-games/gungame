@@ -73,19 +73,23 @@ manifest_path="${work_dir}/payload/manifest.json"
 
 jq -n \
     --arg commitSha "${commit_sha}" \
+    --arg projectId "gungame" \
     --arg refType "${ref_type}" \
     --arg refName "${ref_name}" \
     --arg system "${system}" \
     --arg frontendStorePath "${frontend_path}" \
-    --arg serverStorePath "${server_path}" \
+    --arg backendStorePath "${server_path}" \
     '{
-        schemaVersion: 1,
+        schemaVersion: 2,
+        projectId: $projectId,
         commitSha: $commitSha,
         refType: $refType,
         refName: $refName,
         system: $system,
-        frontendStorePath: $frontendStorePath,
-        serverStorePath: $serverStorePath
+        outputs: {
+            frontend: $frontendStorePath,
+            backend: $backendStorePath
+        }
     }' > "${manifest_path}"
 
 tar \
