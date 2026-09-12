@@ -15,6 +15,9 @@
 - Гарантированная история deployment-сборок начинается с коммита
   `e2f3db3ab611185252a407458b40bdb96ac7e5f2`, в котором впервые появился полный механизм сборки и публикации
   артефактов. Коммиты должны быть его потомками.
+- При вливании ветки этот baseline-коммит нужно сохранить в истории через fast-forward или merge commit. Squash и
+  rebase меняют SHA; после такого вливания baseline необходимо отдельным коммитом обновить одновременно в build
+  script и доверенном publisher workflow.
 - Один артефакт всегда содержит frontend и backend одного commit SHA для `x86_64-linux`.
 - Формат артефакта — сжатый файловый Nix binary cache. Внутри находятся cache и `manifest.json`; рядом публикуется
   SHA-256-файл.
@@ -65,6 +68,6 @@ bash scripts/build_nix_release.sh release-artifacts
 - [x] Production-подобный профиль Nginx + WebSocket в `devenv`.
 - [x] Разделение недоверенной сборки и доверенной публикации GitHub Release assets.
 - [x] Строгая проверка SemVer-тегов и deployment-baseline.
-- [ ] Влить механизм в default branch: до этого `workflow_run` не сможет использовать доверенный publisher из
-      default branch.
+- [ ] Влить механизм в default branch без изменения baseline SHA: до этого `workflow_run` не сможет использовать
+      доверенный publisher из default branch.
 - [ ] Проверить первую веточную публикацию и первый тег на GitHub после слияния.
