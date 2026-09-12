@@ -1,0 +1,114 @@
+name: Build release artifact
+
+on:
+    push:
+        branches:
+            - '**'
+        tags:
+            - 'v*'
+    workflow_dispatch:
+        inputs:
+            commit_sha:
+                description: Full commit SHA to build
+                required: true
+                type: string
+            ref_type:
+                description: Source ref type
+                required: true
+                type: choice
+                options:
+                    - branch
+                    - tag
+            ref_name:
+                description: Source branch or tag name
+                required: true
+                type: string
+
+permissions:
+    contents: read
+
+concurrency:
+    group: gungame-build-${{ github.event_name == 'workflow_dispatch' && inputs.commit_sha || github.sha }}
+    cancel-in-progress: false
+
+jobs:
+    build:
+        name: Build x86_64-linux artifact
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps:
+            - name: Resolve source metadata
+              id: source
+              env:
+                  DISPATCH_SHA: ${{ inputs.commit_sha }}
+                  DISPATCH_REF_NAME: ${{ inputs.ref_name }}
+                  DISPATCH_REF_TYPE: ${{ inputs.ref_type }}
+                  EVENT_NAME: ${{ github.event_name }}
+                  EVENT_REF_NAME: ${{ github.ref_name }}
+                  EVENT_REF_TYPE: ${{ github.ref_type }}
+                  EVENT_SHA: ${{ github.sha }}
+              run: |
+                  if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+                      commit_sha="$DISPATCH_SHA"
+                      ref_type="$DISPATCH_REF_TYPE"
+                      ref_name="$DISPATCH_REF_NAME"
+                  else
+                      commit_sha="$EVENT_SHA"
+                      ref_type="$EVENT_REF_TYPE"
+                      ref_name="$EVENT_REF_NAME"
+                  fi
+
+                  if [[ ! "$commit_sha" =~ ^[0-9a-f]{40}$ ]]; then
+                      echo "commit_sha must be a full lowercase SHA" >&2
+                      exit 64
+                  fi
+
+                  case "$ref_type" in
+                      branch)
+                          git check-ref-format --branch "$ref_name" >/dev/null
+                          ;;
+                      tag)
+                          if [[ ! "$ref_name" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                              echo "Release tags must use vMAJOR.MINOR.PATCH" >&2
+                              exit 64
+                          fi
+                          ;;
+                      *)
+                          echo "ref_type must be branch or tag" >&2
+                          exit 64
+                          ;;
+                  esac
+
+                  {
+                      printf 'commit_sha=%s\n' "$commit_sha"
+                      printf 'ref_type=%s\n' "$ref_type"
+                      printf 'ref_name=%s\n' "$ref_name"
+                  } >> "$GITHUB_OUTPUT"
+
+            - name: Checkout requested commit
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+                  fetch-tags: true
+                  ref: ${{ steps.source.outputs.commit_sha }}
+
+            - name: Install Nix
+              uses: cachix/install-nix-action@v31
+
+            - name: Build file-based Nix cache
+              id: artifact
+              env:
+                  GUNGAME_COMMIT_SHA: ${{ steps.source.outputs.commit_sha }}
+                  GUNGAME_REF_NAME: ${{ steps.source.outputs.ref_name }}
+                  GUNGAME_REF_TYPE: ${{ steps.source.outputs.ref_type }}
+              run: bash scripts/build_nix_release.sh release-artifacts
+
+            - name: Upload artifact for trusted publisher
+              uses: actions/upload-artifact@v7
+              with:
+                  name: gungame-release-${{ steps.artifact.outputs.commit_sha }}
+                  path: release-artifacts/
+                  if-no-files-found: error
+                  retention-days: 1
+                  compression-level: 0

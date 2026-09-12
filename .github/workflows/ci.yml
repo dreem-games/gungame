@@ -39,6 +39,9 @@ jobs:
             - name: Check formatting
               run: npm run format:check
 
+            - name: Check release scripts
+              run: bash -n scripts/build_nix_release.sh
+
             - name: Server tests
               run: npm run test:shared-ws && npm run test:server && npm run test:load
 

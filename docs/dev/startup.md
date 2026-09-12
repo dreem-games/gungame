@@ -107,6 +107,27 @@ systemd и по умолчанию привязывает его к `127.0.0.1:8
 остаётся за конфигурацией конкретного окружения. Reverse proxy должен направлять WebSocket Upgrade с `/ws` на
 настроенные `services.gungame.address` и `services.gungame.port`.
 
+### Артефакты релизов
+
+Workflow `Build release artifact` собирает frontend и backend в файловый Nix binary cache для `x86_64-linux`.
+Ветки принимаются только после базового Nix-коммита, а релизные теги должны иметь строгий вид
+`vMAJOR.MINOR.PATCH`. Сборочный workflow имеет только read-доступ к репозиторию.
+
+Отдельный workflow `Publish release artifact`, выполняемый из default branch, проверяет manifest, commit SHA и
+SHA-256, после чего публикует результат:
+
+- теговые сборки — в обычный GitHub Release соответствующего тега;
+- веточные сборки — в технический prerelease `gungame-build-cache`, без создания тега для каждого коммита.
+
+Вручную повторить упаковку на `x86_64-linux` можно командой:
+
+```bash
+GUNGAME_COMMIT_SHA="$(git rev-parse HEAD)" \
+GUNGAME_REF_TYPE=branch \
+GUNGAME_REF_NAME="$(git branch --show-current)" \
+bash scripts/build_nix_release.sh release-artifacts
+```
+
 ## Проверки качества
 
 Перед коммитом запустите общий набор проверок:
