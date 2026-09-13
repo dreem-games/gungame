@@ -128,10 +128,12 @@ jobs:
                           --notes "Machine-readable deployment artifacts."
                   fi
 
-                  published_assets="$(gh release view gungame-build-cache \
-                      --repo "$GITHUB_REPOSITORY" \
-                      --json assets \
-                      --jq '.assets[].name')"
+                  release_id="$(gh api \
+                      "repos/$GITHUB_REPOSITORY/releases/tags/gungame-build-cache" \
+                      --jq '.id')"
+                  published_assets="$(gh api --paginate \
+                      "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+                      --jq '.[].name')"
                   for file in "$ASSET" "$CHECKSUM"; do
                       asset_name="$(basename "$file")"
                       if grep -Fxq "$asset_name" <<< "$published_assets"; then
@@ -163,10 +165,12 @@ jobs:
                           --title "$REF_NAME"
                   fi
 
-                  published_assets="$(gh release view "$REF_NAME" \
-                      --repo "$GITHUB_REPOSITORY" \
-                      --json assets \
-                      --jq '.assets[].name')"
+                  release_id="$(gh api \
+                      "repos/$GITHUB_REPOSITORY/releases/tags/$REF_NAME" \
+                      --jq '.id')"
+                  published_assets="$(gh api --paginate \
+                      "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+                      --jq '.[].name')"
                   for file in "$ASSET" "$CHECKSUM"; do
                       asset_name="$(basename "$file")"
                       if grep -Fxq "$asset_name" <<< "$published_assets"; then

@@ -24,6 +24,10 @@
   SHA-256-файл.
 - Теговые сборки публикуются в GitHub Release соответствующего тега. Веточные сборки публикуются как неизменяемые
   SHA-именованные assets технического prerelease `gungame-build-cache`.
+- Publisher и потребитель должны получать список assets постранично. GitHub ограничивает один Release тысячей
+  assets, поэтому один технический release вмещает примерно 500 сборок коммитов (архив и checksum на коммит).
+  Для первого этапа очистка и TTL намеренно не вводятся; до достижения лимита потребуется шардирование release
+  либо согласованная политика удаления старых assets.
 - Сборочный workflow имеет только `contents: read`. Отдельный доверенный workflow из default branch проверяет SHA,
   ancestry, ref, manifest и checksum, и только после этого получает `contents: write` для GitHub Releases.
 - Ручной `workflow_dispatch` принимает полный commit SHA, тип ref и имя ref. Это позволяет внешнему контроллеру
