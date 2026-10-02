@@ -22,12 +22,14 @@
   `x86_64-linux`. Формат manifest намеренно не привязан к языку или структуре каталогов проекта.
 - Формат артефакта — сжатый файловый Nix binary cache. Внутри находятся cache и `manifest.json`; рядом публикуется
   SHA-256-файл.
-- Теговые сборки публикуются в GitHub Release соответствующего тега. Веточные сборки публикуются как неизменяемые
-  SHA-именованные assets технического prerelease `gungame-build-cache`.
-- Publisher и потребитель должны получать список assets постранично. GitHub ограничивает один Release тысячей
-  assets, поэтому один технический release вмещает примерно 500 сборок коммитов (архив и checksum на коммит).
-  Для первого этапа очистка и TTL намеренно не вводятся; до достижения лимита потребуется шардирование release
-  либо согласованная политика удаления старых assets.
+- Теговые сборки публикуются в GitHub Release соответствующего тега. Для веточной сборки создаётся отдельный
+  технический prerelease и тег `gungame-build-<полный commit SHA>`; ветки с одним SHA используют общий артефакт.
+  Эти технические теги не соответствуют `vMAJOR.MINOR.PATCH` и не запускают теговую сборку.
+- Архив и checksum загружаются в черновик до публикации: это совместимо с GitHub immutable releases.
+  Повторный запуск восстанавливает незавершённый черновик или проверяет наличие обоих assets в опубликованном
+  релизе. Уже опубликованный неполный immutable release требует отдельного вмешательства.
+- Потребитель веточных сборок должен искать релиз `gungame-build-<полный commit SHA>`.
+  Старый `gungame-build-cache` больше не используется. Очистка и TTL пока не вводятся.
 - Сборочный workflow имеет только `contents: read`. Отдельный доверенный workflow из default branch проверяет SHA,
   ancestry, ref, manifest и checksum, и только после этого получает `contents: write` для GitHub Releases.
 - Ручной `workflow_dispatch` принимает полный commit SHA, тип ref и имя ref. Это позволяет внешнему контроллеру
@@ -61,7 +63,7 @@ GunGame-конфигурации; проекту потребуется оста
 
 ```bash
 npm run check
-bash -n scripts/build_nix_release.sh
+bash -n scripts/build_nix_release.sh scripts/publish_nix_release.sh
 actionlint
 nix flake check --print-build-logs
 ```
@@ -82,6 +84,6 @@ bash scripts/build_nix_release.sh release-artifacts
 - [x] Production-подобный профиль Nginx + WebSocket в `devenv`.
 - [x] Разделение недоверенной сборки и доверенной публикации GitHub Release assets.
 - [x] Строгая проверка SemVer-тегов и deployment-baseline.
-- [ ] Влить механизм в default branch без изменения baseline SHA: до этого `workflow_run` не сможет использовать
-      доверенный publisher из default branch.
+- [x] Влить механизм в default branch без изменения baseline SHA.
+- [ ] Влить исправление публикации immutable releases в default branch и обновить потребителя.
 - [ ] Проверить первую веточную публикацию и первый тег на GitHub после слияния.
