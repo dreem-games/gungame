@@ -4,6 +4,7 @@ const Matter = require('matter-js');
 const map = require('./multiplayer-map.json');
 const { generateWorld } = require('./map-gen');
 
+const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 8080);
 const MAX_PLAYERS = 100;
 const MIN_INTEREST_RADIUS = 1400;
@@ -727,12 +728,12 @@ function onConnection(socket, request) {
     });
 }
 
-function start({ port, server } = {}) {
+function start({ host, port, server } = {}) {
     if (wssInstance) return wssInstance;
 
     const options = { maxPayload: 16 * 1024, perMessageDeflate: { threshold: 1024 } };
     if (port !== undefined) {
-        wssInstance = new WebSocketServer({ port, ...options });
+        wssInstance = new WebSocketServer({ host, port, ...options });
     } else {
         wssInstance = new WebSocketServer({ noServer: true, ...options });
         server.on('upgrade', (request, socket, head) => {
@@ -762,14 +763,14 @@ function start({ port, server } = {}) {
     }, 30000);
     console.log(
         port !== undefined
-            ? `Multiplayer MVP is listening on ws://localhost:${port}`
+            ? `Multiplayer MVP is listening on ws://${host ?? 'localhost'}:${port}`
             : 'Multiplayer MVP is mounted at /ws on the provided http-server'
     );
     return wssInstance;
 }
 
 if (require.main === module) {
-    start({ port: PORT });
+    start({ host: HOST, port: PORT });
 } else {
     module.exports = { start };
 }

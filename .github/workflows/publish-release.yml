@@ -1,0 +1,182 @@
+name: Publish release artifact
+
+on:
+    workflow_run:
+        workflows:
+            - Build release artifact
+        types:
+            - completed
+
+permissions:
+    actions: read
+    contents: write
+
+concurrency:
+    group: gungame-publish
+    cancel-in-progress: false
+
+jobs:
+    publish:
+        name: Publish verified artifact
+        if: github.event.workflow_run.conclusion == 'success'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Checkout trusted deployment baseline
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+                  fetch-tags: true
+
+            - name: Download build output
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RUN_ID: ${{ github.event.workflow_run.id }}
+              run: gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --dir incoming
+
+            - name: Verify artifact metadata
+              id: artifact
+              env:
+                  BASELINE_SHA: 75dc118083ad0ac017837c68df1c76ccafa5845c
+                  EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+                  ORIGIN_EVENT: ${{ github.event.workflow_run.event }}
+              run: |
+                  shopt -s nullglob
+                  artifact_dirs=(incoming/gungame-release-*)
+                  if (( ${#artifact_dirs[@]} != 1 )); then
+                      echo "Expected exactly one release artifact directory" >&2
+                      exit 65
+                  fi
+
+                  artifact_dir="${artifact_dirs[0]}"
+                  manifest="$artifact_dir/manifest.json"
+                  test -f "$manifest"
+                  commit_sha="$(jq -r '.commitSha' "$manifest")"
+                  if [[ ! "$commit_sha" =~ ^[0-9a-f]{40}$ ]]; then
+                      echo "Manifest contains an invalid commit SHA" >&2
+                      exit 65
+                  fi
+
+                  test "$artifact_dir" = "incoming/gungame-release-${commit_sha}"
+                  asset="$artifact_dir/gungame-${commit_sha}-x86_64-linux.nix-cache.tar.gz"
+                  checksum="$asset.sha256"
+                  test -f "$asset"
+                  test -f "$checksum"
+                  test "$(jq -r '.schemaVersion' "$manifest")" = 2
+                  test "$(jq -r '.projectId' "$manifest")" = gungame
+                  test "$(jq -r '.system' "$manifest")" = x86_64-linux
+                  test "$(jq -r '.outputs | keys | sort | join(",")' "$manifest")" = backend,frontend
+                  jq -e '.outputs[] | test("^/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-[A-Za-z0-9+._?=-]+$")' "$manifest" >/dev/null
+
+                  if [[ "$ORIGIN_EVENT" == push ]]; then
+                      test "$commit_sha" = "$EXPECTED_SHA"
+                  fi
+
+                  git cat-file -e "${commit_sha}^{commit}"
+                  git merge-base --is-ancestor "$BASELINE_SHA" "$commit_sha"
+
+                  expected_hash="$(cut -d ' ' -f 1 "$checksum")"
+                  actual_hash="$(sha256sum "$asset" | cut -d ' ' -f 1)"
+                  test "$actual_hash" = "$expected_hash"
+
+                  archived_manifest="$(mktemp)"
+                  tar -xOzf "$asset" ./manifest.json > "$archived_manifest"
+                  cmp --silent "$manifest" "$archived_manifest"
+
+                  ref_type="$(jq -r '.refType' "$manifest")"
+                  ref_name="$(jq -r '.refName' "$manifest")"
+                  case "$ref_type" in
+                      branch)
+                          git check-ref-format --branch "$ref_name" >/dev/null
+                          ;;
+                      tag)
+                          if [[ ! "$ref_name" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                              echo "Manifest contains an invalid release tag" >&2
+                              exit 65
+                          fi
+                          test "$(git rev-list -n 1 "refs/tags/${ref_name}")" = "$commit_sha"
+                          ;;
+                      *)
+                          echo "Manifest contains an invalid ref type" >&2
+                          exit 65
+                          ;;
+                  esac
+
+                  {
+                      printf 'asset=%s\n' "$asset"
+                      printf 'checksum=%s\n' "$checksum"
+                      printf 'commit_sha=%s\n' "$commit_sha"
+                      printf 'ref_type=%s\n' "$ref_type"
+                      printf 'ref_name=%s\n' "$ref_name"
+                  } >> "$GITHUB_OUTPUT"
+
+            - name: Publish build-cache asset
+              if: steps.artifact.outputs.ref_type == 'branch'
+              env:
+                  ASSET: ${{ steps.artifact.outputs.asset }}
+                  CHECKSUM: ${{ steps.artifact.outputs.checksum }}
+                  COMMIT_SHA: ${{ steps.artifact.outputs.commit_sha }}
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if ! gh release view gungame-build-cache --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                      gh release create gungame-build-cache \
+                          --repo "$GITHUB_REPOSITORY" \
+                          --target "$COMMIT_SHA" \
+                          --prerelease \
+                          --title "GunGame build cache" \
+                          --notes "Machine-readable deployment artifacts."
+                  fi
+
+                  release_id="$(gh api \
+                      "repos/$GITHUB_REPOSITORY/releases/tags/gungame-build-cache" \
+                      --jq '.id')"
+                  published_assets="$(gh api --paginate \
+                      "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+                      --jq '.[].name')"
+                  for file in "$ASSET" "$CHECKSUM"; do
+                      asset_name="$(basename "$file")"
+                      if grep -Fxq "$asset_name" <<< "$published_assets"; then
+                          echo "$asset_name is already published"
+                      else
+                          gh release upload gungame-build-cache "$file" \
+                              --repo "$GITHUB_REPOSITORY"
+                      fi
+                  done
+
+            - name: Publish SemVer release asset
+              if: steps.artifact.outputs.ref_type == 'tag'
+              env:
+                  ASSET: ${{ steps.artifact.outputs.asset }}
+                  CHECKSUM: ${{ steps.artifact.outputs.checksum }}
+                  GH_TOKEN: ${{ github.token }}
+                  REF_NAME: ${{ steps.artifact.outputs.ref_name }}
+              run: |
+                  if [[ ! "$REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                      echo "Ref is not a supported SemVer tag" >&2
+                      exit 64
+                  fi
+
+                  if ! gh release view "$REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                      gh release create "$REF_NAME" \
+                          --repo "$GITHUB_REPOSITORY" \
+                          --verify-tag \
+                          --generate-notes \
+                          --title "$REF_NAME"
+                  fi
+
+                  release_id="$(gh api \
+                      "repos/$GITHUB_REPOSITORY/releases/tags/$REF_NAME" \
+                      --jq '.id')"
+                  published_assets="$(gh api --paginate \
+                      "repos/$GITHUB_REPOSITORY/releases/$release_id/assets?per_page=100" \
+                      --jq '.[].name')"
+                  for file in "$ASSET" "$CHECKSUM"; do
+                      asset_name="$(basename "$file")"
+                      if grep -Fxq "$asset_name" <<< "$published_assets"; then
+                          echo "$asset_name is already published"
+                      else
+                          gh release upload "$REF_NAME" "$file" \
+                              --repo "$GITHUB_REPOSITORY"
+                      fi
+                  done

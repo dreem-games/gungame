@@ -39,5 +39,30 @@ jobs:
             - name: Check formatting
               run: npm run format:check
 
+            - name: Check release scripts
+              run: bash -n scripts/build_nix_release.sh
+
             - name: Server tests
               run: npm run test:shared-ws && npm run test:server && npm run test:load
+
+    nix:
+        name: Nix packages
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+
+            - name: Install Nix
+              uses: cachix/install-nix-action@v31
+
+            - name: Check flake
+              run: nix flake check --print-build-logs
+
+            - name: Evaluate deployment architectures
+              run: |
+                  nix eval .#packages.x86_64-linux.gungame-server.drvPath
+                  nix eval .#packages.x86_64-linux.gungame-frontend.drvPath
+                  nix eval .#packages.aarch64-linux.gungame-server.drvPath
+                  nix eval .#packages.aarch64-linux.gungame-frontend.drvPath

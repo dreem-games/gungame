@@ -113,6 +113,8 @@ npm run check      # typecheck + oxlint + oxfmt + shared-ws/server/load smoke
 
 ## Правила разработки
 
+Документацию в этом репозитории вести на русском языке.
+
 1. Новая сущность: реализует `IEntity` (`src/types/interfaces.ts`), регистрируется через `EntityManager`
    (или остаётся обычным `Matter.Sprite` при разовой сцене — как `Barrel`/`OilTank`).
 2. Новая пуля/оружие: наследовать `BaseWeapon` и добавить в `WeaponManager.weapons`.
