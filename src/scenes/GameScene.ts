@@ -120,6 +120,7 @@ export class GameScene extends Phaser.Scene {
         // Create Hero in the center
         this.hero = new Hero(this, WORLD_SIZE / 2, WORLD_SIZE / 2, this.inputManager);
         this.hero.setDepth(1);
+        this.hero.setVisible(false);
         this.entityManager.add(this.hero);
 
         // Camera setup
@@ -296,6 +297,7 @@ export class GameScene extends Phaser.Scene {
                     for (const object of this.boxes.values()) object.destroy();
                     this.boxes.clear();
                     this.hero.setPosition(spawn.x, spawn.y);
+                    this.hero.setVisible(true);
                     this.createSharedObstacles(layout);
                     this.builtWelcomeSequence = welcomeSequence;
                 }
